@@ -10,31 +10,18 @@ public class GameWinController : MonoBehaviour
 
     private void Start()
     {
-        gameObject.SetActive(false); // Hide by default
-
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnGameWonEvent += ShowWinScreen;
-        }
-
         if (nextLevelButton != null)
             nextLevelButton.onClick.AddListener(OnNextLevelClicked);
     }
 
     private void OnDestroy()
     {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnGameWonEvent -= ShowWinScreen;
-        }
-
         if (nextLevelButton != null)
             nextLevelButton.onClick.RemoveListener(OnNextLevelClicked);
     }
 
-    private void ShowWinScreen()
+    public void UpdateWinText()
     {
-        gameObject.SetActive(true);
         if (victoryText != null && GameManager.Instance != null)
         {
             victoryText.text = $"Hole in {GameManager.Instance.CurrentStrokes}!";

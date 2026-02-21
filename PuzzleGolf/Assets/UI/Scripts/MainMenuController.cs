@@ -23,7 +23,10 @@ public class MainMenuController : MonoBehaviour
 
     private void OnPlayClicked()
     {
-        // For MVP, just hide the menu and let the player start swiping
-        gameObject.SetActive(false);
+        // Tell the central UI Manager to transition states
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowGameplayHUD();
+        }
     }
 }

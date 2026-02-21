@@ -10,32 +10,17 @@ public class GameOverController : MonoBehaviour
 
     private void Start()
     {
-        gameObject.SetActive(false); // Hide by default
-
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnGameLostEvent += ShowGameOverScreen;
-        }
-
         if (retryButton != null)
             retryButton.onClick.AddListener(OnRetryClicked);
     }
 
     private void OnDestroy()
     {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnGameLostEvent -= ShowGameOverScreen;
-        }
-
         if (retryButton != null)
             retryButton.onClick.RemoveListener(OnRetryClicked);
     }
 
-    private void ShowGameOverScreen()
-    {
-        gameObject.SetActive(true);
-    }
+
 
     private void OnRetryClicked()
     {

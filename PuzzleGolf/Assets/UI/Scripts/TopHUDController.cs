@@ -8,7 +8,7 @@ public class TopHUDController : MonoBehaviour
     public TMP_Text strokesText;
     public Button restartButton;
 
-    private void Start()
+    private void OnEnable()
     {
         // Add listener to the UI button so it calls GameManager when clicked
         if (restartButton != null)
@@ -30,7 +30,7 @@ public class TopHUDController : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
         // Very important: Unsubscribe from events to prevent memory leaks!
         if (GameManager.Instance != null)
