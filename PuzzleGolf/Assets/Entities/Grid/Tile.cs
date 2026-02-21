@@ -17,15 +17,20 @@ public class Tile : MonoBehaviour
     public int powerCount;
     public TileType type;
 
-    [Header("Visuals")]
+    [Header("Visuals (Optional)")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private TMP_Text powerText;
 
-    public void Init(Vector2Int gridPos, int power, TileType tileType)
+    public void Init(Vector2Int gridPos, int power, TileType tileType, Sprite tileSprite = null)
     {
         gridPosition = gridPos;
         powerCount = power;
         type = tileType;
+
+        if (spriteRenderer != null && tileSprite != null)
+        {
+            spriteRenderer.sprite = tileSprite;
+        }
 
         UpdateVisuals();
     }

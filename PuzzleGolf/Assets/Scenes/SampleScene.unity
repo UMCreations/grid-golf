@@ -246,9 +246,12 @@ MonoBehaviour:
   width: 5
   height: 5
   tileSize: 1
-  spacing: 0.1
+  spacing: 0.3
   tilePrefab: {fileID: 6303450923254926047, guid: 9e1f70e9b30d24f02a67b64f63a3f57a, type: 3}
   gridParent: {fileID: 0}
+  standardSprite: {fileID: 21300000, guid: be0f65bb3440f41d7b24711053926ff8, type: 3}
+  startSprite: {fileID: 21300000, guid: 262c1e09640b344e2addd7d0d63516d9, type: 3}
+  holeSprite: {fileID: 21300000, guid: 66d55bb12b69147c7b5d663ddb6d6e07, type: 3}
   startPosition: {x: 0, y: 0}
   holePosition: {x: 4, y: 4}
   ballPrefab: {fileID: 7777476746999806065, guid: cbf9517a982d04db9af92fe8eeebdaf8, type: 3}

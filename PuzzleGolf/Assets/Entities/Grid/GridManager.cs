@@ -13,6 +13,11 @@ public class GridManager : MonoBehaviour
     public Tile tilePrefab;
     public Transform gridParent;
 
+    [Header("Tile Sprites")]
+    public Sprite standardSprite;
+    public Sprite startSprite;
+    public Sprite holeSprite;
+
     [Header("Level Data (Temporary MVP)")]
     public Vector2Int startPosition = new Vector2Int(0, 0);
     public Vector2Int holePosition = new Vector2Int(4, 4);
@@ -93,20 +98,22 @@ public class GridManager : MonoBehaviour
                 // Determine type and power
                 TileType currentType = TileType.Standard;
                 int power = Random.Range(1, 4);
+                Sprite tileSprite = standardSprite;
 
                 if (x == startPosition.x && y == startPosition.y)
                 {
                     currentType = TileType.Start;
-                    // For now, give the start tile a default power so the ball can move off it
-                    power = 2;
+                    power = 2; // For now, give the start tile a default power so the ball can move off it
+                    tileSprite = startSprite;
                 }
                 else if (x == holePosition.x && y == holePosition.y)
                 {
                     currentType = TileType.Hole;
                     power = 0; // The hole doesn't need to push the ball anywhere
+                    tileSprite = holeSprite;
                 }
 
-                spawnedTile.Init(new Vector2Int(x, y), power, currentType);
+                spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite);
 
                 gridArray[x, y] = spawnedTile;
             }
