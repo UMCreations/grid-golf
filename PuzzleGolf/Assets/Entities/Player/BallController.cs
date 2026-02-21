@@ -10,6 +10,8 @@ public class BallController : MonoBehaviour
     [Header("Animation Settings")]
     public float moveDuration = 0.4f;
     public float jumpHeightScale = 0.3f; // How much it grows to simulate flying "up"
+    public float jumpArcHeight = 0.5f; // How much it visually arcs up on the Y-axis
+    public float jumpCurveOffset = 0.5f; // How much it curves laterally (left/right) during flight
     public float rotationsPerMove = 2f;
 
     [Header("Input & Trajectory")]
@@ -41,8 +43,13 @@ public class BallController : MonoBehaviour
         }
         
         trajectoryLine.enabled = false;
-        trajectoryLine.startWidth = 0.15f;
-        trajectoryLine.endWidth = 0.05f; // Tapering effect
+        
+        // Add a width curve instead of distinct start/end widths to simulate 3D closeness
+        AnimationCurve curve = new AnimationCurve();
+        curve.AddKey(0f, 0.15f);
+        curve.AddKey(0.5f, 0.35f); // Thicker in the middle
+        curve.AddKey(1f, 0.05f);
+        trajectoryLine.widthCurve = curve;
         
         // Find standard sprite shader so it blends well in 2D
         Shader spriteShader = Shader.Find("Sprites/Default");
@@ -161,27 +168,44 @@ public class BallController : MonoBehaviour
         Vector2Int targetPosition = currentGridPosition + (currentAimDirection * power);
         Tile targetTile = GridManager.Instance.GetTileAtPosition(targetPosition);
 
-        trajectoryLine.enabled = true;
-        trajectoryLine.positionCount = 2;
-        trajectoryLine.SetPosition(0, transform.position);
+        Vector3 startPos = transform.position;
+        Vector3 endPos;
 
         if (targetTile != null)
         {
-            // Valid move visual: Green line pointing directly to the center of the target tile
-            trajectoryLine.SetPosition(1, targetTile.transform.position);
+            endPos = targetTile.transform.position;
             trajectoryLine.startColor = new Color(0.2f, 1f, 0.2f, 0.8f); // Solid green
             trajectoryLine.endColor = new Color(0.2f, 1f, 0.2f, 0.2f);   // Faded green
         }
         else
         {
-            // Invalid/Out Of Bounds move visual: Red line
             float tileSize = GridManager.Instance.tileSize;
             float spacing = GridManager.Instance.spacing;
             Vector3 direction3D = new Vector3(currentAimDirection.x * (tileSize + spacing), currentAimDirection.y * (tileSize + spacing), 0);
             
-            trajectoryLine.SetPosition(1, transform.position + (direction3D * power));
+            endPos = transform.position + (direction3D * power);
             trajectoryLine.startColor = new Color(1f, 0.2f, 0.2f, 0.8f); // Solid red
             trajectoryLine.endColor = new Color(1f, 0.2f, 0.2f, 0.2f);   // Faded red
+        }
+
+        int segments = 20;
+        trajectoryLine.positionCount = segments + 1;
+        trajectoryLine.enabled = true;
+
+        Vector3 perpendicular = new Vector3(-currentAimDirection.y, currentAimDirection.x, 0).normalized;
+
+        for (int i = 0; i <= segments; i++)
+        {
+            float t = (float)i / segments;
+            Vector3 pointPos = Vector3.Lerp(startPos, endPos, t);
+            
+            // Add arc offset (to simulate 3D curve in 2D space)
+            float arc = 4f * t * (1f - t);
+            pointPos.y += arc * jumpArcHeight;
+            // Add lateral curve to simulate slice/hook in golf
+            pointPos += perpendicular * (arc * jumpCurveOffset);
+
+            trajectoryLine.SetPosition(i, pointPos);
         }
     }
 
@@ -230,7 +254,7 @@ public class BallController : MonoBehaviour
 
         if (targetTile != null)
         {
-            StartCoroutine(MoveAndAnimateBall(targetTile.transform.position, targetTile, targetPosition));
+            StartCoroutine(MoveAndAnimateBall(targetTile.transform.position, targetTile, targetPosition, direction));
             Debug.Log($"Moving to {targetPosition}");
         }
         else
@@ -241,12 +265,14 @@ public class BallController : MonoBehaviour
         }
     }
 
-    private IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos)
+    private IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos, Vector2Int moveDirection)
     {
         isMoving = true;
         
         Vector3 startPosition = transform.position;
         Vector3 baseScale = transform.localScale;
+        
+        Vector3 perpendicular = new Vector3(-moveDirection.y, moveDirection.x, 0).normalized;
         
         float elapsed = 0f;
 
@@ -255,10 +281,17 @@ public class BallController : MonoBehaviour
             float t = elapsed / moveDuration;
             
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
-            transform.position = Vector3.Lerp(startPosition, targetWorldPos, smoothT);
+            Vector3 currentPos = Vector3.Lerp(startPosition, targetWorldPos, smoothT);
 
             float arc = 4f * t * (1f - t);
             transform.localScale = baseScale + new Vector3(arc * jumpHeightScale, arc * jumpHeightScale, 0f);
+
+            // Add simulated Y height for the jump just like the trajectory
+            currentPos.y += arc * jumpArcHeight; 
+            // Add lateral curve to simulate slice/hook in golf
+            currentPos += perpendicular * (arc * jumpCurveOffset);
+            
+            transform.position = currentPos;
 
             float rotationAmount = 360f * rotationsPerMove * Time.deltaTime / moveDuration;
             transform.Rotate(Vector3.forward, -rotationAmount);
