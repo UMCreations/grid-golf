@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,11 @@ public class GameManager : MonoBehaviour
 
     public int MaxStrokes { get; private set; } = 5;
     public int CurrentStrokes { get; private set; } = 0;
+
+    // UI Events
+    public event Action<int, int> OnStrokeMadeEvent; // Current, Max
+    public event Action OnGameWonEvent;
+    public event Action OnGameLostEvent;
 
     private void Awake()
     {
@@ -30,6 +36,9 @@ public class GameManager : MonoBehaviour
         CurrentStrokes = 0;
         HasWon = false;
         HasLost = false;
+        
+        // Broadcast initial state
+        OnStrokeMadeEvent?.Invoke(CurrentStrokes, MaxStrokes);
     }
 
     public void OnMoveMade()
@@ -38,6 +47,8 @@ public class GameManager : MonoBehaviour
         
         CurrentStrokes++;
         Debug.Log($"Stroke used! Current: {CurrentStrokes} / {MaxStrokes}");
+        
+        OnStrokeMadeEvent?.Invoke(CurrentStrokes, MaxStrokes);
     }
 
     public void CheckStrokeLimit()
@@ -49,6 +60,8 @@ public class GameManager : MonoBehaviour
             HasLost = true;
             Debug.Log("💀 Out of strokes! Game Over! 💀");
             Debug.Log("Press 'R' to restart the level.");
+            
+            OnGameLostEvent?.Invoke();
         }
     }
 
@@ -59,6 +72,8 @@ public class GameManager : MonoBehaviour
         HasWon = true;
         Debug.Log($"🎉 You Won! Hole Reached in {CurrentStrokes} strokes! 🎉");
         Debug.Log("Press 'R' to restart the level.");
+        
+        OnGameWonEvent?.Invoke();
     }
 
     public void OnInvalidMove()
