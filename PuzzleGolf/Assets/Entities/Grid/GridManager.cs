@@ -13,6 +13,9 @@ public class GridManager : MonoBehaviour
     public Tile tilePrefab;
     public Transform gridParent;
 
+    [Header("Camera Settings")]
+    public float screenPadding = 1.0f; // Extra space around the grid
+
     [Header("Tile Sprites")]
     public Sprite standardSprite;
     public Sprite startSprite;
@@ -45,6 +48,39 @@ public class GridManager : MonoBehaviour
     {
         GenerateGrid();
         SpawnBall();
+        CenterAndFitCamera();
+    }
+
+    private void CenterAndFitCamera()
+    {
+        if (Camera.main == null) return;
+        
+        // 1. Calculate the physical dimensions of the grid
+        float physicalWidth = (width - 1) * (tileSize + spacing) + tileSize;
+        float physicalHeight = (height - 1) * (tileSize + spacing) + tileSize;
+
+        // 2. Find the exact center point of the grid
+        float centerX = ((width - 1) * (tileSize + spacing)) / 2f;
+        float centerY = ((height - 1) * (tileSize + spacing)) / 2f;
+        
+        // 3. Move the camera to the center
+        Camera.main.transform.position = new Vector3(centerX, centerY, -10f);
+
+        // 4. Calculate required orthographic sizes (half sizes) with padding
+        float paddedWidth = physicalWidth + screenPadding;
+        float paddedHeight = physicalHeight + screenPadding;
+
+        // 5. aspect ratio = width / height
+        float screenAspect = (float)Screen.width / (float)Screen.height;
+        
+        // Required size based on width vs height
+        float requiredSizeHeight = paddedHeight / 2f;
+        float requiredSizeWidth = (paddedWidth / screenAspect) / 2f;
+
+        // The camera should take the larger requirement to ensure everything fits
+        Camera.main.orthographicSize = Mathf.Max(requiredSizeHeight, requiredSizeWidth);
+        
+        Debug.Log("Camera perfectly fitted to the grid!");
     }
 
     public void SpawnBall()
