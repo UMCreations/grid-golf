@@ -12,6 +12,14 @@ public class BallController : MonoBehaviour
     public float jumpHeightScale = 0.3f; // How much it grows to simulate flying "up"
     public float rotationsPerMove = 2f;
 
+    [Header("Input & Trajectory")]
+    public float swipeThreshold = 50f; // px distance to register a swipe
+    private LineRenderer trajectoryLine;
+    private Vector2 touchStartPos;
+    private Vector2 touchCurrentPos;
+    private bool isAiming;
+    private Vector2Int currentAimDirection;
+
     private void Start()
     {
         // Now handled by GridManager spawning the ball at the correct start position.
@@ -19,6 +27,32 @@ public class BallController : MonoBehaviour
         {
             currentGridPosition = GridManager.Instance.startPosition;
         }
+
+        SetupLineRenderer();
+    }
+
+    private void SetupLineRenderer()
+    {
+        // Create line renderer dynamically so the user doesn't have to configure it manually
+        trajectoryLine = GetComponent<LineRenderer>();
+        if (trajectoryLine == null)
+        {
+            trajectoryLine = gameObject.AddComponent<LineRenderer>();
+        }
+        
+        trajectoryLine.enabled = false;
+        trajectoryLine.startWidth = 0.15f;
+        trajectoryLine.endWidth = 0.05f; // Tapering effect
+        
+        // Find standard sprite shader so it blends well in 2D
+        Shader spriteShader = Shader.Find("Sprites/Default");
+        if (spriteShader != null)
+        {
+            trajectoryLine.material = new Material(spriteShader);
+        }
+        
+        trajectoryLine.sortingOrder = 5; // Draw behind the ball (which is 10)
+        trajectoryLine.useWorldSpace = true;
     }
 
     private void Update()
@@ -27,22 +61,144 @@ public class BallController : MonoBehaviour
         if (isMoving) return;
         if (GameManager.Instance != null && GameManager.Instance.HasWon) return;
 
+        HandleKeyboardInput();
+        HandleTouchInput();
+    }
+
+    private void HandleKeyboardInput()
+    {
         Vector2Int inputDirection = GetInputDirection();
-        if (inputDirection != Vector2Int.zero)
+        if (inputDirection != Vector2Int.zero && !isAiming) // Prioritize keyboard if not swiping
         {
             AttemptMove(inputDirection);
         }
     }
 
+    private void HandleTouchInput()
+    {
+        // Input.GetMouseButton(0) works universally for both Mouse Clicks and Mobile Finger Touches
+        if (Input.GetMouseButtonDown(0))
+        {
+            touchStartPos = Input.mousePosition;
+            isAiming = true;
+            currentAimDirection = Vector2Int.zero;
+        }
+
+        if (Input.GetMouseButton(0) && isAiming)
+        {
+            touchCurrentPos = Input.mousePosition;
+            Vector2 swipeDelta = touchCurrentPos - touchStartPos;
+
+            // Only register drag if we've moved our finger/mouse past a threshold (prevents accidental taps)
+            if (swipeDelta.magnitude > swipeThreshold)
+            {
+                currentAimDirection = GetSnapDirection(swipeDelta);
+                UpdateTrajectory();
+            }
+            else
+            {
+                currentAimDirection = Vector2Int.zero;
+                HideTrajectory();
+            }
+        }
+
+        if (Input.GetMouseButtonUp(0) && isAiming)
+        {
+            isAiming = false;
+            HideTrajectory();
+            
+            // Execute move upon release if we had a valid target direction
+            if (currentAimDirection != Vector2Int.zero)
+            {
+                AttemptMove(currentAimDirection);
+            }
+        }
+    }
+
+    private Vector2Int GetSnapDirection(Vector2 rawDirection)
+    {
+        // Calculate angle from swipe. Mathf.Atan2 returns -PI to PI
+        float angle = Mathf.Atan2(rawDirection.y, rawDirection.x) * Mathf.Rad2Deg;
+        if (angle < 0) angle += 360f;
+
+        // Snapping into 8 distinct directional slices (45 degrees each)
+        // Offset by 22.5 degrees so that angles exactly along cardinal directions sit right in the middle of a slice
+        angle = (angle + 22.5f) % 360f;
+        int slice = Mathf.FloorToInt(angle / 45f);
+
+        switch (slice)
+        {
+            case 0: return Vector2Int.right;
+            case 1: return new Vector2Int(1, 1);
+            case 2: return Vector2Int.up;
+            case 3: return new Vector2Int(-1, 1);
+            case 4: return Vector2Int.left;
+            case 5: return new Vector2Int(-1, -1);
+            case 6: return Vector2Int.down;
+            case 7: return new Vector2Int(1, -1);
+            default: return Vector2Int.zero; 
+        }
+    }
+
+    private void UpdateTrajectory()
+    {
+        if (trajectoryLine == null) return;
+
+        Tile currentTile = GridManager.Instance.GetTileAtPosition(currentGridPosition);
+        if (currentTile == null || currentTile.type == TileType.Hole) 
+        {
+            HideTrajectory();
+            return;
+        }
+
+        int power = currentTile.powerCount;
+        if (power <= 0)
+        {
+            HideTrajectory();
+            return;
+        }
+
+        Vector2Int targetPosition = currentGridPosition + (currentAimDirection * power);
+        Tile targetTile = GridManager.Instance.GetTileAtPosition(targetPosition);
+
+        trajectoryLine.enabled = true;
+        trajectoryLine.positionCount = 2;
+        trajectoryLine.SetPosition(0, transform.position);
+
+        if (targetTile != null)
+        {
+            // Valid move visual: Green line pointing directly to the center of the target tile
+            trajectoryLine.SetPosition(1, targetTile.transform.position);
+            trajectoryLine.startColor = new Color(0.2f, 1f, 0.2f, 0.8f); // Solid green
+            trajectoryLine.endColor = new Color(0.2f, 1f, 0.2f, 0.2f);   // Faded green
+        }
+        else
+        {
+            // Invalid/Out Of Bounds move visual: Red line
+            float tileSize = GridManager.Instance.tileSize;
+            float spacing = GridManager.Instance.spacing;
+            Vector3 direction3D = new Vector3(currentAimDirection.x * (tileSize + spacing), currentAimDirection.y * (tileSize + spacing), 0);
+            
+            trajectoryLine.SetPosition(1, transform.position + (direction3D * power));
+            trajectoryLine.startColor = new Color(1f, 0.2f, 0.2f, 0.8f); // Solid red
+            trajectoryLine.endColor = new Color(1f, 0.2f, 0.2f, 0.2f);   // Faded red
+        }
+    }
+
+    private void HideTrajectory()
+    {
+        if (trajectoryLine != null)
+            trajectoryLine.enabled = false;
+    }
+
     private Vector2Int GetInputDirection()
     {
-        // 4-way Standard Input
+        // Keep keyboard logic for PC testing
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) return Vector2Int.up;
         if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) return Vector2Int.down;
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) return Vector2Int.left;
         if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) return Vector2Int.right;
 
-        // 8-way Diagonal Input via Numpad
         if (Input.GetKeyDown(KeyCode.Keypad8)) return Vector2Int.up;
         if (Input.GetKeyDown(KeyCode.Keypad2)) return Vector2Int.down;
         if (Input.GetKeyDown(KeyCode.Keypad4)) return Vector2Int.left;
@@ -60,8 +216,6 @@ public class BallController : MonoBehaviour
     {
         Tile currentTile = GridManager.Instance.GetTileAtPosition(currentGridPosition);
         if (currentTile == null) return;
-
-        // In a real game, if we are on the hole, we've won, so we don't move.
         if (currentTile.type == TileType.Hole) return;
 
         int power = currentTile.powerCount;
@@ -76,13 +230,11 @@ public class BallController : MonoBehaviour
 
         if (targetTile != null)
         {
-            // Start the movement coroutine instead of an instant teleport
             StartCoroutine(MoveAndAnimateBall(targetTile.transform.position, targetTile, targetPosition));
             Debug.Log($"Moving to {targetPosition}");
         }
         else
         {
-            // Move went out of bounds
             Debug.Log($"Invalid move: Target {targetPosition} is out of bounds!");
             if (GameManager.Instance != null)
                 GameManager.Instance.OnInvalidMove();
@@ -95,7 +247,6 @@ public class BallController : MonoBehaviour
         
         Vector3 startPosition = transform.position;
         Vector3 baseScale = transform.localScale;
-        // Depending on distance, we might want to rotate more or take longer, but for puzzle games a uniform time feels snappy
         
         float elapsed = 0f;
 
@@ -103,17 +254,12 @@ public class BallController : MonoBehaviour
         {
             float t = elapsed / moveDuration;
             
-            // 1. Smoothly interpolate position (Ease Out)
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
             transform.position = Vector3.Lerp(startPosition, targetWorldPos, smoothT);
 
-            // 2. Simulate "Arc/Flight" in 2D by scaling it up in the middle of the journey
-            // Equation of an inverted parabola from 0 to 1 back to 0: 4 * t * (1 - t)
             float arc = 4f * t * (1f - t);
             transform.localScale = baseScale + new Vector3(arc * jumpHeightScale, arc * jumpHeightScale, 0f);
 
-            // 3. Simulate "Rolling" by rotating around the Z axis
-            // We rotate smoothly over the duration
             float rotationAmount = 360f * rotationsPerMove * Time.deltaTime / moveDuration;
             transform.Rotate(Vector3.forward, -rotationAmount);
 
@@ -121,14 +267,12 @@ public class BallController : MonoBehaviour
             yield return null;
         }
 
-        // Snap to final destination exactly to be safe
         transform.position = targetWorldPos;
         transform.localScale = baseScale;
         currentGridPosition = targetGridPos;
         
         isMoving = false;
 
-        // Step 5: Check if we landed on the hole after we finish animating
         if (targetTile.type == TileType.Hole)
         {
             if (GameManager.Instance != null)

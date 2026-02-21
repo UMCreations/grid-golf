@@ -250,7 +250,7 @@ MonoBehaviour:
   tilePrefab: {fileID: 6303450923254926047, guid: 9e1f70e9b30d24f02a67b64f63a3f57a, type: 3}
   gridParent: {fileID: 0}
   standardSprite: {fileID: 21300000, guid: be0f65bb3440f41d7b24711053926ff8, type: 3}
-  startSprite: {fileID: 21300000, guid: 262c1e09640b344e2addd7d0d63516d9, type: 3}
+  startSprite: {fileID: 21300000, guid: 2aff5daad093642ea8e709928ab5d7d7, type: 3}
   holeSprite: {fileID: 21300000, guid: 66d55bb12b69147c7b5d663ddb6d6e07, type: 3}
   startPosition: {x: 0, y: 0}
   holePosition: {x: 4, y: 4}
