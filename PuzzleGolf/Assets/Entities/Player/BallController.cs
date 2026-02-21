@@ -64,9 +64,9 @@ public class BallController : MonoBehaviour
 
     private void Update()
     {
-        // Don't accept input if ball is already animating a move, or if the game is already won
+        // Don't accept input if ball is already animating a move, or if the game is already won/lost
         if (isMoving) return;
-        if (GameManager.Instance != null && GameManager.Instance.HasWon) return;
+        if (GameManager.Instance != null && (GameManager.Instance.HasWon || GameManager.Instance.HasLost)) return;
 
         HandleKeyboardInput();
         HandleTouchInput();
@@ -254,6 +254,10 @@ public class BallController : MonoBehaviour
 
         if (targetTile != null)
         {
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.OnMoveMade();
+            }
             StartCoroutine(MoveAndAnimateBall(targetTile.transform.position, targetTile, targetPosition, direction));
             Debug.Log($"Moving to {targetPosition}");
         }
@@ -310,6 +314,12 @@ public class BallController : MonoBehaviour
         {
             if (GameManager.Instance != null)
                 GameManager.Instance.OnHoleReached();
+        }
+        else
+        {
+            // If we didn't land in the hole, check if we've run out of max strokes
+            if (GameManager.Instance != null)
+                GameManager.Instance.CheckStrokeLimit();
         }
     }
 }

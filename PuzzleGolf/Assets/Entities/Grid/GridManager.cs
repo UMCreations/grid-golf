@@ -24,6 +24,7 @@ public class GridManager : MonoBehaviour
     [Header("Level Data (Temporary MVP)")]
     public Vector2Int startPosition = new Vector2Int(0, 0);
     public Vector2Int holePosition = new Vector2Int(4, 4);
+    public int levelPar = 5; // Max allowed strokes
 
     [Header("Player")]
     public BallController ballPrefab;
@@ -46,6 +47,11 @@ public class GridManager : MonoBehaviour
 
     private void Start()
     {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.InitializeLevel(levelPar);
+        }
+
         GenerateGrid();
         SpawnBall();
         CenterAndFitCamera();

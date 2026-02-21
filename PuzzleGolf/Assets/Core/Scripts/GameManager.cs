@@ -6,6 +6,10 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     public bool HasWon { get; private set; } = false;
+    public bool HasLost { get; private set; } = false;
+
+    public int MaxStrokes { get; private set; } = 5;
+    public int CurrentStrokes { get; private set; } = 0;
 
     private void Awake()
     {
@@ -20,15 +24,41 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void InitializeLevel(int maxStrokes)
+    {
+        MaxStrokes = maxStrokes;
+        CurrentStrokes = 0;
+        HasWon = false;
+        HasLost = false;
+    }
+
+    public void OnMoveMade()
+    {
+        if (HasWon || HasLost) return;
+        
+        CurrentStrokes++;
+        Debug.Log($"Stroke used! Current: {CurrentStrokes} / {MaxStrokes}");
+    }
+
+    public void CheckStrokeLimit()
+    {
+        if (HasWon || HasLost) return;
+
+        if (CurrentStrokes >= MaxStrokes)
+        {
+            HasLost = true;
+            Debug.Log("💀 Out of strokes! Game Over! 💀");
+            Debug.Log("Press 'R' to restart the level.");
+        }
+    }
+
     public void OnHoleReached()
     {
-        if (HasWon) return; // Prevent multiple triggers
+        if (HasWon || HasLost) return; // Prevent multiple triggers
         
         HasWon = true;
-        Debug.Log("🎉 You Won! Hole Reached! 🎉");
+        Debug.Log($"🎉 You Won! Hole Reached in {CurrentStrokes} strokes! 🎉");
         Debug.Log("Press 'R' to restart the level.");
-        
-        // In the future, we will trigger the Win UI here and show the total strokes
     }
 
     public void OnInvalidMove()
