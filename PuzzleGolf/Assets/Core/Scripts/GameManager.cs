@@ -72,6 +72,11 @@ public class GameManager : MonoBehaviour
         HasWon = true;
         Debug.Log($"🎉 You Won! Hole Reached in {CurrentStrokes} strokes! 🎉");
         Debug.Log("Press 'R' to restart the level.");
+
+        if (LevelManager.Instance != null)
+        {
+            LevelManager.Instance.CompleteCurrentLevel();
+        }
         
         OnGameWonEvent?.Invoke();
     }
@@ -100,9 +105,22 @@ public class GameManager : MonoBehaviour
 
     public void LoadNextLevel()
     {
-        // Clear the save so GridManager creates a fresh new board next time it runs Starts()
-        SaveManager.ClearSave();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        if (LevelManager.Instance != null && LevelManager.Instance.HasNextLevel())
+        {
+            // Update LevelManager to point to the next level index
+            LevelManager.Instance.ProgressToNextLevel();
+            
+            // Clear mid-level save so GridManager creates the NEW level
+            SaveManager.ClearSave();
+            
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+        else
+        {
+            Debug.Log("You beat the final level/Difficulty! Returning to menu logic here soon.");
+            SaveManager.ClearSave();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
     }
 
     private void Update()

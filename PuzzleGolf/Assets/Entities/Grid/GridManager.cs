@@ -51,16 +51,26 @@ public class GridManager : MonoBehaviour
 
     private void Start()
     {
-        LevelData savedLevel = SaveManager.LoadLevel();
-        if (savedLevel != null)
+        Difficulty targetDiff = currentDifficulty;
+        int targetLevel = 1;
+
+        if (LevelManager.Instance != null)
         {
-            Debug.Log("Loading saved level...");
+            targetDiff = LevelManager.Instance.SelectedDifficulty;
+            targetLevel = LevelManager.Instance.SelectedLevelIndex;
+        }
+
+        LevelData savedLevel = SaveManager.LoadLevel();
+        // Only load the save if it perfectly matches the level we are trying to play
+        if (savedLevel != null && savedLevel.difficulty == targetDiff && savedLevel.levelIndex == targetLevel)
+        {
+            Debug.Log($"Loading saved level {targetDiff} - {targetLevel}...");
             LoadExistingLevel(savedLevel);
         }
         else
         {
-            Debug.Log("Generating new level...");
-            GenerateAndLoadNewLevel(currentDifficulty);
+            Debug.Log($"Generating new level {targetDiff} - {targetLevel}...");
+            GenerateAndLoadNewLevel(targetDiff, targetLevel);
         }
     }
 
@@ -85,7 +95,7 @@ public class GridManager : MonoBehaviour
         CenterAndFitCamera();
     }
 
-    public void GenerateAndLoadNewLevel(Difficulty difficulty)
+    public void GenerateAndLoadNewLevel(Difficulty difficulty, int levelIndex)
     {
         if (LevelGenerator.Instance == null)
         {
@@ -93,7 +103,7 @@ public class GridManager : MonoBehaviour
             return;
         }
 
-        LevelData newLevelData = LevelGenerator.Instance.GenerateLevel(difficulty);
+        LevelData newLevelData = LevelGenerator.Instance.GenerateLevel(difficulty, levelIndex);
         
         // Save it so that reloading the scene restarts this EXACT level pattern
         SaveManager.SaveLevel(newLevelData);

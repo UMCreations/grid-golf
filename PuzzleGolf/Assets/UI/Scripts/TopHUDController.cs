@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class TopHUDController : MonoBehaviour
 {
     [Header("UI References")]
+    public TMP_Text levelText;
     public TMP_Text strokesText;
     public Button menuButton;
 
@@ -28,6 +29,8 @@ public class TopHUDController : MonoBehaviour
         {
             Debug.LogWarning("TopHUDController could not find GameManager.");
         }
+
+        UpdateLevelText();
     }
 
     private void OnDisable()
@@ -49,6 +52,18 @@ public class TopHUDController : MonoBehaviour
         if (strokesText != null)
         {
             strokesText.text = $"Strokes: {currentStrokes} / {maxStrokes}";
+        }
+    }
+
+    private void UpdateLevelText()
+    {
+        if (levelText != null && LevelManager.Instance != null)
+        {
+            levelText.text = $"Level {LevelManager.Instance.SelectedLevelIndex} ({LevelManager.Instance.SelectedDifficulty})";
+        }
+        else if (levelText != null)
+        {
+            levelText.text = "Level ? (-)";
         }
     }
 

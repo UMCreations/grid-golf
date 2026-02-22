@@ -43,10 +43,9 @@ public class GameWinController : MonoBehaviour
 
     private void OnNextLevelClicked()
     {
-        // For MVP, restarting the scene serves as restarting
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.RestartLevel();
+            GameManager.Instance.LoadNextLevel();
         }
     }
     

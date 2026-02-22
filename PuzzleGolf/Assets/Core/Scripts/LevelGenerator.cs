@@ -18,6 +18,7 @@ public class LevelData
     public Vector2Int holePosition;
     public int levelPar;
     public int currentStrokes;
+    public int levelIndex;
     public Vector2Int currentGridPosition;
 
     // For JSON serialization
@@ -70,8 +71,12 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    public LevelData GenerateLevel(Difficulty difficulty)
+    public LevelData GenerateLevel(Difficulty difficulty, int levelIndex)
     {
+        // Set fixed seed so Level "N" is always the same for everyone
+        int seed = (int)difficulty * 1000 + levelIndex;
+        Random.InitState(seed);
+
         int width, height, pathLength, maxPower;
 
         switch (difficulty)
@@ -99,6 +104,7 @@ public class LevelGenerator : MonoBehaviour
         LevelData levelData = new LevelData
         {
             difficulty = difficulty,
+            levelIndex = levelIndex,
             width = width,
             height = height,
             tilePowers = new int[width, height]
