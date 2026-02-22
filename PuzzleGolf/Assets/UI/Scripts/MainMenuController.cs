@@ -4,12 +4,18 @@ using UnityEngine.UI;
 public class MainMenuController : MonoBehaviour
 {
     public Button playButton;
+    public Button settingsButton;
 
     private void Start()
     {
         if (playButton != null)
         {
             playButton.onClick.AddListener(OnPlayClicked);
+        }
+        
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.AddListener(OnSettingsClicked);
         }
     }
 
@@ -19,6 +25,11 @@ public class MainMenuController : MonoBehaviour
         {
             playButton.onClick.RemoveListener(OnPlayClicked);
         }
+
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.RemoveListener(OnSettingsClicked);
+        }
     }
 
     private void OnPlayClicked()
@@ -27,6 +38,14 @@ public class MainMenuController : MonoBehaviour
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowGameplayHUD();
+        }
+    }
+
+    private void OnSettingsClicked()
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowSettings();
         }
     }
 }
