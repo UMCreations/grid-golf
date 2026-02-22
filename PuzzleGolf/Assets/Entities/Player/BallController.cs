@@ -310,6 +310,12 @@ public class BallController : MonoBehaviour
         
         isMoving = false;
 
+        // Save progress after move
+        if (GridManager.Instance != null && GameManager.Instance != null)
+        {
+            GridManager.Instance.SaveGameState(currentGridPosition, GameManager.Instance.CurrentStrokes);
+        }
+
         if (targetTile.type == TileType.Hole)
         {
             if (GameManager.Instance != null)

@@ -51,7 +51,38 @@ public class GridManager : MonoBehaviour
 
     private void Start()
     {
-        GenerateAndLoadNewLevel(currentDifficulty);
+        LevelData savedLevel = SaveManager.LoadLevel();
+        if (savedLevel != null)
+        {
+            Debug.Log("Loading saved level...");
+            LoadExistingLevel(savedLevel);
+        }
+        else
+        {
+            Debug.Log("Generating new level...");
+            GenerateAndLoadNewLevel(currentDifficulty);
+        }
+    }
+
+    public void LoadExistingLevel(LevelData levelData)
+    {
+        currentLevelData = levelData;
+        currentDifficulty = levelData.difficulty;
+        
+        width = currentLevelData.width;
+        height = currentLevelData.height;
+        startPosition = currentLevelData.startPosition;
+        holePosition = currentLevelData.holePosition;
+        levelPar = currentLevelData.levelPar;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.InitializeLevel(levelPar, currentLevelData.currentStrokes);
+        }
+
+        GenerateGrid();
+        SpawnBall();
+        CenterAndFitCamera();
     }
 
     public void GenerateAndLoadNewLevel(Difficulty difficulty)
@@ -62,23 +93,32 @@ public class GridManager : MonoBehaviour
             return;
         }
 
-        currentDifficulty = difficulty;
-        currentLevelData = LevelGenerator.Instance.GenerateLevel(difficulty);
+        LevelData newLevelData = LevelGenerator.Instance.GenerateLevel(difficulty);
         
-        width = currentLevelData.width;
-        height = currentLevelData.height;
-        startPosition = currentLevelData.startPosition;
-        holePosition = currentLevelData.holePosition;
-        levelPar = currentLevelData.levelPar;
+        // Save it so that reloading the scene restarts this EXACT level pattern
+        SaveManager.SaveLevel(newLevelData);
 
-        if (GameManager.Instance != null)
+        LoadExistingLevel(newLevelData);
+    }
+
+    public void ResetLevelState()
+    {
+        if (currentLevelData != null)
         {
-            GameManager.Instance.InitializeLevel(levelPar);
+            currentLevelData.currentStrokes = 0;
+            currentLevelData.currentGridPosition = currentLevelData.startPosition;
+            SaveManager.SaveLevel(currentLevelData);
         }
+    }
 
-        GenerateGrid();
-        SpawnBall();
-        CenterAndFitCamera();
+    public void SaveGameState(Vector2Int newBallPos, int strokes)
+    {
+        if (currentLevelData != null)
+        {
+            currentLevelData.currentGridPosition = newBallPos;
+            currentLevelData.currentStrokes = strokes;
+            SaveManager.SaveLevel(currentLevelData);
+        }
     }
 
     private void CenterAndFitCamera()
@@ -122,10 +162,11 @@ public class GridManager : MonoBehaviour
 
         if (ballPrefab != null)
         {
-            Tile startTile = GetTileAtPosition(startPosition);
-            if (startTile != null)
+            Tile currentTile = GetTileAtPosition(currentLevelData.currentGridPosition);
+            if (currentTile != null)
             {
-                currentBall = Instantiate(ballPrefab, startTile.transform.position, Quaternion.identity);
+                currentBall = Instantiate(ballPrefab, currentTile.transform.position, Quaternion.identity);
+                currentBall.currentGridPosition = currentLevelData.currentGridPosition;
             }
         }
         else

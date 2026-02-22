@@ -30,10 +30,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void InitializeLevel(int maxStrokes)
+    public void InitializeLevel(int maxStrokes, int currentStrokes = 0)
     {
         MaxStrokes = maxStrokes;
-        CurrentStrokes = 0;
+        CurrentStrokes = currentStrokes;
         HasWon = false;
         HasLost = false;
         
@@ -88,7 +88,20 @@ public class GameManager : MonoBehaviour
 
     public void RestartLevel()
     {
+        if (GridManager.Instance != null)
+        {
+            GridManager.Instance.ResetLevelState();
+        }
+        
         // Simple scene reload for MVP puzzle reset
+        // GridManager.Start() will see the SaveManager has data (with reset progress), so it automatically loads the EXACT same layout!
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void LoadNextLevel()
+    {
+        // Clear the save so GridManager creates a fresh new board next time it runs Starts()
+        SaveManager.ClearSave();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

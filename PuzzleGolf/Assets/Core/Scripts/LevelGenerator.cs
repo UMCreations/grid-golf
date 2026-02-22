@@ -8,13 +8,49 @@ public enum Difficulty
     Hard
 }
 
+[System.Serializable]
 public class LevelData
 {
+    public Difficulty difficulty;
     public int width;
     public int height;
     public Vector2Int startPosition;
     public Vector2Int holePosition;
     public int levelPar;
+    public int currentStrokes;
+    public Vector2Int currentGridPosition;
+
+    // For JSON serialization
+    public int[] tilePowersFlat; 
+
+    public void Flatten()
+    {
+        tilePowersFlat = new int[width * height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                tilePowersFlat[y * width + x] = tilePowers[x, y];
+            }
+        }
+    }
+
+    public void Unflatten()
+    {
+        tilePowers = new int[width, height];
+        if (tilePowersFlat != null && tilePowersFlat.Length == width * height)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    tilePowers[x, y] = tilePowersFlat[y * width + x];
+                }
+            }
+        }
+    }
+
+    [System.NonSerialized]
     public int[,] tilePowers; // 0 means empty, other numbers mean specific movement distance
 }
 
@@ -62,6 +98,7 @@ public class LevelGenerator : MonoBehaviour
 
         LevelData levelData = new LevelData
         {
+            difficulty = difficulty,
             width = width,
             height = height,
             tilePowers = new int[width, height]
@@ -133,6 +170,8 @@ public class LevelGenerator : MonoBehaviour
 
         // 3. Mark the final landed position as Start
         level.startPosition = currentPos;
+        level.currentGridPosition = currentPos;
+        level.currentStrokes = 0;
         
         // Par is the length of the ideal path + 1 for breathing room (or strict par = length)
         level.levelPar = Mathf.Max(actualPathLength, 1) + 1; 
