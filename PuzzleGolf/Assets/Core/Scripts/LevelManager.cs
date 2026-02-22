@@ -10,6 +10,11 @@ public class PlayerProfile
     public int unlockedMedium = 1;
     public int unlockedHard = 1;
 
+    // Stars earned for each level (0-indexed array, so index 0 = Level 1)
+    public int[] easyStars = new int[100];
+    public int[] mediumStars = new int[100];
+    public int[] hardStars = new int[100];
+
     // What the player was last playing, to allow a generic "Play" button resume
     public Difficulty lastPlayedDifficulty = Difficulty.Easy;
     public int lastPlayedLevelIndex = 1;
@@ -107,6 +112,31 @@ public class LevelManager : MonoBehaviour
             case Difficulty.Medium: return CurrentProfile.unlockedMedium;
             case Difficulty.Hard: return CurrentProfile.unlockedHard;
             default: return 1;
+        }
+    }
+
+    public int GetStars(Difficulty diff, int levelIndex)
+    {
+        if (CurrentProfile == null || levelIndex < 1 || levelIndex > MAX_LEVELS) return 0;
+        int arrIndex = levelIndex - 1; // 1-indexed to 0-indexed array
+        switch (diff)
+        {
+            case Difficulty.Easy: return CurrentProfile.easyStars[arrIndex];
+            case Difficulty.Medium: return CurrentProfile.mediumStars[arrIndex];
+            case Difficulty.Hard: return CurrentProfile.hardStars[arrIndex];
+            default: return 0;
+        }
+    }
+
+    public void SetStars(Difficulty diff, int levelIndex, int stars)
+    {
+        if (CurrentProfile == null || levelIndex < 1 || levelIndex > MAX_LEVELS) return;
+        int arrIndex = levelIndex - 1;
+        switch (diff)
+        {
+            case Difficulty.Easy: CurrentProfile.easyStars[arrIndex] = Mathf.Max(CurrentProfile.easyStars[arrIndex], stars); break;
+            case Difficulty.Medium: CurrentProfile.mediumStars[arrIndex] = Mathf.Max(CurrentProfile.mediumStars[arrIndex], stars); break;
+            case Difficulty.Hard: CurrentProfile.hardStars[arrIndex] = Mathf.Max(CurrentProfile.hardStars[arrIndex], stars); break;
         }
     }
 

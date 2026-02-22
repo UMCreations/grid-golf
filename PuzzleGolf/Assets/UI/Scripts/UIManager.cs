@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     public GameWinController gameWinController;
     public GameOverController gameOverController;
     public SettingsController settingsController;
+    public LevelSelectionController levelSelectionController;
 
     private void Awake()
     {
@@ -53,6 +54,7 @@ public class UIManager : MonoBehaviour
         if (gameWinController != null) gameWinController.gameObject.SetActive(false);
         if (gameOverController != null) gameOverController.gameObject.SetActive(false);
         if (settingsController != null) settingsController.gameObject.SetActive(false);
+        if (levelSelectionController != null) levelSelectionController.gameObject.SetActive(false);
     }
 
     public void ShowMainMenu()
@@ -92,6 +94,15 @@ public class UIManager : MonoBehaviour
         if (settingsController != null)
         {
             settingsController.gameObject.SetActive(true);
+        }
+    }
+
+    public void ShowLevelSelection()
+    {
+        HideAllPanels();
+        if (levelSelectionController != null)
+        {
+            levelSelectionController.gameObject.SetActive(true);
         }
     }
 }

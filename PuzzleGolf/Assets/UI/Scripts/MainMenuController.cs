@@ -5,6 +5,7 @@ public class MainMenuController : MonoBehaviour
 {
     public Button playButton;
     public Button settingsButton;
+    public Button levelSelectionButton;
 
     private void Start()
     {
@@ -16,6 +17,11 @@ public class MainMenuController : MonoBehaviour
         if (settingsButton != null)
         {
             settingsButton.onClick.AddListener(OnSettingsClicked);
+        }
+
+        if (levelSelectionButton != null)
+        {
+            levelSelectionButton.onClick.AddListener(OnLevelSelectionClicked);
         }
     }
 
@@ -30,14 +36,23 @@ public class MainMenuController : MonoBehaviour
         {
             settingsButton.onClick.RemoveListener(OnSettingsClicked);
         }
+
+        if (levelSelectionButton != null)
+        {
+            levelSelectionButton.onClick.RemoveListener(OnLevelSelectionClicked);
+        }
     }
 
     private void OnPlayClicked()
     {
-        // Tell the central UI Manager to transition states
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowGameplayHUD();
+        }
+        
+        if (GridManager.Instance != null)
+        {
+            GridManager.Instance.InitializeGame();
         }
     }
 
@@ -46,6 +61,14 @@ public class MainMenuController : MonoBehaviour
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowSettings();
+        }
+    }
+
+    private void OnLevelSelectionClicked()
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowLevelSelection();
         }
     }
 }

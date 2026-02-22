@@ -96,11 +96,8 @@ public class GameManager : MonoBehaviour
         if (GridManager.Instance != null)
         {
             GridManager.Instance.ResetLevelState();
+            GridManager.Instance.InitializeGame(); // Instead of Scene reload
         }
-        
-        // Simple scene reload for MVP puzzle reset
-        // GridManager.Start() will see the SaveManager has data (with reset progress), so it automatically loads the EXACT same layout!
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void LoadNextLevel()
@@ -113,13 +110,16 @@ public class GameManager : MonoBehaviour
             // Clear mid-level save so GridManager creates the NEW level
             SaveManager.ClearSave();
             
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (GridManager.Instance != null) GridManager.Instance.InitializeGame();
+            if (UIManager.Instance != null) UIManager.Instance.ShowGameplayHUD();
         }
         else
         {
-            Debug.Log("You beat the final level/Difficulty! Returning to menu logic here soon.");
+            Debug.Log("You beat the final level/Difficulty! Returning to menu.");
             SaveManager.ClearSave();
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
+            if (GridManager.Instance != null) GridManager.Instance.ClearGrid();
+            if (UIManager.Instance != null) UIManager.Instance.ShowMainMenu();
         }
     }
 

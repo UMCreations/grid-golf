@@ -51,6 +51,11 @@ public class GridManager : MonoBehaviour
 
     private void Start()
     {
+        // Do not automatically generate level on scene load. Wait for InitializeGame to be called.
+    }
+
+    public void InitializeGame()
+    {
         Difficulty targetDiff = currentDifficulty;
         int targetLevel = 1;
 
@@ -182,6 +187,21 @@ public class GridManager : MonoBehaviour
         else
         {
             Debug.LogWarning("Ball Prefab is not assigned in the GridManager!");
+        }
+    }
+
+    public void ClearGrid()
+    {
+        if (gridParent != null)
+        {
+            foreach (Transform child in gridParent)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+        if (currentBall != null)
+        {
+            Destroy(currentBall.gameObject);
         }
     }
 
