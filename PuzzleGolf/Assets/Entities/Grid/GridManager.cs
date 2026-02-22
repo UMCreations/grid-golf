@@ -6,8 +6,6 @@ public class GridManager : MonoBehaviour
     public static GridManager Instance { get; private set; }
 
     [Header("Grid Generation Settings")]
-    public int width = 5;
-    public int height = 5;
     public float tileSize = 1.0f;
     public float spacing = 0.1f;
     public Tile tilePrefab;
@@ -21,10 +19,16 @@ public class GridManager : MonoBehaviour
     public Sprite startSprite;
     public Sprite holeSprite;
 
-    [Header("Level Data (Temporary MVP)")]
-    public Vector2Int startPosition = new Vector2Int(0, 0);
-    public Vector2Int holePosition = new Vector2Int(4, 4);
-    public int levelPar = 5; // Max allowed strokes
+    [Header("Level Integration")]
+    public Difficulty currentDifficulty = Difficulty.Easy;
+    private LevelData currentLevelData;
+
+    // Data populated by LevelGenerator
+    public int width { get; private set; }
+    public int height { get; private set; }
+    public Vector2Int startPosition { get; private set; }
+    public Vector2Int holePosition { get; private set; }
+    public int levelPar { get; private set; }
 
     [Header("Player")]
     public BallController ballPrefab;
@@ -47,6 +51,26 @@ public class GridManager : MonoBehaviour
 
     private void Start()
     {
+        GenerateAndLoadNewLevel(currentDifficulty);
+    }
+
+    public void GenerateAndLoadNewLevel(Difficulty difficulty)
+    {
+        if (LevelGenerator.Instance == null)
+        {
+            Debug.LogError("No LevelGenerator found in scene! Cannot generate level.");
+            return;
+        }
+
+        currentDifficulty = difficulty;
+        currentLevelData = LevelGenerator.Instance.GenerateLevel(difficulty);
+        
+        width = currentLevelData.width;
+        height = currentLevelData.height;
+        startPosition = currentLevelData.startPosition;
+        holePosition = currentLevelData.holePosition;
+        levelPar = currentLevelData.levelPar;
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.InitializeLevel(levelPar);
@@ -91,6 +115,11 @@ public class GridManager : MonoBehaviour
 
     public void SpawnBall()
     {
+        if (currentBall != null)
+        {
+            Destroy(currentBall.gameObject);
+        }
+
         if (ballPrefab != null)
         {
             Tile startTile = GetTileAtPosition(startPosition);
@@ -139,13 +168,13 @@ public class GridManager : MonoBehaviour
                 
                 // Determine type and power
                 TileType currentType = TileType.Standard;
-                int power = Random.Range(1, 4);
+                int power = currentLevelData.tilePowers[x, y];
                 Sprite tileSprite = standardSprite;
 
                 if (x == startPosition.x && y == startPosition.y)
                 {
                     currentType = TileType.Start;
-                    power = 2; // For now, give the start tile a default power so the ball can move off it
+                    // Power is already set accurately by the Reverse Pathfinding!
                     tileSprite = startSprite;
                 }
                 else if (x == holePosition.x && y == holePosition.y)
