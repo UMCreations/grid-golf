@@ -6,18 +6,31 @@ public class GameWinController : MonoBehaviour
 {
     public TMP_Text victoryText;
     public Button nextLevelButton;
+    public Button replayButton;
     public Button menuButton;
 
     private void Start()
     {
         if (nextLevelButton != null)
             nextLevelButton.onClick.AddListener(OnNextLevelClicked);
+            
+        if (replayButton != null)
+            replayButton.onClick.AddListener(OnReplayClicked);
+            
+        if (menuButton != null)
+            menuButton.onClick.AddListener(OnMenuClicked);
     }
 
     private void OnDestroy()
     {
         if (nextLevelButton != null)
             nextLevelButton.onClick.RemoveListener(OnNextLevelClicked);
+            
+        if (replayButton != null)
+            replayButton.onClick.RemoveListener(OnReplayClicked);
+            
+        if (menuButton != null)
+            menuButton.onClick.RemoveListener(OnMenuClicked);
     }
 
     public void UpdateWinText()
@@ -35,5 +48,19 @@ public class GameWinController : MonoBehaviour
         {
             GameManager.Instance.RestartLevel();
         }
+    }
+    
+    private void OnReplayClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RestartLevel();
+        }
+    }
+
+    private void OnMenuClicked()
+    {
+        // Reloading the active scene will default to showing the Main Menu and reset the level state.
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 }

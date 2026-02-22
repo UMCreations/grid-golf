@@ -12,15 +12,19 @@ public class GameOverController : MonoBehaviour
     {
         if (retryButton != null)
             retryButton.onClick.AddListener(OnRetryClicked);
+            
+        if (menuButton != null)
+            menuButton.onClick.AddListener(OnMenuClicked);
     }
 
     private void OnDestroy()
     {
         if (retryButton != null)
             retryButton.onClick.RemoveListener(OnRetryClicked);
+            
+        if (menuButton != null)
+            menuButton.onClick.RemoveListener(OnMenuClicked);
     }
-
-
 
     private void OnRetryClicked()
     {
@@ -28,5 +32,11 @@ public class GameOverController : MonoBehaviour
         {
             GameManager.Instance.RestartLevel();
         }
+    }
+    
+    private void OnMenuClicked()
+    {
+        // Reloading the active scene will default to showing the Main Menu and reset the level state.
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 }
