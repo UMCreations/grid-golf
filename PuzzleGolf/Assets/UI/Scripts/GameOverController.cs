@@ -36,6 +36,11 @@ public class GameOverController : MonoBehaviour
     
     private void OnMenuClicked()
     {
+        if (GridManager.Instance != null)
+        {
+            GridManager.Instance.ResetLevelState();
+        }
+
         // Reloading the active scene will default to showing the Main Menu and reset the level state.
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }

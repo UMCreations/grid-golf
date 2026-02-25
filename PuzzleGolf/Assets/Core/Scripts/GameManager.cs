@@ -98,6 +98,11 @@ public class GameManager : MonoBehaviour
             GridManager.Instance.ResetLevelState();
             GridManager.Instance.InitializeGame(); // Instead of Scene reload
         }
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowGameplayHUD();
+        }
     }
 
     public void LoadNextLevel()
