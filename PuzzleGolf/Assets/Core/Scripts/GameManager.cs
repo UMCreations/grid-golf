@@ -51,17 +51,24 @@ public class GameManager : MonoBehaviour
         OnStrokeMadeEvent?.Invoke(CurrentStrokes, MaxStrokes);
     }
 
+    public void TriggerGameOver(string reason)
+    {
+        if (HasWon || HasLost) return;
+
+        HasLost = true;
+        Debug.Log($"💀 {reason}! Game Over! 💀");
+        Debug.Log("Press 'R' to restart the level.");
+        
+        OnGameLostEvent?.Invoke();
+    }
+
     public void CheckStrokeLimit()
     {
         if (HasWon || HasLost) return;
 
         if (CurrentStrokes >= MaxStrokes)
         {
-            HasLost = true;
-            Debug.Log("💀 Out of strokes! Game Over! 💀");
-            Debug.Log("Press 'R' to restart the level.");
-            
-            OnGameLostEvent?.Invoke();
+            TriggerGameOver("Out of strokes");
         }
     }
 

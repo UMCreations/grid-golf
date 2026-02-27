@@ -8,6 +8,7 @@ public class TopHUDController : MonoBehaviour
     public TMP_Text levelText;
     public TMP_Text strokesText;
     public Button menuButton;
+    public Button restartButton;
 
     private void OnEnable()
     {
@@ -15,6 +16,10 @@ public class TopHUDController : MonoBehaviour
         if (menuButton != null)
         {
             menuButton.onClick.AddListener(OnMenuClicked);
+        }
+        if (restartButton != null)
+        {
+            restartButton.onClick.AddListener(OnRestartClicked);
         }
 
         // Subscribe to GameManager events
@@ -45,6 +50,10 @@ public class TopHUDController : MonoBehaviour
         {
             menuButton.onClick.RemoveListener(OnMenuClicked);
         }
+        if (restartButton != null)
+        {
+            restartButton.onClick.RemoveListener(OnRestartClicked);
+        }
     }
 
     private void UpdateStrokesUI(int currentStrokes, int maxStrokes)
@@ -71,5 +80,13 @@ public class TopHUDController : MonoBehaviour
     {
         // Reloading the active scene will default to showing the Main Menu and reset the level state.
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private void OnRestartClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RestartLevel();
+        }
     }
 }

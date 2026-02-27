@@ -319,4 +319,26 @@ public class GridManager : MonoBehaviour
             }
         }
     }
+
+    public bool HasValidMoves(Vector2Int sourcePos, int power)
+    {
+        if (power <= 0) return false;
+
+        Vector2Int[] directions = {
+            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+            new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1)
+        };
+
+        foreach (var dir in directions)
+        {
+            Vector2Int targetPos = sourcePos + (dir * power);
+            Tile targetTile = GetTileAtPosition(targetPos);
+            if (targetTile != null)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }

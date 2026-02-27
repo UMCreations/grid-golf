@@ -99,3 +99,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentGridPosition: {x: 0, y: 0}
   isMoving: 0
+  moveDuration: 0.4
+  jumpHeightScale: 0.3
+  jumpArcHeight: 0.5
+  jumpCurveOffset: 0.5
+  rotationsPerMove: 2
+  swipeThreshold: 50

@@ -351,6 +351,14 @@ public class BallController : MonoBehaviour
             // If we didn't land in the hole, check if we've run out of max strokes
             if (GameManager.Instance != null)
                 GameManager.Instance.CheckStrokeLimit();
+                
+            if (GridManager.Instance != null && GameManager.Instance != null && !GameManager.Instance.HasWon && !GameManager.Instance.HasLost)
+            {
+                if (!GridManager.Instance.HasValidMoves(currentGridPosition, targetTile.powerCount))
+                {
+                    GameManager.Instance.TriggerGameOver("Stuck on a tile with no valid exits");
+                }
+            }
         }
     }
 }
