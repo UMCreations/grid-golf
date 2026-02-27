@@ -20,6 +20,7 @@ public class Tile : MonoBehaviour
     [Header("Visuals (Optional)")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private TMP_Text powerText;
+    [SerializeField] private GameObject highlightBorder;
 
     public void Init(Vector2Int gridPos, int power, TileType tileType, Sprite tileSprite = null)
     {
@@ -56,6 +57,19 @@ public class Tile : MonoBehaviour
             {
                 powerText.text = "";
             }
+        }
+    }
+
+    public void SetHighlight(bool isHighlighted)
+    {
+        if (highlightBorder != null)
+        {
+            highlightBorder.SetActive(isHighlighted);
+        }
+        else if (spriteRenderer != null)
+        {
+            // Fallback if highlightBorder is not assigned yet
+            spriteRenderer.color = isHighlighted ? new Color(0.6f, 1f, 0.6f, 1f) : Color.white;
         }
     }
 }

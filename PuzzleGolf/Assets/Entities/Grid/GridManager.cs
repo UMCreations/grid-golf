@@ -285,4 +285,38 @@ public class GridManager : MonoBehaviour
         // Out of bounds
         return null;
     }
+
+    public void HighlightValidDestinations(Vector2Int sourcePos, int power)
+    {
+        ClearAllHighlights();
+
+        if (power <= 0) return;
+
+        Vector2Int[] directions = {
+            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+            new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1)
+        };
+
+        foreach (var dir in directions)
+        {
+            Vector2Int targetPos = sourcePos + (dir * power);
+            Tile targetTile = GetTileAtPosition(targetPos);
+            if (targetTile != null)
+            {
+                targetTile.SetHighlight(true);
+            }
+        }
+    }
+
+    public void ClearAllHighlights()
+    {
+        if (gridArray == null) return;
+        foreach (Tile tile in gridArray)
+        {
+            if (tile != null)
+            {
+                tile.SetHighlight(false);
+            }
+        }
+    }
 }

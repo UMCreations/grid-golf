@@ -31,6 +31,23 @@ public class BallController : MonoBehaviour
         }
 
         SetupLineRenderer();
+        UpdateHighlights();
+    }
+
+    private void UpdateHighlights()
+    {
+        if (GridManager.Instance != null && !isMoving)
+        {
+            Tile currentTile = GridManager.Instance.GetTileAtPosition(currentGridPosition);
+            if (currentTile != null && currentTile.type != TileType.Hole)
+            {
+                GridManager.Instance.HighlightValidDestinations(currentGridPosition, currentTile.powerCount);
+            }
+            else
+            {
+                GridManager.Instance.ClearAllHighlights();
+            }
+        }
     }
 
     private void SetupLineRenderer()
@@ -259,6 +276,12 @@ public class BallController : MonoBehaviour
             {
                 GameManager.Instance.OnMoveMade();
             }
+            
+            if (GridManager.Instance != null)
+            {
+                GridManager.Instance.ClearAllHighlights();
+            }
+            
             StartCoroutine(MoveAndAnimateBall(targetTile.transform.position, targetTile, targetPosition, direction));
             Debug.Log($"Moving to {targetPosition}");
         }
@@ -310,6 +333,7 @@ public class BallController : MonoBehaviour
         currentGridPosition = targetGridPos;
         
         isMoving = false;
+        UpdateHighlights();
 
         // Save progress after move
         if (GridManager.Instance != null && GameManager.Instance != null)
