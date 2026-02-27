@@ -41,17 +41,9 @@ public class Tile : MonoBehaviour
         // We will update sprite and text based on type and powerCount here
         if (powerText != null)
         {
-            if (type == TileType.Standard)
+            if (type == TileType.Standard || type == TileType.Start)
             {
                 powerText.text = powerCount > 0 ? powerCount.ToString() : "";
-            }
-            else if (type == TileType.Start)
-            {
-                powerText.text = "S";
-            }
-            else if (type == TileType.Hole)
-            {
-                powerText.text = "H";
             }
             else
             {

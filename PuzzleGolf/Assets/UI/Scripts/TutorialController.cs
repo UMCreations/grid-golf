@@ -2,19 +2,26 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+[System.Serializable]
+public class TutorialStep
+{
+    public string title;
+    [TextArea(2, 5)]
+    public string message;
+    public Sprite characterSprite; // Optional character expression
+}
+
 public class TutorialController : MonoBehaviour
 {
+    [Header("UI References")]
+    public TMP_Text titleText;
     public TMP_Text tutorialText;
+    public Image characterImage;
     public Button nextButton;
 
+    [Header("Tutorial Data")]
+    public TutorialStep[] tutorialSteps;
     private int currentStep = 0;
-    private string[] tutorialSteps = new string[]
-    {
-        "Welcome to Puzzle Golf!\nLet's learn the basics on this small 2x2 grid.",
-        "Your goal is to reach the Hole (the black tile with the flag).",
-        "The number on your current tile (the '1') shows exactly how many spaces you will move.",
-        "Swipe towards the Hole to make your first move. Good luck!"
-    };
 
     private void Start()
     {
@@ -53,9 +60,28 @@ public class TutorialController : MonoBehaviour
 
     private void UpdateTutorialText()
     {
-        if (tutorialText != null)
+        if (tutorialSteps != null && currentStep < tutorialSteps.Length)
         {
-            tutorialText.text = tutorialSteps[currentStep];
+            TutorialStep step = tutorialSteps[currentStep];
+
+            if (titleText != null)
+                titleText.text = step.title;
+
+            if (tutorialText != null)
+                tutorialText.text = step.message;
+
+            if (characterImage != null)
+            {
+                if (step.characterSprite != null)
+                {
+                    characterImage.sprite = step.characterSprite;
+                    characterImage.enabled = true;
+                }
+                else
+                {
+                    characterImage.enabled = false;
+                }
+            }
         }
     }
 
