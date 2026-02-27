@@ -101,7 +101,23 @@ public class LevelSelectionController : MonoBehaviour
             LevelManager.Instance.SetLevelToPlay(diff, levelIndex);
             
             // Go to gameplay and generate level
-            UIManager.Instance.ShowGameplayHUD();
+            bool showTutorial = false;
+            if (LevelManager.Instance.CurrentProfile != null &&
+                diff == Difficulty.Easy &&
+                levelIndex == 1 &&
+                !LevelManager.Instance.CurrentProfile.hasCompletedTutorial)
+            {
+                showTutorial = true;
+            }
+
+            if (showTutorial)
+            {
+                UIManager.Instance.ShowTutorial();
+            }
+            else
+            {
+                UIManager.Instance.ShowGameplayHUD();
+            }
             
             if (GridManager.Instance != null)
             {

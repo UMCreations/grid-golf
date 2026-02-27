@@ -63,6 +63,18 @@ public class GridManager : MonoBehaviour
         {
             targetDiff = LevelManager.Instance.SelectedDifficulty;
             targetLevel = LevelManager.Instance.SelectedLevelIndex;
+
+            // FTUE Logic: Force tutorial if not completed OR if manually requested
+            if (!LevelManager.Instance.CurrentProfile.hasCompletedTutorial || LevelManager.Instance.IsTutorialMode)
+            {
+                Debug.Log($"FTUE Logic: Tutorial triggered (Mandatory: {!LevelManager.Instance.CurrentProfile.hasCompletedTutorial}, Manual: {LevelManager.Instance.IsTutorialMode}). Generating 2x2 board.");
+                GenerateAndLoadNewLevel(Difficulty.Easy, 0, true);
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.ShowTutorial();
+                }
+                return;
+            }
         }
 
         LevelData savedLevel = SaveManager.LoadLevel();
@@ -100,7 +112,7 @@ public class GridManager : MonoBehaviour
         CenterAndFitCamera();
     }
 
-    public void GenerateAndLoadNewLevel(Difficulty difficulty, int levelIndex)
+    public void GenerateAndLoadNewLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
         if (LevelGenerator.Instance == null)
         {
@@ -108,7 +120,7 @@ public class GridManager : MonoBehaviour
             return;
         }
 
-        LevelData newLevelData = LevelGenerator.Instance.GenerateLevel(difficulty, levelIndex);
+        LevelData newLevelData = LevelGenerator.Instance.GenerateLevel(difficulty, levelIndex, isTutorial);
         
         // Save it so that reloading the scene restarts this EXACT level pattern
         SaveManager.SaveLevel(newLevelData);

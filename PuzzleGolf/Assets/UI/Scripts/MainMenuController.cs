@@ -6,6 +6,7 @@ public class MainMenuController : MonoBehaviour
     public Button playButton;
     public Button settingsButton;
     public Button levelSelectionButton;
+    public Button tutorialButton;
 
     private void Start()
     {
@@ -22,6 +23,11 @@ public class MainMenuController : MonoBehaviour
         if (levelSelectionButton != null)
         {
             levelSelectionButton.onClick.AddListener(OnLevelSelectionClicked);
+        }
+
+        if (tutorialButton != null)
+        {
+            tutorialButton.onClick.AddListener(OnTutorialClicked);
         }
     }
 
@@ -41,10 +47,20 @@ public class MainMenuController : MonoBehaviour
         {
             levelSelectionButton.onClick.RemoveListener(OnLevelSelectionClicked);
         }
+
+        if (tutorialButton != null)
+        {
+            tutorialButton.onClick.RemoveListener(OnTutorialClicked);
+        }
     }
 
     private void OnPlayClicked()
     {
+        if (LevelManager.Instance != null)
+        {
+            LevelManager.Instance.IsTutorialMode = false;
+        }
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowGameplayHUD();
@@ -53,6 +69,24 @@ public class MainMenuController : MonoBehaviour
         if (GridManager.Instance != null)
         {
             GridManager.Instance.InitializeGame();
+        }
+    }
+
+    private void OnTutorialClicked()
+    {
+        if (LevelManager.Instance != null)
+        {
+            LevelManager.Instance.IsTutorialMode = true;
+        }
+
+        if (GridManager.Instance != null)
+        {
+            GridManager.Instance.InitializeGame();
+        }
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowTutorial();
         }
     }
 

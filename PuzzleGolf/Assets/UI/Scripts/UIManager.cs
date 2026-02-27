@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour
     public GameOverController gameOverController;
     public SettingsController settingsController;
     public LevelSelectionController levelSelectionController;
+    public TutorialController tutorialController;
 
     private void Awake()
     {
@@ -55,6 +56,16 @@ public class UIManager : MonoBehaviour
         if (gameOverController != null) gameOverController.gameObject.SetActive(false);
         if (settingsController != null) settingsController.gameObject.SetActive(false);
         if (levelSelectionController != null) levelSelectionController.gameObject.SetActive(false);
+        if (tutorialController != null) tutorialController.gameObject.SetActive(false);
+    }
+
+    public void ShowTutorial()
+    {
+        HideAllPanels();
+        if (tutorialController != null)
+        {
+            tutorialController.gameObject.SetActive(true);
+        }
     }
 
     public void ShowMainMenu()

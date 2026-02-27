@@ -23,6 +23,9 @@ public class PlayerProfile
     public bool soundEffectsEnabled = true;
     public bool musicEnabled = true;
     public bool vibrationEnabled = true;
+
+    // FTUE Training
+    public bool hasCompletedTutorial = false;
 }
 
 public class LevelManager : MonoBehaviour
@@ -36,6 +39,7 @@ public class LevelManager : MonoBehaviour
     // These state variables control what happens when a game scene is loaded
     public Difficulty SelectedDifficulty { get; private set; } = Difficulty.Easy;
     public int SelectedLevelIndex { get; private set; } = 1;
+    public bool IsTutorialMode { get; set; } = false;
 
     private void Awake()
     {

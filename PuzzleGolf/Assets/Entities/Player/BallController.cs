@@ -67,6 +67,7 @@ public class BallController : MonoBehaviour
         // Don't accept input if ball is already animating a move, or if the game is already won/lost
         if (isMoving) return;
         if (GameManager.Instance != null && (GameManager.Instance.HasWon || GameManager.Instance.HasLost)) return;
+        if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy) return;
 
         HandleKeyboardInput();
         HandleTouchInput();
