@@ -48,6 +48,11 @@ public class GameManager : MonoBehaviour
         CurrentStrokes++;
         Debug.Log($"Stroke used! Current: {CurrentStrokes} / {MaxStrokes}");
         
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayStrokeSound(CurrentStrokes);
+        }
+        
         OnStrokeMadeEvent?.Invoke(CurrentStrokes, MaxStrokes);
     }
 
@@ -57,6 +62,12 @@ public class GameManager : MonoBehaviour
 
         HasLost = true;
         Debug.Log($"💀 {reason}! Game Over! 💀");
+        
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayLoseSound();
+        }
+
         Debug.Log("Press 'R' to restart the level.");
         
         // Clear mid-level save so we don't resume into a game-over state
@@ -88,6 +99,12 @@ public class GameManager : MonoBehaviour
         
         HasWon = true;
         Debug.Log($"🎉 You Won! Hole Reached in {CurrentStrokes} strokes! 🎉");
+        
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayWinSound();
+        }
+
         Debug.Log("Press 'R' to restart the level.");
 
         // Clear mid-level save as the level is successfully completed
@@ -123,6 +140,11 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("❌ Invalid Move! (e.g., attempt to move off grid)");
         
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayInvalidMove();
+        }
+
         // For MVP, we simply log it and prevent the move.
         // In a stricter puzzle setting, this could trigger a Game Over.
     }
