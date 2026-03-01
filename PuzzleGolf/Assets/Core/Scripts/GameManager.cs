@@ -59,6 +59,9 @@ public class GameManager : MonoBehaviour
         Debug.Log($"💀 {reason}! Game Over! 💀");
         Debug.Log("Press 'R' to restart the level.");
         
+        // Clear mid-level save so we don't resume into a game-over state
+        SaveManager.ClearSave();
+        
         OnGameLostEvent?.Invoke();
     }
 
@@ -79,6 +82,9 @@ public class GameManager : MonoBehaviour
         HasWon = true;
         Debug.Log($"🎉 You Won! Hole Reached in {CurrentStrokes} strokes! 🎉");
         Debug.Log("Press 'R' to restart the level.");
+
+        // Clear mid-level save as the level is successfully completed
+        SaveManager.ClearSave();
 
         if (LevelManager.Instance != null)
         {

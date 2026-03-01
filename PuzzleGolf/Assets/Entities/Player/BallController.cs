@@ -24,12 +24,6 @@ public class BallController : MonoBehaviour
 
     private void Start()
     {
-        // Now handled by GridManager spawning the ball at the correct start position.
-        if (GridManager.Instance != null)
-        {
-            currentGridPosition = GridManager.Instance.startPosition;
-        }
-
         SetupLineRenderer();
         UpdateHighlights();
     }
