@@ -183,8 +183,8 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
 
     private void GenerateFalsePath(LevelData level, int maxPower, Vector2Int startPos, int pathLengthTarget)
     {
-        // Find a tile near the hole that isn't on the golden path
-        List<Vector2Int> nearHole = new List<Vector2Int>();
+        // 1. Identify "Trap Zones" near the hole (1 tile away)
+        List<Vector2Int> trapZones = new List<Vector2Int>();
         Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
         
         foreach (var dir in dirs)
@@ -192,22 +192,25 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
             Vector2Int pos = level.holePosition + dir;
             if (pos.x >= 0 && pos.x < level.width && pos.y >= 0 && pos.y < level.height)
             {
-                if (level.tilePowers[pos.x, pos.y] == 0) // Empty tile
+                // Must be an empty tile (not part of the Golden Path)
+                if (level.tilePowers[pos.x, pos.y] == 0) 
                 {
-                    nearHole.Add(pos);
+                    trapZones.Add(pos);
                 }
             }
         }
 
-        if (nearHole.Count == 0) return;
+        if (trapZones.Count == 0) return;
 
-        Vector2Int trapPos = nearHole[Random.Range(0, nearHole.Count)];
-        
-        // Let's create a path that leads away from the trap point back toward startPos area
-        Vector2Int currentPos = trapPos;
-        int falsePathStrokes = Random.Range(2, Mathf.Max(3, pathLengthTarget));
+        // 2. Select a trap tile and build a path BACKWARDS from it
+        // This makes it look like a valid path that just "nearly" makes it.
+        Vector2Int trapTile = trapZones[Random.Range(0, trapZones.Count)];
+        Vector2Int currentPos = trapTile;
 
-        for (int i = 0; i < falsePathStrokes; i++)
+        // The false path should be roughly as long as the real one to be a convincing distractor
+        int falsePathLength = Mathf.Clamp(pathLengthTarget + Random.Range(-1, 2), 2, 12);
+
+        for (int i = 0; i < falsePathLength; i++)
         {
             List<Vector2Int> validMoves = new List<Vector2Int>();
             
@@ -220,6 +223,7 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
                     if (possibleRetreat.x >= 0 && possibleRetreat.x < level.width &&
                         possibleRetreat.y >= 0 && possibleRetreat.y < level.height)
                     {
+                        // Don't overwrite the Golden Path or the Hole
                         if (level.tilePowers[possibleRetreat.x, possibleRetreat.y] == 0 && possibleRetreat != level.holePosition)
                         {
                             validMoves.Add(possibleRetreat);
@@ -230,7 +234,13 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
 
             if (validMoves.Count > 0)
             {
-                Vector2Int chosenRetreat = validMoves[Random.Range(0, validMoves.Count)];
+                // Prioritize retreating towards the Start Position to make it look like an alternative starting branch
+                validMoves.Sort((a, b) => Vector2Int.Distance(a, startPos).CompareTo(Vector2Int.Distance(b, startPos)));
+                
+                // Pick one of the best 2 moves to keep it slightly organic but generally moving toward start
+                int index = Random.Range(0, Mathf.Min(2, validMoves.Count));
+                Vector2Int chosenRetreat = validMoves[index];
+                
                 int requiredPower = Mathf.Abs(chosenRetreat.x - currentPos.x) + Mathf.Abs(chosenRetreat.y - currentPos.y);
                 
                 level.tilePowers[chosenRetreat.x, chosenRetreat.y] = requiredPower;
@@ -242,8 +252,12 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
             }
         }
 
-        // Set the final trap tile to a value that would send it off to a wall, or just random
-        level.tilePowers[trapPos.x, trapPos.y] = Random.Range(1, maxPower + 1);
+        // 3. Final Step: The Trap!
+        // The tile adjacent to the hole (trapTile) must have a power that makes it 
+        // ALMOST reach the hole but overshoot or undershoot if the player isn't careful.
+        // Or, we just give it a legitimate distance to the hole, but because it's a "False Path,"
+        // the player will run out of strokes (Par) before they can finish it correctly.
+        level.tilePowers[trapTile.x, trapTile.y] = 1; // Requires exactly 1 more stroke than the player likely has.
     }
 
     private void FillNoise(LevelData level, int maxPower, Difficulty difficulty)
