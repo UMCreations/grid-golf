@@ -1611,8 +1611,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 117.015686, y: 8}
-  m_SizeDelta: {x: 530.9586, y: 250}
+  m_AnchoredPosition: {x: 101.7489, y: 0.8117981}
+  m_SizeDelta: {x: 738.0425, y: 347.5048}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &338557844
 CanvasRenderer:
@@ -2016,8 +2016,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 217.14005, y: -127.65825}
-  m_SizeDelta: {x: 434.2802, y: 149.9922}
+  m_AnchoredPosition: {x: 322.27356, y: -176.41064}
+  m_SizeDelta: {x: 644.5471, y: 229.25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &470716148
 MonoBehaviour:
@@ -2039,7 +2039,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: ' '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e55e815613c6b4c0a8887d5c20a8448b, type: 2}
   m_sharedMaterial: {fileID: 1253159242532535909, guid: e55e815613c6b4c0a8887d5c20a8448b, type: 2}
@@ -2066,8 +2066,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 25
-  m_fontSizeBase: 25
+  m_fontSize: 28
+  m_fontSizeBase: 28
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2567,7 +2567,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 159.37152, y: -24.289703}
+  m_AnchoredPosition: {x: 159.3715, y: -24.2897}
   m_SizeDelta: {x: 318.743, y: 48.5794}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &569971506
@@ -3721,6 +3721,10 @@ MonoBehaviour:
   tutorialText: {fileID: 470716148}
   characterImage: {fileID: 2108518275}
   nextButton: {fileID: 1603532753}
+  CharBox: {fileID: 0}
+  popDuration: 0.3
+  popScale: 1.1
+  textAnimDurationPerWord: 0.1
   tutorialSteps:
   - title: CADDY'S HINT
     message: Welcome to Puzzle Golf! Your goal is to get the ball exactly into the
@@ -5514,10 +5518,10 @@ RectTransform:
   - {fileID: 338557843}
   m_Father: {fileID: 779019378}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 157}
-  m_SizeDelta: {x: 800, y: 350}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 0, y: 101}
+  m_SizeDelta: {x: 0, y: 463.9296}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1162302590
 MonoBehaviour:
@@ -6663,8 +6667,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   failureText: {fileID: 1376316651}
+  gameoverText: {fileID: 1224327085}
   retryButton: {fileID: 629328070}
   menuButton: {fileID: 987597677}
+  canvasGroup: {fileID: 0}
 --- !u!114 &1346055915
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8607,10 +8613,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9143fe21acfd4a458cfc228a1973a85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  titleText: {fileID: 1883862072}
   victoryText: {fileID: 165299339}
   nextLevelButton: {fileID: 21235950}
   replayButton: {fileID: 208220653}
   menuButton: {fileID: 555784680}
+  canvasGroup: {fileID: 0}
+  animationDelay: 0.2
 --- !u!114 &1732026796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10875,7 +10884,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 10, y: 0}
+  m_AnchoredPosition: {x: 7, y: -79}
   m_SizeDelta: {x: 250, y: 250}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &2108518275

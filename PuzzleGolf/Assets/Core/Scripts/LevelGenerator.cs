@@ -126,24 +126,29 @@ public class LevelGenerator : MonoBehaviour
         {
             difficulty = Difficulty.Easy,
             levelIndex = 0, // Special index for tutorial
-            width = 2,
-            height = 2,
-            tilePowers = new int[2, 2]
+            width = 3,
+            height = 3,
+            tilePowers = new int[3, 3]
         };
 
         // Layout:
-        // (0,1)[1]  (1,1)[H]
-        // (0,0)[S,1] (1,0)[1]
+        // (0,2)[1] (1,2)[1] (2,2)[H]
+        // (0,1)[1] (1,1)[1] (2,1)[1]
+        // (0,0)[S,1] (1,0)[1] (2,0)[1]
 
         tutorial.startPosition = new Vector2Int(0, 0);
         tutorial.currentGridPosition = new Vector2Int(0, 0);
-        tutorial.holePosition = new Vector2Int(1, 1);
-        tutorial.levelPar = 1; // Direct jump possible
+        tutorial.holePosition = new Vector2Int(2, 2);
+        tutorial.levelPar = 4; // 4 steps to hole
 
-        tutorial.tilePowers[0, 0] = 1; // Start
-        tutorial.tilePowers[1, 0] = 1;
-        tutorial.tilePowers[0, 1] = 1;
-        tutorial.tilePowers[1, 1] = 0; // Hole
+        for (int x = 0; x < 3; x++)
+        {
+            for (int y = 0; y < 3; y++)
+            {
+                tutorial.tilePowers[x, y] = 1;
+            }
+        }
+        tutorial.tilePowers[2, 2] = 0; // Hole
 
         return tutorial;
     }

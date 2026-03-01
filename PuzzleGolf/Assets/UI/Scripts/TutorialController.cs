@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
 
 [System.Serializable]
 public class TutorialStep
@@ -18,6 +19,13 @@ public class TutorialController : MonoBehaviour
     public TMP_Text tutorialText;
     public Image characterImage;
     public Button nextButton;
+    public GameObject CharBox;
+
+    [Header("Animations")]
+    public float popDuration = 0.3f;
+    public float popScale = 1.1f;
+    public float textAnimDurationPerWord = 0.1f;
+    private Tween textTween;
 
     [Header("Tutorial Data")]
     public TutorialStep[] tutorialSteps;
@@ -37,6 +45,9 @@ public class TutorialController : MonoBehaviour
         {
             nextButton.onClick.RemoveListener(OnNextClicked);
         }
+        
+        if (textTween != null)
+            textTween.Kill();
     }
 
     private void OnEnable()
@@ -68,7 +79,10 @@ public class TutorialController : MonoBehaviour
                 titleText.text = step.title;
 
             if (tutorialText != null)
-                tutorialText.text = step.message;
+            {
+                if (textTween != null) textTween.Kill();
+                textTween = UIAnimationHelper.DOTextWordByWord(tutorialText, step.message, textAnimDurationPerWord);
+            }
 
             if (characterImage != null)
             {
@@ -81,6 +95,12 @@ public class TutorialController : MonoBehaviour
                 {
                     characterImage.enabled = false;
                 }
+            }
+
+            // Animate CharBox when step changes
+            if (CharBox != null)
+            {
+                UIAnimationHelper.PopIn(CharBox, popDuration, 0.8f, 1f);
             }
         }
     }

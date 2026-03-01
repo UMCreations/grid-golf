@@ -67,7 +67,7 @@ public class GridManager : MonoBehaviour
             // FTUE Logic: Force tutorial if not completed OR if manually requested
             if (!LevelManager.Instance.CurrentProfile.hasCompletedTutorial || LevelManager.Instance.IsTutorialMode)
             {
-                Debug.Log($"FTUE Logic: Tutorial triggered (Mandatory: {!LevelManager.Instance.CurrentProfile.hasCompletedTutorial}, Manual: {LevelManager.Instance.IsTutorialMode}). Generating 2x2 board.");
+                Debug.Log($"FTUE Logic: Tutorial triggered (Mandatory: {!LevelManager.Instance.CurrentProfile.hasCompletedTutorial}, Manual: {LevelManager.Instance.IsTutorialMode}). Generating 3x3 board.");
                 GenerateAndLoadNewLevel(Difficulty.Easy, 0, true);
                 if (UIManager.Instance != null)
                 {
