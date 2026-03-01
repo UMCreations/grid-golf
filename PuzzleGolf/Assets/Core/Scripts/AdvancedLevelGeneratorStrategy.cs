@@ -44,11 +44,22 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
         // Level 4, 9, 14... is the peak
         int sequenceInCycle = levelIndex % 5;
         
+        // Dynamic Difficulty Adjustment (DDA)
+        int ddaPathModifier = 0;
+        if (LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
+        {
+            var profile = LevelManager.Instance.CurrentProfile;
+            if (profile.consecutiveFailures >= 3) ddaPathModifier = -1;
+            if (profile.consecutivePerfects >= 3) ddaPathModifier = 1;
+        }
+
+        pathLength += ddaPathModifier;
+
         if (sequenceInCycle == 0 && levelIndex > 0) // The Breather (e.g. 5)
         {
             width = Mathf.Max(3, width - 2);
             height = Mathf.Max(3, height - 2);
-            pathLength = Mathf.Max(2, pathLength - 2);
+            pathLength = Mathf.Max(2, pathLength - 1); // Breathers are already short, don't over-reduce
         }
         else if (sequenceInCycle == 4) // The Peak (e.g. 4)
         {
@@ -66,7 +77,7 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
             tilePowers = new int[width, height]
         };
 
-        GenerateGoldenPath(levelData, pathLength, maxPower, difficulty);
+        GenerateGoldenPath(levelData, pathLength, maxPower, difficulty, ddaPathModifier);
 
         return levelData;
     }
@@ -99,7 +110,7 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
         return tutorial;
     }
 
-    private void GenerateGoldenPath(LevelData level, int pathLength, int maxPower, Difficulty difficulty)
+    private void GenerateGoldenPath(LevelData level, int pathLength, int maxPower, Difficulty difficulty, int ddaModifier)
     {
         Vector2Int holePos = new Vector2Int(Random.Range(0, level.width), Random.Range(0, level.height));
         level.holePosition = holePos;
@@ -150,14 +161,20 @@ public class AdvancedLevelGeneratorStrategy : ILevelGeneratorStrategy
         level.currentStrokes = 0;
         
         int sequenceInCycle = level.levelIndex % 5;
+        
+        // Base Par calculation
+        level.levelPar = Mathf.Max(actualPathLength, 1) + 1;
+
+        // Apply DDA and Breather modifiers to PAR
         if (sequenceInCycle == 0 && level.levelIndex > 0)
         {
-            // Give extra generous par for breathers to give a dopamine hit
-            level.levelPar = Mathf.Max(actualPathLength, 1) + 2; 
+            // Give extra generous par for breathers
+            level.levelPar += 1; 
         }
-        else 
+        
+        if (ddaModifier < 0) // Player is failing
         {
-            level.levelPar = Mathf.Max(actualPathLength, 1) + 1; 
+            level.levelPar += 1; // Give them an extra stroke on top of the shorter path
         }
 
         GenerateFalsePath(level, maxPower, currentPos, actualPathLength);

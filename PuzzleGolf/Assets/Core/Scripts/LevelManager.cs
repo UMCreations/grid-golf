@@ -26,6 +26,10 @@ public class PlayerProfile
 
     // FTUE Training
     public bool hasCompletedTutorial = false;
+
+    // DDA (Dynamic Difficulty Adjustment)
+    public int consecutiveFailures = 0;
+    public int consecutivePerfects = 0;
 }
 
 public class LevelManager : MonoBehaviour

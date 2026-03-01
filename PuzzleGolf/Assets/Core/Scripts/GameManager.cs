@@ -62,6 +62,13 @@ public class GameManager : MonoBehaviour
         // Clear mid-level save so we don't resume into a game-over state
         SaveManager.ClearSave();
         
+        if (LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
+        {
+            LevelManager.Instance.CurrentProfile.consecutiveFailures++;
+            LevelManager.Instance.CurrentProfile.consecutivePerfects = 0;
+            LevelManager.Instance.SaveProfile();
+        }
+
         OnGameLostEvent?.Invoke();
     }
 
@@ -88,6 +95,22 @@ public class GameManager : MonoBehaviour
 
         if (LevelManager.Instance != null)
         {
+            // Track DDA
+            if (LevelManager.Instance.CurrentProfile != null)
+            {
+                LevelManager.Instance.CurrentProfile.consecutiveFailures = 0;
+                
+                // If par was the golden path length + 1, then Strokes == Par - 1 is a perfect score
+                if (CurrentStrokes < MaxStrokes) 
+                {
+                    LevelManager.Instance.CurrentProfile.consecutivePerfects++;
+                }
+                else
+                {
+                    LevelManager.Instance.CurrentProfile.consecutivePerfects = 0;
+                }
+            }
+
             LevelManager.Instance.CompleteCurrentLevel();
         }
         
