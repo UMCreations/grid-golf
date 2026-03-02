@@ -17,7 +17,8 @@ public class FeedbackManager : MonoBehaviour
 
     private readonly string[] goodShots = { "GOOD SHOT!", "NIICE!", "KEEP GOING!", "SOLID!", "GREAT!" };
     private readonly string[] amazingShots = { "AMAZING!", "PRO!", "INCREDIBLE!", "BEST SHOT!", "WOW!" };
-    private readonly string[] victoryShots = { "BULLSEYE!", "HOLE IN ONE!", "PERFECT!", "VICTORY!" };
+    private readonly string[] genericVictory = { "BULLSEYE!", "PERFECT!", "VICTORY!", "GOAL!" };
+    private readonly string holeInOneMessage = "HOLE IN ONE!";
 
     // Theme Colors: Vibrant Cyan and Vibrant Green
     private readonly Color[] feedbackColors = {
@@ -50,7 +51,10 @@ public class FeedbackManager : MonoBehaviour
         
         if (reachedHole)
         {
-            message = victoryShots[Random.Range(0, victoryShots.Length)];
+            if (GameManager.Instance != null && GameManager.Instance.CurrentStrokes == 1)
+                message = holeInOneMessage;
+            else
+                message = genericVictory[Random.Range(0, genericVictory.Length)];
         }
         else if (distanceTraveled >= 3)
         {
