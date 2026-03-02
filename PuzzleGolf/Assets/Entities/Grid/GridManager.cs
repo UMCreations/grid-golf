@@ -83,15 +83,24 @@ public class GridManager : MonoBehaviour
         }
 
         LevelData savedLevel = SaveManager.LoadLevel();
-        // Only load the save if it perfectly matches the level we are trying to play
-        if (savedLevel != null && savedLevel.difficulty == targetDiff && savedLevel.levelIndex == targetLevel)
+        GameMode targetMode = LevelManager.Instance != null
+            ? LevelManager.Instance.SelectedGameMode
+            : GameMode.Classic;
+
+        // Only load the save if it perfectly matches difficulty, level index AND game mode
+        bool saveMatches = savedLevel != null &&
+                           savedLevel.difficulty == targetDiff &&
+                           savedLevel.levelIndex == targetLevel &&
+                           savedLevel.gameMode == targetMode;
+
+        if (saveMatches)
         {
-            Debug.Log($"Loading saved level {targetDiff} - {targetLevel}...");
+            Debug.Log($"Loading saved {targetMode} level {targetDiff} - {targetLevel}...");
             LoadExistingLevel(savedLevel);
         }
         else
         {
-            Debug.Log($"Generating new level {targetDiff} - {targetLevel}...");
+            Debug.Log($"Generating new {targetMode} level {targetDiff} - {targetLevel}...");
             GenerateAndLoadNewLevel(targetDiff, targetLevel);
         }
     }
@@ -124,6 +133,10 @@ public class GridManager : MonoBehaviour
             Debug.LogError("No LevelGenerator found in scene! Cannot generate level.");
             return;
         }
+
+        // Make sure the generator is using the correct strategy for the current game mode
+        if (LevelManager.Instance != null)
+            LevelGenerator.Instance.SetGameMode(LevelManager.Instance.SelectedGameMode);
 
         LevelData newLevelData = LevelGenerator.Instance.GenerateLevel(difficulty, levelIndex, isTutorial);
         

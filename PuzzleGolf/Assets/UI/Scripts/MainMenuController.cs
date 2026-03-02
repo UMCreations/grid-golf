@@ -77,13 +77,15 @@ public class MainMenuController : MonoBehaviour
         if (LevelManager.Instance != null)
         {
             LevelManager.Instance.IsTutorialMode = false;
-            // Set Adventure mode — this switches the generator strategy automatically
             LevelManager.Instance.SetLevelToPlay(
                 LevelManager.Instance.SelectedDifficulty,
                 LevelManager.Instance.SelectedLevelIndex,
                 GameMode.Adventure
             );
         }
+
+        // Clear any existing save so a fresh Adventure level is always generated
+        SaveManager.ClearSave();
 
         if (UIManager.Instance != null)
             UIManager.Instance.ShowGameplayHUD();
