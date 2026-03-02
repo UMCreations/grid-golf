@@ -78,12 +78,16 @@ public class TopHUDController : MonoBehaviour
 
     private void OnMenuClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+        
         // Reloading the active scene will default to showing the Main Menu and reset the level state.
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
     }
 
     private void OnRestartClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+        
         if (GameManager.Instance != null)
         {
             GameManager.Instance.RestartLevel();
