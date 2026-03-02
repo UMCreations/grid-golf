@@ -20,6 +20,7 @@ public class LevelData
     public int currentStrokes;
     public int levelIndex;
     public Vector2Int currentGridPosition;
+    public List<Vector2Int> goldenPath = new List<Vector2Int>();
 
     // For JSON serialization
     public int[] tilePowersFlat; 

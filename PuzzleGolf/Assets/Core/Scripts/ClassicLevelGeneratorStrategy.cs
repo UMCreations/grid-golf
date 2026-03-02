@@ -76,6 +76,13 @@ public class ClassicLevelGeneratorStrategy : ILevelGeneratorStrategy
             }
         }
         tutorial.tilePowers[2, 2] = 0; // Hole
+        
+        // Tutorial Golden Path
+        tutorial.goldenPath.Add(new Vector2Int(0,0));
+        tutorial.goldenPath.Add(new Vector2Int(1,0));
+        tutorial.goldenPath.Add(new Vector2Int(2,0));
+        tutorial.goldenPath.Add(new Vector2Int(2,1));
+        tutorial.goldenPath.Add(new Vector2Int(2,2));
 
         return tutorial;
     }
@@ -85,6 +92,7 @@ public class ClassicLevelGeneratorStrategy : ILevelGeneratorStrategy
         Vector2Int holePos = new Vector2Int(Random.Range(0, level.width), Random.Range(0, level.height));
         level.holePosition = holePos;
         level.tilePowers[holePos.x, holePos.y] = 0;
+        level.goldenPath.Add(holePos);
 
         Vector2Int currentPos = holePos;
         int actualPathLength = 0;
@@ -120,6 +128,7 @@ public class ClassicLevelGeneratorStrategy : ILevelGeneratorStrategy
                 
                 level.tilePowers[chosenRetreat.x, chosenRetreat.y] = requiredPower;
                 currentPos = chosenRetreat;
+                level.goldenPath.Add(currentPos);
                 actualPathLength++;
             }
             else

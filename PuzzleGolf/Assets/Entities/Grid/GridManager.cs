@@ -21,7 +21,7 @@ public class GridManager : MonoBehaviour
 
     [Header("Level Integration")]
     public Difficulty currentDifficulty = Difficulty.Easy;
-    private LevelData currentLevelData;
+    public LevelData CurrentLevelData { get; private set; }
 
     // Data populated by LevelGenerator
     public int width { get; private set; }
@@ -93,18 +93,18 @@ public class GridManager : MonoBehaviour
 
     public void LoadExistingLevel(LevelData levelData)
     {
-        currentLevelData = levelData;
+        CurrentLevelData = levelData;
         currentDifficulty = levelData.difficulty;
         
-        width = currentLevelData.width;
-        height = currentLevelData.height;
-        startPosition = currentLevelData.startPosition;
-        holePosition = currentLevelData.holePosition;
-        levelPar = currentLevelData.levelPar;
+        width = CurrentLevelData.width;
+        height = CurrentLevelData.height;
+        startPosition = CurrentLevelData.startPosition;
+        holePosition = CurrentLevelData.holePosition;
+        levelPar = CurrentLevelData.levelPar;
 
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.InitializeLevel(levelPar, currentLevelData.currentStrokes);
+            GameManager.Instance.InitializeLevel(levelPar, CurrentLevelData.currentStrokes);
         }
 
         GenerateGrid();
@@ -130,21 +130,21 @@ public class GridManager : MonoBehaviour
 
     public void ResetLevelState()
     {
-        if (currentLevelData != null)
+        if (CurrentLevelData != null)
         {
-            currentLevelData.currentStrokes = 0;
-            currentLevelData.currentGridPosition = currentLevelData.startPosition;
-            SaveManager.SaveLevel(currentLevelData);
+            CurrentLevelData.currentStrokes = 0;
+            CurrentLevelData.currentGridPosition = CurrentLevelData.startPosition;
+            SaveManager.SaveLevel(CurrentLevelData);
         }
     }
 
     public void SaveGameState(Vector2Int newBallPos, int strokes)
     {
-        if (currentLevelData != null)
+        if (CurrentLevelData != null)
         {
-            currentLevelData.currentGridPosition = newBallPos;
-            currentLevelData.currentStrokes = strokes;
-            SaveManager.SaveLevel(currentLevelData);
+            CurrentLevelData.currentGridPosition = newBallPos;
+            CurrentLevelData.currentStrokes = strokes;
+            SaveManager.SaveLevel(CurrentLevelData);
         }
     }
 
@@ -189,11 +189,11 @@ public class GridManager : MonoBehaviour
 
         if (ballPrefab != null)
         {
-            Tile currentTile = GetTileAtPosition(currentLevelData.currentGridPosition);
+            Tile currentTile = GetTileAtPosition(CurrentLevelData.currentGridPosition);
             if (currentTile != null)
             {
                 currentBall = Instantiate(ballPrefab, currentTile.transform.position, Quaternion.identity);
-                currentBall.currentGridPosition = currentLevelData.currentGridPosition;
+                currentBall.currentGridPosition = CurrentLevelData.currentGridPosition;
             }
         }
         else
@@ -251,7 +251,7 @@ public class GridManager : MonoBehaviour
                 
                 // Determine type and power
                 TileType currentType = TileType.Standard;
-                int power = currentLevelData.tilePowers[x, y];
+                int power = CurrentLevelData.tilePowers[x, y];
                 Sprite tileSprite = standardSprite;
 
                 if (x == startPosition.x && y == startPosition.y)

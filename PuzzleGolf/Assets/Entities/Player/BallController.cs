@@ -317,6 +317,13 @@ public class BallController : MonoBehaviour
                 GameManager.Instance.OnMoveMade();
             }
             
+            // Show encouraging feedback immediately on shot release
+            if (FeedbackManager.Instance != null && !GameManager.Instance.HasLost)
+            {
+                int distance = direction.magnitude == 0 ? 0 : (int)(targetPosition - currentGridPosition).magnitude;
+                FeedbackManager.Instance.ShowFeedback(targetPosition, distance, targetTile.type == TileType.Hole);
+            }
+
             if (GridManager.Instance != null)
             {
                 GridManager.Instance.ClearAllHighlights();
@@ -370,6 +377,7 @@ public class BallController : MonoBehaviour
 
         transform.position = targetWorldPos;
         transform.localScale = baseScale;
+        
         currentGridPosition = targetGridPos;
         
         isMoving = false;

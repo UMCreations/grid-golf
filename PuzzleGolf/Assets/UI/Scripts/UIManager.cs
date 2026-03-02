@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     public SettingsController settingsController;
     public LevelSelectionController levelSelectionController;
     public TutorialController tutorialController;
+    public FeedbackManager feedbackManager;
 
     private void Awake()
     {
