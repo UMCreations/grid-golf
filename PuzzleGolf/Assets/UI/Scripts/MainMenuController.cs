@@ -56,6 +56,8 @@ public class MainMenuController : MonoBehaviour
 
     private void OnPlayClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+
         if (LevelManager.Instance != null)
         {
             LevelManager.Instance.IsTutorialMode = false;
@@ -74,6 +76,8 @@ public class MainMenuController : MonoBehaviour
 
     private void OnTutorialClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+
         if (LevelManager.Instance != null)
         {
             LevelManager.Instance.IsTutorialMode = true;
@@ -92,6 +96,8 @@ public class MainMenuController : MonoBehaviour
 
     private void OnSettingsClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowSettings();
@@ -100,6 +106,8 @@ public class MainMenuController : MonoBehaviour
 
     private void OnLevelSelectionClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowLevelSelection();

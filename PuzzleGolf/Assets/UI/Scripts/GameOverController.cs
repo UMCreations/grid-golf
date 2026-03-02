@@ -86,6 +86,7 @@ public class GameOverController : MonoBehaviour
 
     private void OnRetryClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         if (GameManager.Instance != null)
         {
             GameManager.Instance.RestartLevel();
@@ -94,6 +95,7 @@ public class GameOverController : MonoBehaviour
     
     private void OnMenuClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         if (GridManager.Instance != null)
         {
             GridManager.Instance.ResetLevelState();

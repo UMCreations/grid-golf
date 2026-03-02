@@ -30,9 +30,9 @@ public class LevelSelectionController : MonoBehaviour
 
     private void Start()
     {
-        if (easyTabBtn != null) easyTabBtn.onClick.AddListener(() => ChangeTab(Difficulty.Easy));
-        if (mediumTabBtn != null) mediumTabBtn.onClick.AddListener(() => ChangeTab(Difficulty.Medium));
-        if (hardTabBtn != null) hardTabBtn.onClick.AddListener(() => ChangeTab(Difficulty.Hard));
+        if (easyTabBtn != null) easyTabBtn.onClick.AddListener(() => { if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick(); ChangeTab(Difficulty.Easy); });
+        if (mediumTabBtn != null) mediumTabBtn.onClick.AddListener(() => { if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick(); ChangeTab(Difficulty.Medium); });
+        if (hardTabBtn != null) hardTabBtn.onClick.AddListener(() => { if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick(); ChangeTab(Difficulty.Hard); });
         
         if (backButton != null) backButton.onClick.AddListener(OnBackClicked);
 
@@ -128,6 +128,7 @@ public class LevelSelectionController : MonoBehaviour
 
     private void OnBackClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowMainMenu();

@@ -71,6 +71,7 @@ public class LevelCardController : MonoBehaviour
 
     private void OnCardClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         if (parentController != null)
         {
             parentController.OnLevelSelected(myDifficulty, myLevelIndex);

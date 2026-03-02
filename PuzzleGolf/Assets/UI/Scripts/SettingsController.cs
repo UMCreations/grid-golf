@@ -82,6 +82,8 @@ public class SettingsController : MonoBehaviour
 
     private void OnBackClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+
         if (UIManager.Instance != null)
         {
             // Fully delegate navigation to the central UIManager
