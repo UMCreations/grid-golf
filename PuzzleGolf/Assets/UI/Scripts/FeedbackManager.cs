@@ -19,6 +19,12 @@ public class FeedbackManager : MonoBehaviour
     private readonly string[] amazingShots = { "AMAZING!", "PRO!", "INCREDIBLE!", "BEST SHOT!", "WOW!" };
     private readonly string[] victoryShots = { "BULLSEYE!", "HOLE IN ONE!", "PERFECT!", "VICTORY!" };
 
+    // Theme Colors: Vibrant Cyan and Vibrant Green
+    private readonly Color[] feedbackColors = {
+        new Color(0.1f, 0.8f, 1f), // Cyan Blue
+        new Color(0.2f, 1f, 0.4f)  // Vibrant Green
+    };
+
     private void Awake()
     {
         if (Instance == null)
@@ -54,6 +60,9 @@ public class FeedbackManager : MonoBehaviour
         {
             message = goodShots[Random.Range(0, goodShots.Length)];
         }
+
+        // Randomize color from our theme palette
+        feedbackText.color = feedbackColors[Random.Range(0, feedbackColors.Length)];
 
         feedbackText.text = message;
         PlayFeedbackSequence();
