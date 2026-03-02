@@ -7,7 +7,10 @@ public enum TileType
     Start,
     Hole,
     Wall,
-    Water
+    Water,
+    Ice,    // Adventure: auto-slides in same direction
+    Sand,   // Adventure: reduces next shot power by 1
+    Boost   // Adventure: increases next shot power by 1
 }
 
 public class Tile : MonoBehaviour
@@ -38,12 +41,21 @@ public class Tile : MonoBehaviour
 
     public void UpdateVisuals()
     {
-        // We will update sprite and text based on type and powerCount here
         if (powerText != null)
         {
-            if (type == TileType.Standard || type == TileType.Start)
+            bool shouldShowPower = (type == TileType.Standard || type == TileType.Start ||
+                                   type == TileType.Ice || type == TileType.Sand ||
+                                   type == TileType.Boost);
+
+            if (shouldShowPower && powerCount > 0)
             {
-                powerText.text = powerCount > 0 ? powerCount.ToString() : "";
+                powerText.text = powerCount.ToString();
+
+                // Color-code power number by tile type
+                if      (type == TileType.Ice)   powerText.color = new Color(0.6f, 0.85f, 1f);   // Ice Blue
+                else if (type == TileType.Sand)  powerText.color = new Color(1f,  0.9f,  0.55f); // Sand Yellow
+                else if (type == TileType.Boost) powerText.color = new Color(0.4f, 1f,   0.6f);  // Boost Green
+                else                             powerText.color = Color.white;
             }
             else
             {
