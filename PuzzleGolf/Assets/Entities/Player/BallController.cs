@@ -225,12 +225,12 @@ public class BallController : MonoBehaviour
         if (targetTile != null)
         {
             endPos = targetTile.transform.position;
-            trajectoryLine.startColor = new Color(0.1f, 0.8f, 1f, 0.8f); // Cyan blue
-            trajectoryLine.endColor = new Color(0.1f, 0.8f, 1f, 0.2f);
+            trajectoryLine.startColor = new Color(0.2f, 1f, 0.4f, 0.8f); // Vibrant light green
+            trajectoryLine.endColor = new Color(0.2f, 1f, 0.4f, 0.1f);  
             
             landingTargetObject.transform.position = endPos;
             landingTargetObject.SetActive(true);
-            landingTargetObject.GetComponent<SpriteRenderer>().color = new Color(0.1f, 0.8f, 1f, 0.4f);
+            landingTargetObject.GetComponent<SpriteRenderer>().color = new Color(0.2f, 1f, 0.4f, 0.4f);
         }
         else
         {
