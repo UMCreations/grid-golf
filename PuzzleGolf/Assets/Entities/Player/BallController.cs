@@ -13,10 +13,13 @@ public class BallController : MonoBehaviour
     public float jumpArcHeight = 0.5f; // How much it visually arcs up on the Y-axis
     public float jumpCurveOffset = 0.5f; // How much it curves laterally (left/right) during flight
     public float rotationsPerMove = 2f;
+    public float trajectoryAnimationSpeed = 2f;
 
     [Header("Input & Trajectory")]
     public float swipeThreshold = 50f; // px distance to register a swipe
+    public Sprite trajectoryDotSprite; // Optional: Assign a dot sprite for a dotted line effect
     private LineRenderer trajectoryLine;
+    private GameObject landingTargetObject;
     private Vector2 touchStartPos;
     private Vector2 touchCurrentPos;
     private bool isAiming;
@@ -46,7 +49,6 @@ public class BallController : MonoBehaviour
 
     private void SetupLineRenderer()
     {
-        // Create line renderer dynamically so the user doesn't have to configure it manually
         trajectoryLine = GetComponent<LineRenderer>();
         if (trajectoryLine == null)
         {
@@ -54,23 +56,33 @@ public class BallController : MonoBehaviour
         }
         
         trajectoryLine.enabled = false;
+        trajectoryLine.textureMode = LineTextureMode.Tile; // Important for dotted animation
         
-        // Add a width curve instead of distinct start/end widths to simulate 3D closeness
         AnimationCurve curve = new AnimationCurve();
-        curve.AddKey(0f, 0.15f);
-        curve.AddKey(0.5f, 0.35f); // Thicker in the middle
-        curve.AddKey(1f, 0.05f);
+        curve.AddKey(0f, 0.2f);   // Start slightly thicker
+        curve.AddKey(0.5f, 0.25f); // Peak thickness in middle
+        curve.AddKey(1f, 0.1f);    // Taper to point at landing
         trajectoryLine.widthCurve = curve;
         
-        // Find standard sprite shader so it blends well in 2D
         Shader spriteShader = Shader.Find("Sprites/Default");
         if (spriteShader != null)
         {
             trajectoryLine.material = new Material(spriteShader);
+            // If we have a dot sprite, we would apply it here
+            // trajectoryLine.material.mainTexture = trajectoryDotSprite.texture;
         }
         
-        trajectoryLine.sortingOrder = 5; // Draw behind the ball (which is 10)
+        trajectoryLine.sortingOrder = 5;
         trajectoryLine.useWorldSpace = true;
+
+        // Create a simple landing target visual
+        landingTargetObject = new GameObject("LandingTarget");
+        landingTargetObject.transform.SetParent(null);
+        SpriteRenderer sr = landingTargetObject.AddComponent<SpriteRenderer>();
+        sr.sprite = GetComponent<SpriteRenderer>().sprite; // Use the ball's sprite as a ghost
+        sr.color = new Color(1, 1, 1, 0.3f);
+        sr.sortingOrder = 4;
+        landingTargetObject.SetActive(false);
     }
 
     private void Update()
@@ -82,6 +94,32 @@ public class BallController : MonoBehaviour
 
         HandleKeyboardInput();
         HandleTouchInput();
+        AnimateTrajectory();
+    }
+
+    private void AnimateTrajectory()
+    {
+        if (isAiming && trajectoryLine != null && trajectoryLine.enabled)
+        {
+            // 1. Move the texture offset for a "marching ants" or flow effect
+            float offset = Time.time * trajectoryAnimationSpeed;
+            trajectoryLine.material.mainTextureOffset = new Vector2(-offset, 0);
+
+            // 2. Pulse the landing target if active
+            if (landingTargetObject != null && landingTargetObject.activeInHierarchy)
+            {
+                float pulse = 1f + Mathf.Sin(Time.time * 10f) * 0.1f;
+                landingTargetObject.transform.localScale = Vector3.one * pulse;
+                
+                SpriteRenderer sr = landingTargetObject.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    Color c = sr.color;
+                    c.a = 0.3f + Mathf.Sin(Time.time * 15f) * 0.1f;
+                    sr.color = c;
+                }
+            }
+        }
     }
 
     private void HandleKeyboardInput()
@@ -186,8 +224,12 @@ public class BallController : MonoBehaviour
         if (targetTile != null)
         {
             endPos = targetTile.transform.position;
-            trajectoryLine.startColor = new Color(0.2f, 1f, 0.2f, 0.8f); // Solid green
-            trajectoryLine.endColor = new Color(0.2f, 1f, 0.2f, 0.2f);   // Faded green
+            trajectoryLine.startColor = new Color(0.1f, 0.8f, 1f, 0.8f); // Cyan blue
+            trajectoryLine.endColor = new Color(0.1f, 0.8f, 1f, 0.2f);
+            
+            landingTargetObject.transform.position = endPos;
+            landingTargetObject.SetActive(true);
+            landingTargetObject.GetComponent<SpriteRenderer>().color = new Color(0.1f, 0.8f, 1f, 0.4f);
         }
         else
         {
@@ -196,11 +238,13 @@ public class BallController : MonoBehaviour
             Vector3 direction3D = new Vector3(currentAimDirection.x * (tileSize + spacing), currentAimDirection.y * (tileSize + spacing), 0);
             
             endPos = transform.position + (direction3D * power);
-            trajectoryLine.startColor = new Color(1f, 0.2f, 0.2f, 0.8f); // Solid red
-            trajectoryLine.endColor = new Color(1f, 0.2f, 0.2f, 0.2f);   // Faded red
+            trajectoryLine.startColor = new Color(1f, 0.2f, 0.2f, 0.8f); // Red
+            trajectoryLine.endColor = new Color(1f, 0.2f, 0.2f, 0.2f);
+            
+            landingTargetObject.SetActive(false);
         }
 
-        int segments = 20;
+        int segments = 25; // Smoother arc
         trajectoryLine.positionCount = segments + 1;
         trajectoryLine.enabled = true;
 
@@ -211,10 +255,8 @@ public class BallController : MonoBehaviour
             float t = (float)i / segments;
             Vector3 pointPos = Vector3.Lerp(startPos, endPos, t);
             
-            // Add arc offset (to simulate 3D curve in 2D space)
             float arc = 4f * t * (1f - t);
             pointPos.y += arc * jumpArcHeight;
-            // Add lateral curve to simulate slice/hook in golf
             pointPos += perpendicular * (arc * jumpCurveOffset);
 
             trajectoryLine.SetPosition(i, pointPos);
@@ -225,6 +267,9 @@ public class BallController : MonoBehaviour
     {
         if (trajectoryLine != null)
             trajectoryLine.enabled = false;
+        
+        if (landingTargetObject != null)
+            landingTargetObject.SetActive(false);
     }
 
     private Vector2Int GetInputDirection()
