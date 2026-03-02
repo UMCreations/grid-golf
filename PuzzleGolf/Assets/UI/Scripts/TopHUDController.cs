@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class TopHUDController : MonoBehaviour
 {
@@ -9,6 +10,14 @@ public class TopHUDController : MonoBehaviour
     public TMP_Text strokesText;
     public Button menuButton;
     public Button restartButton;
+
+    [Header("Strokes Colors")]
+    public Color safeColor = new Color(0.2f, 1f, 0.4f);   // Green
+    public Color warningColor = new Color(1f, 0.8f, 0.2f); // Yellow/Orange
+    public Color criticalColor = new Color(1f, 0.2f, 0.2f); // Red
+
+    private int lastCurrentStrokes = -1;
+    private Tween criticalPulseTween;
 
     private void OnEnable()
     {
@@ -40,6 +49,8 @@ public class TopHUDController : MonoBehaviour
 
     private void OnDisable()
     {
+        StopCriticalPulse();
+        
         // Very important: Unsubscribe from events to prevent memory leaks!
         if (GameManager.Instance != null)
         {
@@ -61,6 +72,58 @@ public class TopHUDController : MonoBehaviour
         if (strokesText != null)
         {
             strokesText.text = $"Strokes: {currentStrokes} / {maxStrokes}";
+            
+            // 1. Color Feedback
+            int strokesLeft = maxStrokes - currentStrokes;
+            if (strokesLeft <= 1)
+            {
+                strokesText.color = criticalColor;
+                StartCriticalPulse();
+            }
+            else if (strokesLeft <= 3)
+            {
+                strokesText.color = warningColor;
+                StopCriticalPulse();
+            }
+            else
+            {
+                strokesText.color = safeColor;
+                StopCriticalPulse();
+            }
+
+            // 2. Punch Animation on change (Juice!)
+            if (currentStrokes != lastCurrentStrokes && lastCurrentStrokes != -1)
+            {
+                strokesText.transform.DOPunchScale(Vector3.one * 0.3f, 0.4f, 10, 1f).SetUpdate(true);
+                
+                // If critical, also do a tiny shake
+                if (strokesLeft <= 1)
+                {
+                    strokesText.transform.DOShakePosition(0.4f, 10f, 20, 90f, false, true).SetUpdate(true);
+                }
+            }
+            
+            lastCurrentStrokes = currentStrokes;
+        }
+    }
+
+    private void StartCriticalPulse()
+    {
+        if (criticalPulseTween != null && criticalPulseTween.IsActive()) return;
+
+        criticalPulseTween = strokesText.transform.DOScale(1.2f, 0.5f)
+            .SetLoops(-1, LoopType.Yoyo)
+            .SetEase(Ease.InOutSine)
+            .SetUpdate(true);
+    }
+
+    private void StopCriticalPulse()
+    {
+        if (criticalPulseTween != null)
+        {
+            criticalPulseTween.Kill();
+            criticalPulseTween = null;
+            if (strokesText != null) strokesText.transform.localScale = Vector3.one;
         }
     }
 
