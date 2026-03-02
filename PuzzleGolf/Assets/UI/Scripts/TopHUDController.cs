@@ -131,7 +131,11 @@ public class TopHUDController : MonoBehaviour
     {
         if (levelText != null && LevelManager.Instance != null)
         {
-            levelText.text = $"Level {LevelManager.Instance.SelectedLevelIndex} ({LevelManager.Instance.SelectedDifficulty})";
+            bool isAdventure = LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
+            int levelNum = isAdventure ? LevelManager.Instance.AdventureLevelIndex : LevelManager.Instance.SelectedLevelIndex;
+            string modeName = isAdventure ? "Adventure" : LevelManager.Instance.SelectedDifficulty.ToString();
+            
+            levelText.text = $"Level {levelNum} ({modeName})";
         }
         else if (levelText != null)
         {

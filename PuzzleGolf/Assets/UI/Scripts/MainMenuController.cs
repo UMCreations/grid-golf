@@ -77,11 +77,11 @@ public class MainMenuController : MonoBehaviour
         if (LevelManager.Instance != null)
         {
             LevelManager.Instance.IsTutorialMode = false;
-            LevelManager.Instance.SetLevelToPlay(
-                LevelManager.Instance.SelectedDifficulty,
-                LevelManager.Instance.SelectedLevelIndex,
-                GameMode.Adventure
-            );
+            // Resume last adventure level, or start from 1
+            int adventureLevel = LevelManager.Instance.CurrentProfile != null
+                ? LevelManager.Instance.CurrentProfile.lastAdventureLevelIndex
+                : 1;
+            LevelManager.Instance.SetAdventureLevelToPlay(adventureLevel);
         }
 
         // Clear any existing save so a fresh Adventure level is always generated

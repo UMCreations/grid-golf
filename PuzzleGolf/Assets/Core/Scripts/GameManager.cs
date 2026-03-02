@@ -95,40 +95,38 @@ public class GameManager : MonoBehaviour
 
     public void OnHoleReached()
     {
-        if (HasWon || HasLost) return; // Prevent multiple triggers
+        if (HasWon || HasLost) return;
         
         HasWon = true;
         Debug.Log($"🎉 You Won! Hole Reached in {CurrentStrokes} strokes! 🎉");
         
         if (AudioManager.Instance != null)
-        {
             AudioManager.Instance.PlayWinSound();
-        }
 
-        Debug.Log("Press 'R' to restart the level.");
-
-        // Clear mid-level save as the level is successfully completed
         SaveManager.ClearSave();
 
-        if (LevelManager.Instance != null)
-        {
-            // Track DDA
-            if (LevelManager.Instance.CurrentProfile != null)
-            {
-                LevelManager.Instance.CurrentProfile.consecutiveFailures = 0;
-                
-                // If par was the golden path length + 1, then Strokes == Par - 1 is a perfect score
-                if (CurrentStrokes < MaxStrokes) 
-                {
-                    LevelManager.Instance.CurrentProfile.consecutivePerfects++;
-                }
-                else
-                {
-                    LevelManager.Instance.CurrentProfile.consecutivePerfects = 0;
-                }
-            }
+        bool isAdventure = LevelManager.Instance != null &&
+                           LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
 
-            LevelManager.Instance.CompleteCurrentLevel();
+        if (LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
+        {
+            LevelManager.Instance.CurrentProfile.consecutiveFailures = 0;
+
+            if (isAdventure)
+            {
+                // Adventure Mode: advance to the next Adventure level
+                LevelManager.Instance.CompleteCurrentAdventureLevel();
+            }
+            else
+            {
+                // Classic Mode: DDA tracking + unlock progression
+                if (CurrentStrokes < MaxStrokes)
+                    LevelManager.Instance.CurrentProfile.consecutivePerfects++;
+                else
+                    LevelManager.Instance.CurrentProfile.consecutivePerfects = 0;
+
+                LevelManager.Instance.CompleteCurrentLevel();
+            }
         }
         
         OnGameWonEvent?.Invoke();
@@ -151,38 +149,77 @@ public class GameManager : MonoBehaviour
 
     public void RestartLevel()
     {
-        if (GridManager.Instance != null)
+        bool isAdventure = LevelManager.Instance != null &&
+                           LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
+
+        if (isAdventure)
         {
-            GridManager.Instance.ResetLevelState();
-            GridManager.Instance.InitializeGame(); // Instead of Scene reload
+            // Adventure restart: clear save and regenerate a FRESH board for same level number
+            SaveManager.ClearSave();
+            if (GridManager.Instance != null)
+                GridManager.Instance.GenerateAndLoadNewLevel(
+                    LevelManager.Instance.SelectedDifficulty,
+                    LevelManager.Instance.AdventureLevelIndex
+                );
+        }
+        else
+        {
+            // Classic restart: reset strokes and reload the exact same board
+            if (GridManager.Instance != null)
+            {
+                GridManager.Instance.ResetLevelState();
+                GridManager.Instance.InitializeGame();
+            }
         }
 
         if (UIManager.Instance != null)
-        {
             UIManager.Instance.ShowGameplayHUD();
-        }
     }
 
     public void LoadNextLevel()
     {
-        if (LevelManager.Instance != null && LevelManager.Instance.HasNextLevel())
+        bool isAdventure = LevelManager.Instance != null &&
+                           LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
+
+        if (isAdventure)
         {
-            // Update LevelManager to point to the next level index
-            LevelManager.Instance.ProgressToNextLevel();
-            
-            // Clear mid-level save so GridManager creates the NEW level
-            SaveManager.ClearSave();
-            
-            if (GridManager.Instance != null) GridManager.Instance.InitializeGame();
-            if (UIManager.Instance != null) UIManager.Instance.ShowGameplayHUD();
+            if (LevelManager.Instance.HasNextAdventureLevel())
+            {
+                // Adventure: always generate a completely fresh new board
+                SaveManager.ClearSave();
+                if (GridManager.Instance != null)
+                    GridManager.Instance.GenerateAndLoadNewLevel(
+                        LevelManager.Instance.SelectedDifficulty,
+                        LevelManager.Instance.AdventureLevelIndex
+                    );
+                if (UIManager.Instance != null)
+                    UIManager.Instance.ShowGameplayHUD();
+            }
+            else
+            {
+                Debug.Log("Adventure Complete! All 100 levels beaten!");
+                SaveManager.ClearSave();
+                if (GridManager.Instance != null) GridManager.Instance.ClearGrid();
+                if (UIManager.Instance != null) UIManager.Instance.ShowMainMenu();
+            }
         }
         else
         {
-            Debug.Log("You beat the final level/Difficulty! Returning to menu.");
-            SaveManager.ClearSave();
-
-            if (GridManager.Instance != null) GridManager.Instance.ClearGrid();
-            if (UIManager.Instance != null) UIManager.Instance.ShowMainMenu();
+            // Classic mode
+            if (LevelManager.Instance != null && LevelManager.Instance.HasNextLevel())
+            {
+                LevelManager.Instance.ProgressToNextLevel();
+                SaveManager.ClearSave();
+                if (GridManager.Instance != null) GridManager.Instance.InitializeGame();
+                if (UIManager.Instance != null) UIManager.Instance.ShowGameplayHUD();
+            }
+            else
+            {
+                Debug.Log("You beat the final level/Difficulty! Returning to menu.");
+                SaveManager.ClearSave();
+                if (GridManager.Instance != null) GridManager.Instance.ClearGrid();
+                if (UIManager.Instance != null) UIManager.Instance.ShowMainMenu();
+            }
         }
     }
 

@@ -98,9 +98,13 @@ public class GameWinController : MonoBehaviour
 
     public void UpdateWinText()
     {
-        if (victoryText != null && GameManager.Instance != null)
+        if (victoryText != null && GameManager.Instance != null && LevelManager.Instance != null)
         {
-            victoryText.text = $"Hole in {GameManager.Instance.CurrentStrokes}!";
+            bool isAdventure = LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
+            int levelNum = isAdventure ? LevelManager.Instance.AdventureLevelIndex : LevelManager.Instance.SelectedLevelIndex;
+            string modeName = isAdventure ? "Adventure" : LevelManager.Instance.SelectedDifficulty.ToString();
+
+            victoryText.text = $"Level {levelNum} ({modeName}) Cleared in {GameManager.Instance.CurrentStrokes}!";
         }
     }
 

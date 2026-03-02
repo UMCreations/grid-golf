@@ -21,7 +21,9 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
             return GenerateAdventureTutorialLevel();
         }
 
-        int seed = (int)difficulty * 5000 + levelIndex + 999; // Separate seed from classic
+        // Adventure levels use a time-based seed so each play-through is unique,
+        // even if it's the same level index. This is the key difference from Classic mode.
+        int seed = (int)(System.DateTime.Now.Ticks % int.MaxValue) + levelIndex;
         Random.InitState(seed);
 
         int width, height, pathLength, maxPower;

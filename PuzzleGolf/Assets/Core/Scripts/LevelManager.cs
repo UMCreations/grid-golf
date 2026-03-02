@@ -5,17 +5,14 @@ using System.Collections.Generic;
 public class PlayerProfile
 {
     // High score/progress for each difficulty
-    // Unlocked up to Level N (1-indexed)
     public int unlockedEasy = 1;
     public int unlockedMedium = 1;
     public int unlockedHard = 1;
 
-    // Stars earned for each level (0-indexed array, so index 0 = Level 1)
     public int[] easyStars = new int[100];
     public int[] mediumStars = new int[100];
     public int[] hardStars = new int[100];
 
-    // What the player was last playing, to allow a generic "Play" button resume
     public Difficulty lastPlayedDifficulty = Difficulty.Easy;
     public int lastPlayedLevelIndex = 1;
 
@@ -27,9 +24,14 @@ public class PlayerProfile
     // FTUE Training
     public bool hasCompletedTutorial = false;
 
-    // DDA (Dynamic Difficulty Adjustment)
+    // DDA
     public int consecutiveFailures = 0;
     public int consecutivePerfects = 0;
+
+    // --- Adventure Mode: Separate 100-level progression ---
+    public int adventureUnlocked = 1; // Highest unlocked Adventure level
+    public int[] adventureStars = new int[100];
+    public int lastAdventureLevelIndex = 1;
 }
 
 public class LevelManager : MonoBehaviour
@@ -180,7 +182,7 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    // Calculate next level
+    // Calculate next level (Classic)
     public bool HasNextLevel()
     {
         return SelectedLevelIndex < MAX_LEVELS;
@@ -191,6 +193,46 @@ public class LevelManager : MonoBehaviour
         if (HasNextLevel())
         {
             SetLevelToPlay(SelectedDifficulty, SelectedLevelIndex + 1);
+        }
+    }
+
+    // -------------------------------------------------------
+    // ADVENTURE MODE: separate 100-level progression
+    // -------------------------------------------------------
+    public int AdventureLevelIndex { get; private set; } = 1;
+
+    public void SetAdventureLevelToPlay(int levelIndex)
+    {
+        AdventureLevelIndex = Mathf.Clamp(levelIndex, 1, MAX_LEVELS);
+        SelectedGameMode = GameMode.Adventure;
+
+        if (LevelGenerator.Instance != null)
+            LevelGenerator.Instance.SetGameMode(GameMode.Adventure);
+
+        if (CurrentProfile != null)
+        {
+            CurrentProfile.lastAdventureLevelIndex = AdventureLevelIndex;
+            SaveProfile();
+        }
+    }
+
+    public bool HasNextAdventureLevel()
+    {
+        return AdventureLevelIndex < MAX_LEVELS;
+    }
+
+    public void CompleteCurrentAdventureLevel()
+    {
+        AdventureLevelIndex++;
+        AdventureLevelIndex = Mathf.Min(AdventureLevelIndex, MAX_LEVELS);
+
+        if (CurrentProfile != null)
+        {
+            if (AdventureLevelIndex > CurrentProfile.adventureUnlocked)
+                CurrentProfile.adventureUnlocked = AdventureLevelIndex;
+
+            CurrentProfile.lastAdventureLevelIndex = AdventureLevelIndex;
+            SaveProfile();
         }
     }
 }
