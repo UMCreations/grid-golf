@@ -43,6 +43,7 @@ public class LevelManager : MonoBehaviour
     // These state variables control what happens when a game scene is loaded
     public Difficulty SelectedDifficulty { get; private set; } = Difficulty.Easy;
     public int SelectedLevelIndex { get; private set; } = 1;
+    public GameMode SelectedGameMode { get; private set; } = GameMode.Classic;
     public bool IsTutorialMode { get; set; } = false;
 
     private void Awake()
@@ -85,11 +86,16 @@ public class LevelManager : MonoBehaviour
     }
 
     // Called from Main Menu when selecting a specific level to play
-    public void SetLevelToPlay(Difficulty diff, int levelIndex)
+    public void SetLevelToPlay(Difficulty diff, int levelIndex, GameMode mode = GameMode.Classic)
     {
         SelectedDifficulty = diff;
         SelectedLevelIndex = levelIndex;
+        SelectedGameMode = mode;
         
+        // Tell the generator which strategy to use
+        if (LevelGenerator.Instance != null)
+            LevelGenerator.Instance.SetGameMode(mode);
+
         // Update "last played" feature
         CurrentProfile.lastPlayedDifficulty = diff;
         CurrentProfile.lastPlayedLevelIndex = levelIndex;

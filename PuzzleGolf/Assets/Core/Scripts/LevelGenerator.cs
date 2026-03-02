@@ -8,10 +8,17 @@ public enum Difficulty
     Hard
 }
 
+public enum GameMode
+{
+    Classic,  // Standard mode — no special tiles
+    Adventure // New mode — Ice, Sand, Boost tiles
+}
+
 [System.Serializable]
 public class LevelData
 {
     public Difficulty difficulty;
+    public GameMode gameMode;   // Classic or Adventure
     public int width;
     public int height;
     public Vector2Int startPosition;
@@ -23,16 +30,20 @@ public class LevelData
     public List<Vector2Int> goldenPath = new List<Vector2Int>();
 
     // For JSON serialization
-    public int[] tilePowersFlat; 
+    public int[] tilePowersFlat;
+    public int[] tileTypesFlat; // Serialized TileType enum as int
 
     public void Flatten()
     {
         tilePowersFlat = new int[width * height];
+        tileTypesFlat  = new int[width * height];
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 tilePowersFlat[y * width + x] = tilePowers[x, y];
+                if (tileTypes != null)
+                    tileTypesFlat[y * width + x] = (int)tileTypes[x, y];
             }
         }
     }
@@ -40,6 +51,7 @@ public class LevelData
     public void Unflatten()
     {
         tilePowers = new int[width, height];
+        tileTypes  = new TileType[width, height];
         if (tilePowersFlat != null && tilePowersFlat.Length == width * height)
         {
             for (int x = 0; x < width; x++)
@@ -47,13 +59,20 @@ public class LevelData
                 for (int y = 0; y < height; y++)
                 {
                     tilePowers[x, y] = tilePowersFlat[y * width + x];
+                    if (tileTypesFlat != null && tileTypesFlat.Length == width * height)
+                        tileTypes[x, y] = (TileType)tileTypesFlat[y * width + x];
+                    else
+                        tileTypes[x, y] = TileType.Standard;
                 }
             }
         }
     }
 
     [System.NonSerialized]
-    public int[,] tilePowers; // 0 means empty, other numbers mean specific movement distance
+    public int[,] tilePowers;
+
+    [System.NonSerialized]
+    public TileType[,] tileTypes; // Adventure tile types per cell
 }
 
 public class LevelGenerator : MonoBehaviour
@@ -65,6 +84,7 @@ public class LevelGenerator : MonoBehaviour
     public bool useAdvancedMechanics = true;
 
     private ILevelGeneratorStrategy currentStrategy;
+    private GameMode currentGameMode = GameMode.Classic;
 
     private void Awake()
     {
@@ -84,12 +104,20 @@ public class LevelGenerator : MonoBehaviour
         currentStrategy = LevelGeneratorFactory.GetStrategy(useAdvancedMechanics);
     }
 
+    public void SetGameMode(GameMode mode)
+    {
+        currentGameMode = mode;
+        if (mode == GameMode.Adventure)
+            currentStrategy = new AdventureLevelGeneratorStrategy();
+        else
+            currentStrategy = LevelGeneratorFactory.GetStrategy(useAdvancedMechanics);
+    }
+
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
-        if (currentStrategy == null)
-        {
-            InitializeStrategy();
-        }
-        return currentStrategy.GenerateLevel(difficulty, levelIndex, isTutorial);
+        if (currentStrategy == null) InitializeStrategy();
+        LevelData data = currentStrategy.GenerateLevel(difficulty, levelIndex, isTutorial);
+        data.gameMode = currentGameMode;
+        return data;
     }
 }

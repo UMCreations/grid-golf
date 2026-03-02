@@ -25,6 +25,9 @@ public class BallController : MonoBehaviour
     private bool isAiming;
     private Vector2Int currentAimDirection;
 
+    // Adventure Mode: power modifier from special tiles (+1 Boost, -1 Sand)
+    private int adventurePowerModifier = 0;
+
     private void Start()
     {
         SetupLineRenderer();
@@ -301,7 +304,17 @@ public class BallController : MonoBehaviour
         if (currentTile.type == TileType.Hole) return;
 
         int power = currentTile.powerCount;
-        if (power <= 0) 
+        
+        // Adventure Mode: apply any stored power modifier (Sand/Boost effect from last landing)
+        bool isAdventure = GridManager.Instance.CurrentLevelData != null &&
+                           GridManager.Instance.CurrentLevelData.gameMode == GameMode.Adventure;
+        if (isAdventure && adventurePowerModifier != 0)
+        {
+            power = Mathf.Max(1, power + adventurePowerModifier);
+            adventurePowerModifier = 0; // consume it
+        }
+        
+        if (power <= 0)
         {
             Debug.Log("Invalid move: Current tile has 0 power.");
             return;
@@ -382,6 +395,32 @@ public class BallController : MonoBehaviour
         
         isMoving = false;
         UpdateHighlights();
+
+        // --- ADVENTURE MODE: resolve tile effects on landing ---
+        bool adventureMode = GridManager.Instance?.CurrentLevelData?.gameMode == GameMode.Adventure;
+        if (adventureMode)
+        {
+            ITileEffect effect = TileEffectResolver.GetEffect(targetTile.type);
+            if (effect != null)
+            {
+                int modified = effect.ApplyEffect(targetTile.powerCount, moveDirection);
+
+                if (effect.CausesAutoSlide)
+                {
+                    // ICE: chain a free slide in the same direction
+                    Debug.Log($"[Ice] Auto-slide triggered in {moveDirection}!");
+                    yield return new WaitForSeconds(0.05f);
+                    AttemptMove(moveDirection);
+                    yield break; // let the chained move handle the rest
+                }
+                else
+                {
+                    // Sand or Boost: store the delta for next shot
+                    adventurePowerModifier = modified - targetTile.powerCount;
+                    Debug.Log($"[{effect.EffectName}] Next power modifier: {adventurePowerModifier:+0;-0}");
+                }
+            }
+        }
 
         // Save progress after move
         if (GridManager.Instance != null && GameManager.Instance != null)

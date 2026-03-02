@@ -19,6 +19,11 @@ public class GridManager : MonoBehaviour
     public Sprite startSprite;
     public Sprite holeSprite;
 
+    [Header("Adventure Tile Sprites")]
+    public Sprite iceSprite;
+    public Sprite sandSprite;
+    public Sprite boostSprite;
+
     [Header("Level Integration")]
     public Difficulty currentDifficulty = Difficulty.Easy;
     public LevelData CurrentLevelData { get; private set; }
@@ -242,35 +247,51 @@ public class GridManager : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                // Calculate position based on tile size and spacing
                 Vector3 worldPosition = new Vector3(x * (tileSize + spacing), y * (tileSize + spacing), 0);
                 
-                // Spawn tile
                 Tile spawnedTile = Instantiate(tilePrefab, worldPosition, Quaternion.identity, gridParent);
                 spawnedTile.name = $"Tile {x},{y}";
                 
-                // Determine type and power
-                TileType currentType = TileType.Standard;
                 int power = CurrentLevelData.tilePowers[x, y];
+                TileType currentType = TileType.Standard;
                 Sprite tileSprite = standardSprite;
 
+                // --- CLASSIC MODE: determine type purely from position ---
                 if (x == startPosition.x && y == startPosition.y)
                 {
                     currentType = TileType.Start;
-                    // Power is already set accurately by the Reverse Pathfinding!
                     tileSprite = startSprite;
                 }
                 else if (x == holePosition.x && y == holePosition.y)
                 {
                     currentType = TileType.Hole;
-                    power = 0; // The hole doesn't need to push the ball anywhere
+                    power = 0;
                     tileSprite = holeSprite;
+                }
+                // --- ADVENTURE MODE: override type from tileTypes array ---
+                else if (CurrentLevelData.gameMode == GameMode.Adventure &&
+                         CurrentLevelData.tileTypes != null)
+                {
+                    currentType = CurrentLevelData.tileTypes[x, y];
+                    tileSprite = GetSpriteForType(currentType);
                 }
 
                 spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite);
-
                 gridArray[x, y] = spawnedTile;
             }
+        }
+    }
+
+    private Sprite GetSpriteForType(TileType type)
+    {
+        switch (type)
+        {
+            case TileType.Start:  return startSprite;
+            case TileType.Hole:   return holeSprite;
+            case TileType.Ice:    return iceSprite   != null ? iceSprite   : standardSprite;
+            case TileType.Sand:   return sandSprite  != null ? sandSprite  : standardSprite;
+            case TileType.Boost:  return boostSprite != null ? boostSprite : standardSprite;
+            default:              return standardSprite;
         }
     }
 
