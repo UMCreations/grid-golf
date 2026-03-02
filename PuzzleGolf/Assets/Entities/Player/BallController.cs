@@ -108,7 +108,8 @@ public class BallController : MonoBehaviour
             // 2. Pulse the landing target if active
             if (landingTargetObject != null && landingTargetObject.activeInHierarchy)
             {
-                float pulse = 1f + Mathf.Sin(Time.time * 10f) * 0.1f;
+                // Pulse between 0.1 and 0.2 scale as requested
+                float pulse = 0.15f + Mathf.Sin(Time.time * 10f) * 0.05f;
                 landingTargetObject.transform.localScale = Vector3.one * pulse;
                 
                 SpriteRenderer sr = landingTargetObject.GetComponent<SpriteRenderer>();
