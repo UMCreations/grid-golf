@@ -204,6 +204,7 @@ public class LevelManager : MonoBehaviour
     public void SetAdventureLevelToPlay(int levelIndex)
     {
         AdventureLevelIndex = Mathf.Clamp(levelIndex, 1, MAX_LEVELS);
+        SelectedLevelIndex = AdventureLevelIndex; // For UI consistency
         SelectedGameMode = GameMode.Adventure;
 
         if (LevelGenerator.Instance != null)
@@ -214,6 +215,20 @@ public class LevelManager : MonoBehaviour
             CurrentProfile.lastAdventureLevelIndex = AdventureLevelIndex;
             SaveProfile();
         }
+    }
+
+    public int GetAdventureStars(int levelIndex)
+    {
+        if (CurrentProfile == null || levelIndex < 1 || levelIndex > MAX_LEVELS) return 0;
+        return CurrentProfile.adventureStars[levelIndex - 1];
+    }
+
+    public void SetAdventureStars(int levelIndex, int stars)
+    {
+        if (CurrentProfile == null || levelIndex < 1 || levelIndex > MAX_LEVELS) return;
+        int arrIndex = levelIndex - 1;
+        CurrentProfile.adventureStars[arrIndex] = Mathf.Max(CurrentProfile.adventureStars[arrIndex], stars);
+        SaveProfile();
     }
 
     public bool HasNextAdventureLevel()

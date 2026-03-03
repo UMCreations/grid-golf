@@ -11,9 +11,6 @@ using System.Collections.Generic;
 /// </summary>
 public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
 {
-    // Chance that a noise tile becomes a special tile instead of a plain Standard
-    private const float SpecialTileChance = 0.35f;
-
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
         if (isTutorial)
@@ -21,38 +18,20 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
             return GenerateAdventureTutorialLevel();
         }
 
-        // Adventure levels use a time-based seed so each play-through is unique,
-        // even if it's the same level index. This is the key difference from Classic mode.
-        int seed = (int)(System.DateTime.Now.Ticks % int.MaxValue) + levelIndex;
+        // Fixed seed based on level index to guarantee the same level generates every time
+        int seed = 9000 + levelIndex;
         Random.InitState(seed);
 
-        int width, height, pathLength, maxPower;
+        AdventureSegmentConfig config = AdventureSegmentResolver.GetConfigForLevel(levelIndex);
 
-        switch (difficulty)
-        {
-            case Difficulty.Easy:
-                width = 5; height = 5;
-                pathLength = Random.Range(3, 5);
-                maxPower = 2;
-                break;
-            case Difficulty.Medium:
-                width = Random.Range(6, 8); height = Random.Range(6, 8);
-                pathLength = Random.Range(5, 8);
-                maxPower = 4;
-                break;
-            case Difficulty.Hard:
-                width = Random.Range(8, 10); height = Random.Range(8, 10);
-                pathLength = Random.Range(8, 12);
-                maxPower = 5;
-                break;
-            default:
-                width = 5; height = 5; pathLength = 3; maxPower = 2;
-                break;
-        }
+        int width = Random.Range(config.minGridSize, config.maxGridSize + 1);
+        int height = Random.Range(config.minGridSize, config.maxGridSize + 1);
+        int pathLength = Random.Range(config.minPathLength, config.maxPathLength + 1);
+        int maxPower = config.maxPower;
 
         LevelData levelData = new LevelData
         {
-            difficulty = difficulty,
+            difficulty = difficulty, // Preserved for compatibility, though largely unused in Adventure now
             levelIndex = levelIndex,
             width = width,
             height = height,
@@ -60,14 +39,19 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
             tileTypes = new TileType[width, height]
         };
 
-        GenerateAdventureGoldenPath(levelData, pathLength, maxPower);
-        FillAdventureNoise(levelData, maxPower, difficulty);
+        GenerateAdventureGoldenPath(levelData, pathLength, config);
+        FillAdventureNoise(levelData, config);
 
         return levelData;
     }
 
-    private void GenerateAdventureGoldenPath(LevelData level, int pathLength, int maxPower)
+    private void GenerateAdventureGoldenPath(LevelData level, int pathLength, AdventureSegmentConfig config)
     {
+        int maxPower = config.maxPower;
+        int maxHazardsOnPath = config.maxHazardsOnPath;
+        List<TileType> allowedHazards = config.allowedHazards;
+        int pathHazardsPlaced = 0;
+
         // Initialize all types to Standard first
         for (int x = 0; x < level.width; x++)
             for (int y = 0; y < level.height; y++)
@@ -101,6 +85,16 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
                         level.tilePowers[retreat.x, retreat.y] == 0 &&
                         retreat != level.holePosition)
                     {
+                        // To place Ice, we need the tile 1 step from currentPos to be empty too
+                        if (d >= 2)
+                        {
+                            Vector2Int iceNode = currentPos - dir;
+                            if (level.tilePowers[iceNode.x, iceNode.y] != 0 && iceNode != level.holePosition)
+                            {
+                                continue; // Ice path blocked
+                            }
+                        }
+
                         validMoves.Add(retreat);
                     }
                 }
@@ -109,10 +103,61 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
             if (validMoves.Count > 0)
             {
                 Vector2Int chosen = validMoves[Random.Range(0, validMoves.Count)];
-                int power = Mathf.Abs(chosen.x - currentPos.x) + Mathf.Abs(chosen.y - currentPos.y);
+                
+                // Determine direction from chosen to currentPos
+                int dx = currentPos.x - chosen.x;
+                int dy = currentPos.y - chosen.y;
+                int dist = Mathf.Abs(dx) + Mathf.Abs(dy);
+                Vector2Int forwardDir = new Vector2Int(
+                    dx == 0 ? 0 : dx / Mathf.Abs(dx),
+                    dy == 0 ? 0 : dy / Mathf.Abs(dy)
+                );
 
-                level.tilePowers[chosen.x, chosen.y] = power;
-                level.tileTypes[chosen.x, chosen.y] = TileType.Standard; // Golden path tiles stay Standard
+                int assignedPower = dist;
+                TileType assignedType = TileType.Standard;
+
+                // Attempt to place a hazard
+                if (pathHazardsPlaced < maxHazardsOnPath && allowedHazards.Count > 0 && Random.value < 0.5f)
+                {
+                    // Shuffle valid hazards for this jump
+                    List<TileType> possibleHazards = new List<TileType>();
+                    if (allowedHazards.Contains(TileType.Sand)) possibleHazards.Add(TileType.Sand);
+                    if (dist > 1 && allowedHazards.Contains(TileType.Boost)) possibleHazards.Add(TileType.Boost);
+                    if (dist >= 2 && allowedHazards.Contains(TileType.Ice)) possibleHazards.Add(TileType.Ice);
+
+                    if (possibleHazards.Count > 0)
+                    {
+                        TileType chosenHazard = possibleHazards[Random.Range(0, possibleHazards.Count)];
+
+                        if (chosenHazard == TileType.Sand)
+                        {
+                            assignedType = TileType.Sand;
+                            assignedPower = dist + 1; // Compensate for -1 effect
+                            pathHazardsPlaced++;
+                        }
+                        else if (chosenHazard == TileType.Boost)
+                        {
+                            assignedType = TileType.Boost;
+                            assignedPower = dist - 1; // Compensate for +1 effect
+                            pathHazardsPlaced++;
+                        }
+                        else if (chosenHazard == TileType.Ice)
+                        {
+                            // Place the ice exactly 1 step before the destination
+                            Vector2Int icePos = currentPos - forwardDir;
+                            level.tileTypes[icePos.x, icePos.y] = TileType.Ice;
+                            level.tilePowers[icePos.x, icePos.y] = Random.Range(1, maxPower + 1); // Fake power to protect from noise fill
+                            
+                            // Chosen tile just shoots to the Ice tile
+                            assignedType = TileType.Standard;
+                            assignedPower = dist - 1; 
+                            pathHazardsPlaced++;
+                        }
+                    }
+                }
+
+                level.tilePowers[chosen.x, chosen.y] = assignedPower;
+                level.tileTypes[chosen.x, chosen.y] = assignedType; 
                 level.goldenPath.Add(chosen);
                 currentPos = chosen;
                 actualPathLength++;
@@ -123,54 +168,123 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
         level.startPosition = currentPos;
         level.currentGridPosition = currentPos;
         level.currentStrokes = 0;
-        level.levelPar = Mathf.Max(actualPathLength, 1) + 2; // Slightly more generous par for adventure
+        level.levelPar = Mathf.Max(actualPathLength, 1) + 2; 
         level.tileTypes[currentPos.x, currentPos.y] = TileType.Start;
     }
 
-    private void FillAdventureNoise(LevelData level, int maxPower, Difficulty difficulty)
+    private void FillAdventureNoise(LevelData level, AdventureSegmentConfig config)
     {
+        int maxPower = config.maxPower;
+        int noiseHazardsPlaced = 0;
+        int maxNoiseHazards = config.maxHazardsInNoise;
+        List<TileType> allowedHazards = config.allowedHazards;
+
+        // Step 1: Assign powers to all non-path tiles first to establish the board
         for (int x = 0; x < level.width; x++)
         {
             for (int y = 0; y < level.height; y++)
             {
-                Vector2Int pos = new Vector2Int(x, y);
-
-                if (level.tilePowers[x, y] == 0 && pos != level.holePosition)
+                if (level.tilePowers[x, y] == 0 && new Vector2Int(x, y) != level.holePosition)
                 {
                     level.tilePowers[x, y] = Random.Range(1, maxPower + 1);
+                    level.tileTypes[x, y] = TileType.Standard; // Default initialization
+                }
+            }
+        }
 
-                    // Roll for special tile (only non-golden-path tiles)
-                    if (!level.goldenPath.Contains(pos) && Random.value < SpecialTileChance)
+        if (maxNoiseHazards == 0 || allowedHazards.Count == 0) return; // World 1 exit early
+
+        // Helper directions
+        Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
+        // Step 2: Build False Trails (Highest Priority Noise)
+        // Iterate over the golden path (excluding Hole and Start if possible)
+        for (int i = 1; i < level.goldenPath.Count - 1; i++)
+        {
+            if (noiseHazardsPlaced >= maxNoiseHazards) break;
+
+            Vector2Int pathNode = level.goldenPath[i];
+            int nodePower = level.tilePowers[pathNode.x, pathNode.y];
+
+            // 30% chance to try building a false trail from this node
+            if (Random.value < 0.3f)
+            {
+                // Look for an adjacent tile that is NOT on the golden path
+                List<Vector2Int> possibleFalseStarts = new List<Vector2Int>();
+                foreach (var dir in dirs)
+                {
+                    Vector2Int adj = pathNode + dir;
+                    if (IsNoiseTile(level, adj))
                     {
-                        // Pick a random special tile type
-                        // Introduce types gradually by difficulty
-                        TileType specialType = PickSpecialTileType(difficulty);
-                        level.tileTypes[x, y] = specialType;
-                    }
-                    else
-                    {
-                        level.tileTypes[x, y] = TileType.Standard;
+                        possibleFalseStarts.Add(adj);
                     }
                 }
+
+                if (possibleFalseStarts.Count > 0)
+                {
+                    Vector2Int falseStart = possibleFalseStarts[Random.Range(0, possibleFalseStarts.Count)];
+                    
+                    // Assign a similar power to make the false trail confusingly believable
+                    int fakePower = Mathf.Clamp(nodePower + Random.Range(-1, 2), 1, maxPower);
+                    level.tilePowers[falseStart.x, falseStart.y] = fakePower;
+
+                    // Place a hazard here to trap the player
+                    TileType hazard = allowedHazards[Random.Range(0, allowedHazards.Count)];
+                    level.tileTypes[falseStart.x, falseStart.y] = hazard;
+                    noiseHazardsPlaced++;
+                }
+            }
+        }
+
+        // Step 3: Path-Adjacent Hazards (Second Priority Noise)
+        if (noiseHazardsPlaced < maxNoiseHazards)
+        {
+            List<Vector2Int> adjacentNoiseTiles = new List<Vector2Int>();
+
+            for (int i = 0; i < level.goldenPath.Count; i++)
+            {
+                Vector2Int pathNode = level.goldenPath[i];
+                foreach (var dir in dirs)
+                {
+                    Vector2Int adj = pathNode + dir;
+                    // Only collect tiles that are noise and haven't already been given a hazard
+                    if (IsNoiseTile(level, adj) && level.tileTypes[adj.x, adj.y] == TileType.Standard)
+                    {
+                        if (!adjacentNoiseTiles.Contains(adj))
+                        {
+                            adjacentNoiseTiles.Add(adj);
+                        }
+                    }
+                }
+            }
+
+            // Shuffle the adjacent list
+            for (int i = 0; i < adjacentNoiseTiles.Count; i++)
+            {
+                Vector2Int temp = adjacentNoiseTiles[i];
+                int randomIndex = Random.Range(i, adjacentNoiseTiles.Count);
+                adjacentNoiseTiles[i] = adjacentNoiseTiles[randomIndex];
+                adjacentNoiseTiles[randomIndex] = temp;
+            }
+
+            // Distribute remaining budget securely around the path
+            foreach (Vector2Int trapTile in adjacentNoiseTiles)
+            {
+                if (noiseHazardsPlaced >= maxNoiseHazards) break;
+
+                TileType hazard = allowedHazards[Random.Range(0, allowedHazards.Count)];
+                level.tileTypes[trapTile.x, trapTile.y] = hazard;
+                noiseHazardsPlaced++;
             }
         }
     }
 
-    private TileType PickSpecialTileType(Difficulty difficulty)
+    private bool IsNoiseTile(LevelData level, Vector2Int pos)
     {
-        // Easy: only Sand (forgiving)
-        // Medium: Sand + Ice
-        // Hard: Sand + Ice + Boost
-        int maxIndex = difficulty == Difficulty.Easy ? 1 :
-                       difficulty == Difficulty.Medium ? 2 : 3;
-
-        int roll = Random.Range(0, maxIndex);
-        switch (roll)
-        {
-            case 0: return TileType.Sand;
-            case 1: return TileType.Ice;
-            default: return TileType.Boost;
-        }
+        if (pos.x < 0 || pos.x >= level.width || pos.y < 0 || pos.y >= level.height) return false;
+        if (pos == level.holePosition) return false;
+        if (level.goldenPath.Contains(pos)) return false;
+        return true;
     }
 
     private LevelData GenerateAdventureTutorialLevel()

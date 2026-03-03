@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     public LevelSelectionController levelSelectionController;
     public TutorialController tutorialController;
     public FeedbackManager feedbackManager;
+    public SagaMapController sagaMapController;
 
     private void Awake()
     {
@@ -58,6 +59,7 @@ public class UIManager : MonoBehaviour
         if (settingsController != null) settingsController.gameObject.SetActive(false);
         if (levelSelectionController != null) levelSelectionController.gameObject.SetActive(false);
         if (tutorialController != null) tutorialController.gameObject.SetActive(false);
+        if (sagaMapController != null) sagaMapController.gameObject.SetActive(false);
     }
 
     public void ShowTutorial()
@@ -115,6 +117,15 @@ public class UIManager : MonoBehaviour
         if (levelSelectionController != null)
         {
             levelSelectionController.gameObject.SetActive(true);
+        }
+    }
+
+    public void ShowSagaMap()
+    {
+        HideAllPanels();
+        if (sagaMapController != null)
+        {
+            sagaMapController.gameObject.SetActive(true);
         }
     }
 }

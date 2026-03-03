@@ -114,6 +114,19 @@ public class GameManager : MonoBehaviour
 
             if (isAdventure)
             {
+                // Calculate Stars for Adventure Mode
+                int par = 0;
+                if (GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null)
+                {
+                    par = GridManager.Instance.CurrentLevelData.levelPar;
+                }
+
+                int stars = 1; // Base star for completing
+                if (CurrentStrokes <= par - 1) stars = 3;
+                else if (CurrentStrokes <= par) stars = 2;
+
+                LevelManager.Instance.SetAdventureStars(LevelManager.Instance.AdventureLevelIndex, stars);
+
                 // Adventure Mode: advance to the next Adventure level
                 LevelManager.Instance.CompleteCurrentAdventureLevel();
             }

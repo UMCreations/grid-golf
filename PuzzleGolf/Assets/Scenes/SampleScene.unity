@@ -10566,7 +10566,8 @@ MonoBehaviour:
   settingsController: {fileID: 2037099689}
   levelSelectionController: {fileID: 1914905273}
   tutorialController: {fileID: 779019379}
-  feedbackManager: {fileID: 0}
+  feedbackManager: {fileID: 880770748}
+  sagaMapController: {fileID: 0}
 --- !u!1 &1997805793
 GameObject:
   m_ObjectHideFlags: 0
