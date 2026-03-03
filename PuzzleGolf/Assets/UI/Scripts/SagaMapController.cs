@@ -54,17 +54,21 @@ public class SagaMapController : MonoBehaviour
 
         int unlockedLevel = LevelManager.Instance.CurrentProfile.adventureUnlocked;
         
-        // Update content height
-        contentContainer.sizeDelta = new Vector2(contentContainer.sizeDelta.x, LevelManager.MAX_LEVELS * verticalSpacing + 400f);
+        // Update content height - strictly based on levels and spacing
+        contentContainer.sizeDelta = new Vector2(contentContainer.sizeDelta.x, LevelManager.MAX_LEVELS * verticalSpacing);
 
         for (int i = 1; i <= LevelManager.MAX_LEVELS; i++)
         {
             LevelNodeController newNode = Instantiate(nodePrefab, contentContainer);
             
-            // Layout positioning
+            // Layout positioning - Top-Center Anchored
             RectTransform nodeRect = newNode.GetComponent<RectTransform>();
+            nodeRect.anchorMin = new Vector2(0.5f, 1f);
+            nodeRect.anchorMax = new Vector2(0.5f, 1f);
+            nodeRect.pivot = new Vector2(0.5f, 0.5f);
+            
             float xPos = Mathf.Sin(i * frequency) * pathWidth;
-            float yPos = - (i * verticalSpacing) - 100f;
+            float yPos = -((i - 1) * verticalSpacing) - (verticalSpacing * 0.5f);
             nodeRect.anchoredPosition = new Vector2(xPos, yPos);
 
             bool isLocked = i > unlockedLevel;
@@ -89,8 +93,8 @@ public class SagaMapController : MonoBehaviour
         
         if (totalHeight <= viewportHeight) return;
 
-        // Calculate position in pixels
-        float targetY = (targetLevel * verticalSpacing) + 100f;
+        // Calculate position in pixels (relative to top)
+        float targetY = ((targetLevel - 1) * verticalSpacing) + (verticalSpacing * 0.5f);
         
         // Normalized position: 0 is bottom, 1 is top
         // Content top is at y=0, bottom is at y = -totalHeight

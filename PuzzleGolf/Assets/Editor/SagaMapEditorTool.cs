@@ -94,7 +94,8 @@ public class SagaMapEditorTool : EditorWindow
         contentRect.anchorMin = new Vector2(0, 1);
         contentRect.anchorMax = new Vector2(1, 1);
         contentRect.pivot = new Vector2(0.5f, 1);
-        contentRect.sizeDelta = new Vector2(0, totalLevels * verticalSpacing + 400f);
+        contentRect.anchoredPosition = Vector2.zero; // Force reset position to top
+        contentRect.sizeDelta = new Vector2(0, totalLevels * verticalSpacing);
         scrollRect.content = contentRect;
 
         // 7. Create Back Button
@@ -154,16 +155,20 @@ public class SagaMapEditorTool : EditorWindow
         }
 
         RectTransform contentRect = selected.GetComponent<RectTransform>();
-        contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, totalLevels * verticalSpacing + 400f);
+        contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, totalLevels * verticalSpacing);
+        contentRect.pivot = new Vector2(0.5f, 1f); // Ensure pivot is at top
 
         for (int i = 1; i <= totalLevels; i++)
         {
             GameObject node = (GameObject)PrefabUtility.InstantiatePrefab(nodePrefab, selected.transform);
             RectTransform nodeRect = node.GetComponent<RectTransform>();
+            nodeRect.anchorMin = new Vector2(0.5f, 1f);
+            nodeRect.anchorMax = new Vector2(0.5f, 1f);
+            nodeRect.pivot = new Vector2(0.5f, 0.5f);
             
             // Calculate Saga Path Position (Sinusoidal)
             float xPos = Mathf.Sin(i * frequency) * pathWidth;
-            float yPos = - (i * verticalSpacing) - 100f; // Start with some padding
+            float yPos = -((i - 1) * verticalSpacing) - (verticalSpacing * 0.5f);
 
             nodeRect.anchoredPosition = new Vector2(xPos, yPos);
             node.name = $"LevelNode_{i}";
