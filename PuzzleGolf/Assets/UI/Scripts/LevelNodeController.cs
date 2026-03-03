@@ -20,7 +20,7 @@ public class LevelNodeController : MonoBehaviour
     private int levelIndex;
     private bool isLocked;
 
-    public void Setup(int level, bool locked, int starsEarned)
+    public void Setup(int level, bool locked, int starsEarned, Color themeColor)
     {
         levelIndex = level;
         isLocked = locked;
@@ -36,10 +36,8 @@ public class LevelNodeController : MonoBehaviour
         {
             if (isLocked)
                 backgroundImage.color = lockedColor;
-            else if (starsEarned > 0)
-                backgroundImage.color = completedColor;
             else
-                backgroundImage.color = unlockedColor;
+                backgroundImage.color = themeColor; // Use segment-specific theme color
         }
 
         // Update Stars

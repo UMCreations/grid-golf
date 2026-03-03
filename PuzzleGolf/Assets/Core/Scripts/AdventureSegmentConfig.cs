@@ -20,4 +20,7 @@ public class AdventureSegmentConfig
     public int maxHazardsInNoise;
     
     public List<TileType> allowedHazards = new List<TileType>();
+    
+    [Header("UI Aesthetics")]
+    public Color segmentColor = Color.gray;
 }

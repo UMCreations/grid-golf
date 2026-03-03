@@ -161,6 +161,8 @@ public class SagaMapEditorTool : EditorWindow
         for (int i = 1; i <= totalLevels; i++)
         {
             GameObject node = (GameObject)PrefabUtility.InstantiatePrefab(nodePrefab, selected.transform);
+            
+            // Layout positioning - Top-Center Anchored
             RectTransform nodeRect = node.GetComponent<RectTransform>();
             nodeRect.anchorMin = new Vector2(0.5f, 1f);
             nodeRect.anchorMax = new Vector2(0.5f, 1f);
@@ -176,13 +178,25 @@ public class SagaMapEditorTool : EditorWindow
             LevelNodeController nodeCtrl = node.GetComponent<LevelNodeController>();
             if (nodeCtrl != null)
             {
-                // In Editor, we can set default labels
+                // Fetch segment color
+                AdventureSegmentConfig config = AdventureSegmentResolver.GetConfigForLevel(i);
+                Color segmentColor = (config != null) ? config.segmentColor : Color.white;
+
+                // In Editor, we can set default labels and colors
                 SerializedObject so = new SerializedObject(nodeCtrl);
                 var textProp = so.FindProperty("levelNumberText");
                 if (textProp != null && textProp.objectReferenceValue != null)
                 {
                     ((TextMeshProUGUI)textProp.objectReferenceValue).text = i.ToString();
                 }
+
+                // Apply background color in Editor
+                var bgImgProp = so.FindProperty("backgroundImage");
+                if (bgImgProp != null && bgImgProp.objectReferenceValue != null)
+                {
+                    ((Image)bgImgProp.objectReferenceValue).color = segmentColor;
+                }
+
                 so.ApplyModifiedProperties();
             }
         }

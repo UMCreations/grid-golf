@@ -73,8 +73,12 @@ public class SagaMapController : MonoBehaviour
 
             bool isLocked = i > unlockedLevel;
             int starsEarned = LevelManager.Instance.GetAdventureStars(i);
+            
+            // Get segment color for background
+            AdventureSegmentConfig config = AdventureSegmentResolver.GetConfigForLevel(i);
+            Color segmentColor = (config != null) ? config.segmentColor : Color.white;
 
-            newNode.Setup(i, isLocked, starsEarned);
+            newNode.Setup(i, isLocked, starsEarned, segmentColor);
             spawnedNodes.Add(newNode);
         }
 
