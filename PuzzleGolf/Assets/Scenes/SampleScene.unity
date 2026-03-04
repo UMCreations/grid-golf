@@ -11067,7 +11067,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Grid Golf '
+  m_text: Grid G<color=#FF0000>o</color>l<color=#FFFF00>f</color>
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e55e815613c6b4c0a8887d5c20a8448b, type: 2}
   m_sharedMaterial: {fileID: 1253159242532535909, guid: e55e815613c6b4c0a8887d5c20a8448b, type: 2}
