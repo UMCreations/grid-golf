@@ -10185,12 +10185,7 @@ MonoBehaviour:
   tilePrefab: {fileID: 6303450923254926047, guid: 9e1f70e9b30d24f02a67b64f63a3f57a, type: 3}
   gridParent: {fileID: 611456832}
   screenPadding: 1
-  standardSprite: {fileID: 21300000, guid: b4563f14e4ca843c385162c80cced3aa, type: 3}
-  startSprite: {fileID: 21300000, guid: 8aeed554e2b284df495d2bf399e17048, type: 3}
-  holeSprite: {fileID: 21300000, guid: 4ce9f6a6be2314f00bb623a7cabaf442, type: 3}
-  iceSprite: {fileID: 21300000, guid: 93df08d8546f945dfbe16cb6b4dd464d, type: 3}
-  sandSprite: {fileID: 21300000, guid: 8fa258d83deb7458cbce363e49d8b7d6, type: 3}
-  boostSprite: {fileID: 21300000, guid: 414271313d00140a3abc349a35b726a4, type: 3}
+  currentTheme: {fileID: 11400000, guid: 3e1c5be98b2fa4278b06d0d6da7abfb2, type: 2}
   currentDifficulty: 0
   ballPrefab: {fileID: 7777476746999806065, guid: cbf9517a982d04db9af92fe8eeebdaf8, type: 3}
 --- !u!4 &611456832

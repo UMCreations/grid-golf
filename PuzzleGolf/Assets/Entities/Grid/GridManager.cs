@@ -14,15 +14,9 @@ public class GridManager : MonoBehaviour
     [Header("Camera Settings")]
     public float screenPadding = 1.0f; // Extra space around the grid
 
-    [Header("Tile Sprites")]
-    public Sprite standardSprite;
-    public Sprite startSprite;
-    public Sprite holeSprite;
-
-    [Header("Adventure Tile Sprites")]
-    public Sprite iceSprite;
-    public Sprite sandSprite;
-    public Sprite boostSprite;
+    [Header("Theme Setup")]
+    public GridTheme currentTheme;
+    private SpriteRenderer bgRenderer;
 
     [Header("Level Integration")]
     public Difficulty currentDifficulty = Difficulty.Easy;
@@ -123,6 +117,7 @@ public class GridManager : MonoBehaviour
 
         GenerateGrid();
         SpawnBall();
+        UpdateBackground();
         CenterAndFitCamera();
     }
 
@@ -233,6 +228,11 @@ public class GridManager : MonoBehaviour
         {
             Destroy(currentBall.gameObject);
         }
+
+        if (bgRenderer != null)
+        {
+            Destroy(bgRenderer.gameObject);
+        }
     }
 
     public void GenerateGrid()
@@ -255,6 +255,8 @@ public class GridManager : MonoBehaviour
             }
         }
 
+        UpdateBackground();
+
         // Generate grid
         for (int x = 0; x < width; x++)
         {
@@ -267,26 +269,26 @@ public class GridManager : MonoBehaviour
                 
                 int power = CurrentLevelData.tilePowers[x, y];
                 TileType currentType = TileType.Standard;
-                Sprite tileSprite = standardSprite;
+                Sprite tileSprite = currentTheme != null ? currentTheme.standardSprite : null;
 
                 // --- CLASSIC MODE: determine type purely from position ---
                 if (x == startPosition.x && y == startPosition.y)
                 {
                     currentType = TileType.Start;
-                    tileSprite = startSprite;
+                    tileSprite = currentTheme != null ? currentTheme.startSprite : null;
                 }
                 else if (x == holePosition.x && y == holePosition.y)
                 {
                     currentType = TileType.Hole;
                     power = 0;
-                    tileSprite = holeSprite;
+                    tileSprite = currentTheme != null ? currentTheme.holeSprite : null;
                 }
                 // --- ADVENTURE MODE: override type from tileTypes array ---
                 else if (CurrentLevelData.gameMode == GameMode.Adventure &&
                          CurrentLevelData.tileTypes != null)
                 {
                     currentType = CurrentLevelData.tileTypes[x, y];
-                    tileSprite = GetSpriteForType(currentType);
+                    tileSprite = currentTheme != null ? currentTheme.GetSpriteForType(currentType) : null;
                 }
 
                 spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite);
@@ -297,15 +299,8 @@ public class GridManager : MonoBehaviour
 
     private Sprite GetSpriteForType(TileType type)
     {
-        switch (type)
-        {
-            case TileType.Start:  return startSprite;
-            case TileType.Hole:   return holeSprite;
-            case TileType.Ice:    return iceSprite   != null ? iceSprite   : standardSprite;
-            case TileType.Sand:   return sandSprite  != null ? sandSprite  : standardSprite;
-            case TileType.Boost:  return boostSprite != null ? boostSprite : standardSprite;
-            default:              return standardSprite;
-        }
+        if (currentTheme != null) return currentTheme.GetSpriteForType(type);
+        return null;
     }
 
     public Tile GetTileAtPosition(Vector2Int gridPosition)
@@ -374,5 +369,57 @@ public class GridManager : MonoBehaviour
         }
         
         return false;
+    }
+
+    private void UpdateBackground()
+    {
+        if (currentTheme == null || currentTheme.backgroundImage == null)
+        {
+            if (bgRenderer != null) bgRenderer.gameObject.SetActive(false);
+            return;
+        }
+
+        if (bgRenderer == null)
+        {
+            GameObject bgObj = new GameObject("GridBackground");
+            bgObj.transform.parent = transform;
+            bgRenderer = bgObj.AddComponent<SpriteRenderer>();
+        }
+
+        bgRenderer.gameObject.SetActive(true);
+        bgRenderer.sprite = currentTheme.backgroundImage;
+        bgRenderer.color = currentTheme.backgroundColor;
+        bgRenderer.sortingOrder = -10; // Behind everything
+
+        // Slicing support for nice borders
+        if (currentTheme.backgroundImage.border != Vector4.zero)
+        {
+            bgRenderer.drawMode = SpriteDrawMode.Sliced;
+        }
+        else
+        {
+            bgRenderer.drawMode = SpriteDrawMode.Simple;
+        }
+
+        float physicalWidth = (width - 1) * (tileSize + spacing) + tileSize;
+        float physicalHeight = (height - 1) * (tileSize + spacing) + tileSize;
+        float centerX = ((width - 1) * (tileSize + spacing)) / 2f;
+        float centerY = ((height - 1) * (tileSize + spacing)) / 2f;
+
+        bgRenderer.transform.position = new Vector3(centerX, centerY, 1f);
+
+        float targetWidth = physicalWidth + currentTheme.backgroundPadding;
+        float targetHeight = physicalHeight + currentTheme.backgroundPadding;
+
+        if (bgRenderer.drawMode == SpriteDrawMode.Sliced)
+        {
+            bgRenderer.size = new Vector2(targetWidth, targetHeight);
+            bgRenderer.transform.localScale = Vector3.one;
+        }
+        else
+        {
+            Vector2 spriteSize = currentTheme.backgroundImage.bounds.size;
+            bgRenderer.transform.localScale = new Vector3(targetWidth / spriteSize.x, targetHeight / spriteSize.y, 1f);
+        }
     }
 }
