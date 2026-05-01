@@ -117,8 +117,8 @@ public class GridManager : MonoBehaviour
 
         GenerateGrid();
         SpawnBall();
-        UpdateBackground();
         CenterAndFitCamera();
+        UpdateBackground();
     }
 
     public void GenerateAndLoadNewLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
@@ -232,6 +232,7 @@ public class GridManager : MonoBehaviour
         if (bgRenderer != null)
         {
             Destroy(bgRenderer.gameObject);
+            bgRenderer = null;
         }
     }
 
@@ -255,7 +256,7 @@ public class GridManager : MonoBehaviour
             }
         }
 
-        UpdateBackground();
+      
 
         // Generate grid
         for (int x = 0; x < width; x++)
@@ -373,23 +374,26 @@ public class GridManager : MonoBehaviour
 
     private void UpdateBackground()
     {
+        // Force clean up of the old background to prevent any alternating states
+        if (bgRenderer != null)
+        {
+            Destroy(bgRenderer.gameObject);
+            bgRenderer = null;
+        }
+
         if (currentTheme == null || currentTheme.backgroundImage == null)
         {
-            if (bgRenderer != null) bgRenderer.gameObject.SetActive(false);
             return;
         }
 
-        if (bgRenderer == null)
-        {
-            GameObject bgObj = new GameObject("GridBackground");
-            bgObj.transform.parent = transform;
-            bgRenderer = bgObj.AddComponent<SpriteRenderer>();
-        }
+        GameObject bgObj = new GameObject("GridBackground");
+        bgObj.transform.parent = transform;
+        bgRenderer = bgObj.AddComponent<SpriteRenderer>();
 
         bgRenderer.gameObject.SetActive(true);
         bgRenderer.sprite = currentTheme.backgroundImage;
         bgRenderer.color = currentTheme.backgroundColor;
-        bgRenderer.sortingOrder = -10; // Behind everything
+        bgRenderer.sortingOrder = -100; // Force it behind all standard tiles
 
         // Slicing support for nice borders
         if (currentTheme.backgroundImage.border != Vector4.zero)
@@ -406,10 +410,16 @@ public class GridManager : MonoBehaviour
         float centerX = ((width - 1) * (tileSize + spacing)) / 2f;
         float centerY = ((height - 1) * (tileSize + spacing)) / 2f;
 
-        bgRenderer.transform.position = new Vector3(centerX, centerY, 1f);
+        // Push Z position further back to ensure it doesn't clip tiles
+        bgRenderer.transform.position = new Vector3(centerX, centerY, 5f);
 
-        float targetWidth = physicalWidth + currentTheme.backgroundPadding;
-        float targetHeight = physicalHeight + currentTheme.backgroundPadding;
+        // Make the background cover the entire screen based on the Camera's orthographic size
+        float targetHeight = Camera.main.orthographicSize * 2f;
+        float targetWidth = targetHeight * Camera.main.aspect;
+        
+        // Add slight overscan padding to prevent edge bleeding
+        targetWidth += 0.5f;
+        targetHeight += 0.5f;
 
         if (bgRenderer.drawMode == SpriteDrawMode.Sliced)
         {
