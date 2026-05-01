@@ -16,6 +16,10 @@ public class GridTheme : ScriptableObject
     public Sprite startSprite;
     public Sprite holeSprite;
 
+    [Header("Numbered Sprites (Optional)")]
+    [Tooltip("Map power count to sprite index (0 = power 1, 1 = power 2, etc.)")]
+    public Sprite[] numberedSprites;
+
     [Header("Adventure Tile Sprites (Optional)")]
     public Sprite iceSprite;
     public Sprite sandSprite;
@@ -25,7 +29,7 @@ public class GridTheme : ScriptableObject
     public Color standardTileColor = Color.white;
     public Color powerTextColor = Color.white;
 
-    public Sprite GetSpriteForType(TileType type)
+    public Sprite GetSpriteForType(TileType type, int power = 0)
     {
         switch (type)
         {
@@ -34,6 +38,12 @@ public class GridTheme : ScriptableObject
             case TileType.Ice:      return iceSprite != null ? iceSprite : standardSprite;
             case TileType.Sand:     return sandSprite != null ? sandSprite : standardSprite;
             case TileType.Boost:    return boostSprite != null ? boostSprite : standardSprite;
+            case TileType.Standard:
+                if (power > 0 && numberedSprites != null && power - 1 < numberedSprites.Length && numberedSprites[power - 1] != null)
+                {
+                    return numberedSprites[power - 1];
+                }
+                return standardSprite;
             default:                return standardSprite;
         }
     }

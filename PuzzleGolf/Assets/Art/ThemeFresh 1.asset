@@ -19,6 +19,11 @@ MonoBehaviour:
   standardSprite: {fileID: 21300000, guid: 9dd1c3afa6ad34041a37712ba926e960, type: 3}
   startSprite: {fileID: 21300000, guid: fcfa205b9d9584f728beeb691fdc528c, type: 3}
   holeSprite: {fileID: 21300000, guid: 7b2cd2c8900a748a3b18a40cd7588f99, type: 3}
+  numberedSprites:
+  - {fileID: 21300000, guid: 9dd1c3afa6ad34041a37712ba926e960, type: 3}
+  - {fileID: 21300000, guid: 865802fa631a540c7a25fbcf9d2d54c8, type: 3}
+  - {fileID: 21300000, guid: e2e242abfef904a78bec5f0ac6d3d4a1, type: 3}
+  - {fileID: 21300000, guid: 66dc735e27d194d1eb23bbf7193fb681, type: 3}
   iceSprite: {fileID: 21300000, guid: ba654a2c85fd6465b99641c15b623555, type: 3}
   sandSprite: {fileID: 21300000, guid: 35fcd649997d1400593789de8a1b69c1, type: 3}
   boostSprite: {fileID: 21300000, guid: 414271313d00140a3abc349a35b726a4, type: 3}

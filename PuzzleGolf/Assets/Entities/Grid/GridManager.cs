@@ -269,7 +269,7 @@ public class GridManager : MonoBehaviour
                 
                 int power = CurrentLevelData.tilePowers[x, y];
                 TileType currentType = TileType.Standard;
-                Sprite tileSprite = currentTheme != null ? currentTheme.standardSprite : null;
+                Sprite tileSprite = currentTheme != null ? currentTheme.GetSpriteForType(TileType.Standard, power) : null;
 
                 // --- CLASSIC MODE: determine type purely from position ---
                 if (x == startPosition.x && y == startPosition.y)
@@ -288,7 +288,7 @@ public class GridManager : MonoBehaviour
                          CurrentLevelData.tileTypes != null)
                 {
                     currentType = CurrentLevelData.tileTypes[x, y];
-                    tileSprite = currentTheme != null ? currentTheme.GetSpriteForType(currentType) : null;
+                    tileSprite = currentTheme != null ? currentTheme.GetSpriteForType(currentType, power) : null;
                 }
 
                 spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite);
@@ -297,9 +297,9 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    private Sprite GetSpriteForType(TileType type)
+    private Sprite GetSpriteForType(TileType type, int power = 0)
     {
-        if (currentTheme != null) return currentTheme.GetSpriteForType(type);
+        if (currentTheme != null) return currentTheme.GetSpriteForType(type, power);
         return null;
     }
 
