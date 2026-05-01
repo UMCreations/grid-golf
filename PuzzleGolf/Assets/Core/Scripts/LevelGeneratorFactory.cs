@@ -6,7 +6,7 @@ public static class LevelGeneratorFactory
     {
         if (useAdvanced)
         {
-            return new AdvancedLevelGeneratorStrategy();
+            return new SmartLevelGeneratorStrategy();
         }
         
         return new ClassicLevelGeneratorStrategy();

@@ -40,7 +40,30 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
         };
 
         GenerateAdventureGoldenPath(levelData, pathLength, config);
-        FillAdventureNoise(levelData, config);
+
+        // Phase 2: Smart Refinement Loop
+        // Solve the level to ensure noise tiles didn't create an accidental shortcut
+        for (int i = 0; i < 5; i++)
+        {
+            FillAdventureNoise(levelData, config);
+            SolveResult result = PuzzleSolver.Solve(levelData);
+
+            if (result.IsSolvable)
+            {
+                if (result.ShortestPathStrokes < pathLength)
+                {
+                    // Shortcut detected, let the next iteration of FillAdventureNoise try again
+                    // (Optionally we could specifically break the shortcut path here)
+                    continue;
+                }
+                else
+                {
+                    // Level is valid: intended path is the shortest or equal to it
+                    levelData.levelPar = result.ShortestPathStrokes + 2; 
+                    break;
+                }
+            }
+        }
 
         return levelData;
     }
