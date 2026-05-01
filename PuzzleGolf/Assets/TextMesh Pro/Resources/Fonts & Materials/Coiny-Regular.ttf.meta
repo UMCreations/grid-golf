@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ac4c27d4501aa401084e1eb87a1051a7
+guid: 9704d3b39dbcc49d498fa91f84b79c6d
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Rubik Dirt
+  - Coiny
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
