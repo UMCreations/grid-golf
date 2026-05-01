@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d014025e5806402a918d37a4b0d5012, type: 3}
+  m_Name: ThemeFresh 1
+  m_EditorClassIdentifier: 
+  themeName: Fresh
+  backgroundImage: {fileID: 0}
+  backgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  backgroundPadding: 1.5
+  standardSprite: {fileID: 21300000, guid: 9dd1c3afa6ad34041a37712ba926e960, type: 3}
+  startSprite: {fileID: 21300000, guid: fcfa205b9d9584f728beeb691fdc528c, type: 3}
+  holeSprite: {fileID: 21300000, guid: 7b2cd2c8900a748a3b18a40cd7588f99, type: 3}
+  iceSprite: {fileID: 21300000, guid: ba654a2c85fd6465b99641c15b623555, type: 3}
+  sandSprite: {fileID: 21300000, guid: 35fcd649997d1400593789de8a1b69c1, type: 3}
+  boostSprite: {fileID: 21300000, guid: 414271313d00140a3abc349a35b726a4, type: 3}
+  standardTileColor: {r: 1, g: 1, b: 1, a: 1}
+  powerTextColor: {r: 1, g: 1, b: 1, a: 1}
