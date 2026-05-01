@@ -159,24 +159,49 @@ public class LevelManager : MonoBehaviour
     // Called by GameManager when a level is beaten
     public void CompleteCurrentLevel()
     {
-        bool unlockedNew = false;
+        bool profileChanged = false;
+
+        // 1. Advance within the current difficulty
         if (SelectedDifficulty == Difficulty.Easy && SelectedLevelIndex == CurrentProfile.unlockedEasy && SelectedLevelIndex < MAX_LEVELS)
         {
             CurrentProfile.unlockedEasy++;
-            unlockedNew = true;
+            profileChanged = true;
         }
         else if (SelectedDifficulty == Difficulty.Medium && SelectedLevelIndex == CurrentProfile.unlockedMedium && SelectedLevelIndex < MAX_LEVELS)
         {
             CurrentProfile.unlockedMedium++;
-            unlockedNew = true;
+            profileChanged = true;
         }
         else if (SelectedDifficulty == Difficulty.Hard && SelectedLevelIndex == CurrentProfile.unlockedHard && SelectedLevelIndex < MAX_LEVELS)
         {
             CurrentProfile.unlockedHard++;
-            unlockedNew = true;
+            profileChanged = true;
         }
 
-        if (unlockedNew)
+        // 2. Unlock NEXT difficulty if the last level of current difficulty was beaten
+        if (SelectedLevelIndex == MAX_LEVELS)
+        {
+            if (SelectedDifficulty == Difficulty.Easy)
+            {
+                // Ensure Medium level 1 is unlocked
+                if (CurrentProfile.unlockedMedium < 1) 
+                {
+                    CurrentProfile.unlockedMedium = 1;
+                    profileChanged = true;
+                }
+            }
+            else if (SelectedDifficulty == Difficulty.Medium)
+            {
+                // Ensure Hard level 1 is unlocked
+                if (CurrentProfile.unlockedHard < 1)
+                {
+                    CurrentProfile.unlockedHard = 1;
+                    profileChanged = true;
+                }
+            }
+        }
+
+        if (profileChanged)
         {
             SaveProfile();
         }
@@ -185,14 +210,33 @@ public class LevelManager : MonoBehaviour
     // Calculate next level (Classic)
     public bool HasNextLevel()
     {
-        return SelectedLevelIndex < MAX_LEVELS;
+        // Still have levels in current difficulty
+        if (SelectedLevelIndex < MAX_LEVELS) return true;
+
+        // At the end of current difficulty, check if we can move to next difficulty
+        if (SelectedDifficulty == Difficulty.Easy) return true; // Can move to Medium 1
+        if (SelectedDifficulty == Difficulty.Medium) return true; // Can move to Hard 1
+
+        return false; // Hard level 100 is the absolute end
     }
 
     public void ProgressToNextLevel()
     {
-        if (HasNextLevel())
+        if (SelectedLevelIndex < MAX_LEVELS)
         {
             SetLevelToPlay(SelectedDifficulty, SelectedLevelIndex + 1);
+        }
+        else
+        {
+            // At the end of the difficulty, switch to the next one
+            if (SelectedDifficulty == Difficulty.Easy)
+            {
+                SetLevelToPlay(Difficulty.Medium, 1);
+            }
+            else if (SelectedDifficulty == Difficulty.Medium)
+            {
+                SetLevelToPlay(Difficulty.Hard, 1);
+            }
         }
     }
 
