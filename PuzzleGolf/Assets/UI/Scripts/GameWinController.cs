@@ -104,7 +104,7 @@ public class GameWinController : MonoBehaviour
             int levelNum = isAdventure ? LevelManager.Instance.AdventureLevelIndex : LevelManager.Instance.SelectedLevelIndex;
             string modeName = isAdventure ? "Adventure" : LevelManager.Instance.SelectedDifficulty.ToString();
 
-            victoryText.text = $"Level {levelNum} ({modeName}) Cleared in {GameManager.Instance.CurrentStrokes}!";
+            victoryText.text = $"Level {levelNum} Cleared in {GameManager.Instance.CurrentStrokes}!";
         }
     }
 
