@@ -12,7 +12,7 @@ public class GridTheme : ScriptableObject
     public float backgroundPadding = 1.5f;
 
     [Header("Tile Sprites (Required)")]
-    public Sprite standardSprite;
+    public Sprite[] standardSprites;
     public Sprite startSprite;
     public Sprite holeSprite;
 
@@ -21,9 +21,9 @@ public class GridTheme : ScriptableObject
     public Sprite[] numberedSprites;
 
     [Header("Adventure Tile Sprites (Optional)")]
-    public Sprite iceSprite;
-    public Sprite sandSprite;
-    public Sprite boostSprite;
+    public Sprite[] iceSprites;
+    public Sprite[] sandSprites;
+    public Sprite[] boostSprites;
 
     [Header("Visual Tuning")]
     public Color standardTileColor = Color.white;
@@ -35,16 +35,30 @@ public class GridTheme : ScriptableObject
         {
             case TileType.Start:    return startSprite;
             case TileType.Hole:     return holeSprite;
-            case TileType.Ice:      return iceSprite != null ? iceSprite : standardSprite;
-            case TileType.Sand:     return sandSprite != null ? sandSprite : standardSprite;
-            case TileType.Boost:    return boostSprite != null ? boostSprite : standardSprite;
+            case TileType.Ice:      return GetRandomFromList(iceSprites);
+            case TileType.Sand:     return GetRandomFromList(sandSprites);
+            case TileType.Boost:    return GetRandomFromList(boostSprites);
             case TileType.Standard:
                 if (power > 0 && numberedSprites != null && power - 1 < numberedSprites.Length && numberedSprites[power - 1] != null)
                 {
                     return numberedSprites[power - 1];
                 }
-                return standardSprite;
-            default:                return standardSprite;
+                return GetRandomFromList(standardSprites);
+            default:                return GetRandomFromList(standardSprites);
         }
+    }
+
+    private Sprite GetRandomFromList(Sprite[] list)
+    {
+        if (list != null && list.Length > 0)
+        {
+            return list[Random.Range(0, list.Length)];
+        }
+        
+        // Return standard if no sprites assigned to specific list
+        if (standardSprites != null && standardSprites.Length > 0)
+            return standardSprites[0];
+            
+        return null;
     }
 }
