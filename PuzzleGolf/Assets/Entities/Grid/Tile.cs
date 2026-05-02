@@ -125,7 +125,13 @@ public class Tile : MonoBehaviour
         // 2. Tile Pop Animation
         transform.DOScale(1.0f, 0.5f)
             .SetDelay(delay)
-            .SetEase(Ease.OutBack);
+            .SetEase(Ease.OutBack)
+            .OnStart(() => {
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlayTilePlaceSound();
+                }
+            });
 
         // 3. Number Fade-in Animation (slightly delayed after the pop)
         if (powerText != null)

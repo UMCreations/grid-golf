@@ -14,6 +14,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip winClip;
     public AudioClip loseClip;
     public AudioClip invalidMoveClip;
+    public AudioClip tilePlaceClip;
 
     [Header("Clips - UI")]
     public AudioClip buttonClickClip;
@@ -88,6 +89,16 @@ public class AudioManager : MonoBehaviour
 
         sfxSource.pitch = 0.8f; // Low pitch for error
         sfxSource.PlayOneShot(invalidMoveClip);
+    }
+
+    public void PlayTilePlaceSound()
+    {
+        if (LevelManager.Instance != null && !LevelManager.Instance.CurrentProfile.soundEffectsEnabled) return;
+        if (tilePlaceClip == null) return;
+
+        // Slight random pitch for variety
+        sfxSource.pitch = 1.0f + Random.Range(-0.1f, 0.1f);
+        sfxSource.PlayOneShot(tilePlaceClip);
     }
 
     public void UpdateSettings()

@@ -6490,6 +6490,7 @@ MonoBehaviour:
   winClip: {fileID: 8300000, guid: cfea1b407c16d4811bb50d768dc179ff, type: 3}
   loseClip: {fileID: 8300000, guid: 3bf1aba442b6541ee86eecf9dfc7b9df, type: 3}
   invalidMoveClip: {fileID: 8300000, guid: a37d6c706aab34dd4bf81240635c2377, type: 3}
+  tilePlaceClip: {fileID: 8300000, guid: fd86eb32497854d00bab44f1af698668, type: 3}
   buttonClickClip: {fileID: 8300000, guid: 3c829b797d99145de8dc222f37aa5daa, type: 3}
   pitchIncrementPerStroke: 0.05
   basePitch: 1
@@ -6822,7 +6823,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 924.73724, y: -74.99995}
+  m_AnchoredPosition: {x: 861.98303, y: -74.99995}
   m_SizeDelta: {x: 250, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &373551465
@@ -24564,7 +24565,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 154.94745, y: -74.99995}
+  m_AnchoredPosition: {x: 142.3966, y: -74.99995}
   m_SizeDelta: {x: 250, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1656730235
@@ -29500,7 +29501,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 539.84235, y: -75}
+  m_AnchoredPosition: {x: 502.18982, y: -75}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2013299301
@@ -29510,7 +29511,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2013299299}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
