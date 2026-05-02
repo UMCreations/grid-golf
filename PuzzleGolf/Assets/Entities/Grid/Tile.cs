@@ -111,4 +111,26 @@ public class Tile : MonoBehaviour
             }
         }
     }
+    public void AnimateSpawn(float delay)
+    {
+        // 1. Initial State (Hidden)
+        transform.localScale = Vector3.zero;
+        if (powerText != null)
+        {
+            Color c = powerText.color;
+            c.a = 0f;
+            powerText.color = c;
+        }
+
+        // 2. Tile Pop Animation
+        transform.DOScale(1.0f, 0.5f)
+            .SetDelay(delay)
+            .SetEase(Ease.OutBack);
+
+        // 3. Number Fade-in Animation (slightly delayed after the pop)
+        if (powerText != null)
+        {
+            powerText.DOFade(1f, 0.5f).SetDelay(delay + 0.3f);
+        }
+    }
 }

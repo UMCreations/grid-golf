@@ -379,7 +379,7 @@ public class BallController : MonoBehaviour
         }
     }
 
-    private IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos, Vector2Int moveDirection)
+    public IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos, Vector2Int moveDirection)
     {
         isMoving = true;
         

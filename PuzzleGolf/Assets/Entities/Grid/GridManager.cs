@@ -116,7 +116,11 @@ public class GridManager : MonoBehaviour
         }
 
         GenerateGrid();
-        SpawnBall();
+        
+        // Calculate max delay to know when to spawn the ball
+        float ballSpawnDelay = (width + height) * 0.05f + 0.6f;
+        Invoke(nameof(SpawnBall), ballSpawnDelay);
+        
         CenterAndFitCamera();
         UpdateBackground();
     }
@@ -205,8 +209,15 @@ public class GridManager : MonoBehaviour
             Tile currentTile = GetTileAtPosition(CurrentLevelData.currentGridPosition);
             if (currentTile != null)
             {
-                currentBall = Instantiate(ballPrefab, currentTile.transform.position, Quaternion.identity);
+                // Spawn above the grid and animate it dropping in
+                Vector3 targetPos = currentTile.transform.position;
+                Vector3 spawnPos = targetPos + Vector3.up * 3f; 
+                
+                currentBall = Instantiate(ballPrefab, spawnPos, Quaternion.identity);
                 currentBall.currentGridPosition = CurrentLevelData.currentGridPosition;
+                
+                // Trigger the characteristic jump animation to reach the start tile
+                currentBall.StartCoroutine(currentBall.MoveAndAnimateBall(targetPos, currentTile, CurrentLevelData.currentGridPosition, Vector2Int.down));
             }
         }
         else
@@ -293,6 +304,17 @@ public class GridManager : MonoBehaviour
                 }
 
                 spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite);
+                
+                // Calculate animation delay based on Manhattan distance from origin
+                float staggerDelay = (x + y) * 0.05f;
+                
+                // Start and Hole tiles appear a bit later for dramatic effect
+                if (currentType == TileType.Start || currentType == TileType.Hole)
+                {
+                    staggerDelay += 0.5f;
+                }
+                
+                spawnedTile.AnimateSpawn(staggerDelay);
                 gridArray[x, y] = spawnedTile;
             }
         }
