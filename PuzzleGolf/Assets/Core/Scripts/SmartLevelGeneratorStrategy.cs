@@ -7,6 +7,11 @@ public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
 
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
+        if (isTutorial)
+        {
+            return GenerateTutorialLevel();
+        }
+
         // Standard seeding to keep levels deterministic
         int seed = (int)difficulty * 1000 + levelIndex + 5000; // Offset to distinguish from Classic
         Random.InitState(seed);
@@ -57,6 +62,42 @@ public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
 
         levelData.levelPar = targetPathLength; // Strict par for 'Exactly One Path' feel
         return levelData;
+    }
+
+    private LevelData GenerateTutorialLevel()
+    {
+        LevelData tutorial = new LevelData
+        {
+            difficulty = Difficulty.Easy,
+            levelIndex = 0, // Special index for tutorial
+            width = 3,
+            height = 3,
+            tilePowers = new int[3, 3],
+            gameMode = GameMode.Classic
+        };
+
+        tutorial.startPosition = new Vector2Int(0, 0);
+        tutorial.currentGridPosition = new Vector2Int(0, 0);
+        tutorial.holePosition = new Vector2Int(2, 2);
+        tutorial.levelPar = 4; // 4 steps to hole
+
+        for (int x = 0; x < 3; x++)
+        {
+            for (int y = 0; y < 3; y++)
+            {
+                tutorial.tilePowers[x, y] = 1;
+            }
+        }
+        tutorial.tilePowers[2, 2] = 0; // Hole
+        
+        // Tutorial Golden Path
+        tutorial.goldenPath.Add(new Vector2Int(0,0));
+        tutorial.goldenPath.Add(new Vector2Int(1,0));
+        tutorial.goldenPath.Add(new Vector2Int(2,0));
+        tutorial.goldenPath.Add(new Vector2Int(2,1));
+        tutorial.goldenPath.Add(new Vector2Int(2,2));
+
+        return tutorial;
     }
 
     private void GenerateWindingPath(LevelData level, int pathLength, int maxPower)
