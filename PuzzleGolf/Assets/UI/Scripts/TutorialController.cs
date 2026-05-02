@@ -7,6 +7,7 @@ public enum TutorialActionType
 {
     None,            // Advances with "Next" button
     MoveToPosition,  // Advances when ball reaches specific grid pos
+    MoveToAnyTile
 }
 
 public enum TutorialVisualBehavior
@@ -47,6 +48,9 @@ public class TutorialController : MonoBehaviour
     public float popScale = 1.1f;
     public float textAnimDurationPerWord = 0.1f;
     private Tween textTween;
+    private bool isTyping = false;
+    
+    public bool IsTyping => isTyping;
 
     [Header("Tutorial Data")]
     public TutorialStep[] tutorialSteps;
@@ -59,7 +63,7 @@ public class TutorialController : MonoBehaviour
     {
         if (nextButton != null)
         {
-            nextButton.onClick.AddListener(OnNextClicked);
+            nextButton.onClick.AddListener(NextStep);
         }
     }
 
@@ -67,11 +71,30 @@ public class TutorialController : MonoBehaviour
     {
         if (nextButton != null)
         {
-            nextButton.onClick.RemoveListener(OnNextClicked);
+            nextButton.onClick.RemoveListener(NextStep);
         }
         
         if (textTween != null)
             textTween.Kill();
+    }
+
+    public void NextStep()
+    {
+        // Don't allow manual "Next" if the current step requires a specific gameplay action
+        if (currentStep < tutorialSteps.Length && tutorialSteps[currentStep].actionType != TutorialActionType.None)
+            return;
+
+        // If still typing, skip to the end of the current message first
+        if (isTyping)
+        {
+            if (textTween != null)
+            {
+                textTween.Complete(); // This triggers OnComplete and sets isTyping = false
+            }
+            return;
+        }
+
+        AdvanceTutorial();
     }
 
     private void OnEnable()
@@ -80,29 +103,32 @@ public class TutorialController : MonoBehaviour
         UpdateTutorialText();
     }
 
-    private void OnNextClicked()
-    {
-        // Don't allow manual "Next" if the step requires an action
-        if (tutorialSteps[currentStep].actionType != TutorialActionType.None)
-            return;
-
-        AdvanceTutorial();
-    }
 
     public void OnActionPerformed(TutorialActionType action, Vector2Int position = default)
     {
         if (currentStep >= tutorialSteps.Length) return;
 
         TutorialStep step = tutorialSteps[currentStep];
-        if (step.actionType == action)
+        
+        // If the action performed was a move (MoveToPosition), 
+        // it can satisfy either a specific MoveToPosition step or a general MoveToAnyTile step.
+        if (action == TutorialActionType.MoveToPosition)
         {
-            if (action == TutorialActionType.MoveToPosition)
+            if (step.actionType == TutorialActionType.MoveToPosition)
             {
                 if (position == step.requiredTargetPosition)
                 {
                     AdvanceTutorial();
                 }
             }
+            else if (step.actionType == TutorialActionType.MoveToAnyTile)
+            {
+                AdvanceTutorial();
+            }
+        }
+        else if (step.actionType == action)
+        {
+            AdvanceTutorial();
         }
     }
 
@@ -131,7 +157,9 @@ public class TutorialController : MonoBehaviour
             if (tutorialText != null)
             {
                 if (textTween != null) textTween.Kill();
-                textTween = UIAnimationHelper.DOTextWordByWord(tutorialText, step.message, textAnimDurationPerWord);
+                isTyping = true;
+                textTween = UIAnimationHelper.DOTextWordByWord(tutorialText, step.message, textAnimDurationPerWord)
+                    .OnComplete(() => isTyping = false);
             }
 
             if (characterImage != null)

@@ -95,10 +95,11 @@ public class BallController : MonoBehaviour
         if (GameManager.Instance != null && (GameManager.Instance.HasWon || GameManager.Instance.HasLost)) return;
         
         // Block standard input ONLY if the tutorial is in "Button Only" mode (ActionType.None)
+        // OR if the tutorial text is currently animating/typing
         if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy)
         {
             var tutorial = UIManager.Instance.tutorialController;
-            if (tutorial.CurrentStepData != null && tutorial.CurrentStepData.actionType == TutorialActionType.None)
+            if (tutorial.IsTyping || tutorial.CurrentStepData?.actionType == TutorialActionType.None)
             {
                 return;
             }
