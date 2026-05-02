@@ -372,6 +372,49 @@ public class GridManager : MonoBehaviour
         return false;
     }
 
+    public void ClearTutorialVisuals()
+    {
+        if (gridArray == null) return;
+        foreach (Tile tile in gridArray)
+        {
+            if (tile != null)
+            {
+                tile.SetPulse(false);
+                tile.SetPowerHighlight(false);
+            }
+        }
+    }
+
+    public void HighlightHoleForTutorial(bool shouldHighlight)
+    {
+        Tile hole = GetTileAtPosition(holePosition);
+        if (hole != null)
+        {
+            hole.SetPulse(shouldHighlight);
+        }
+    }
+
+    public void HighlightTileForTutorial(Vector2Int pos, bool shouldHighlight)
+    {
+        Tile tile = GetTileAtPosition(pos);
+        if (tile != null)
+        {
+            tile.SetPulse(shouldHighlight);
+        }
+    }
+
+    public void HighlightAllPowerNumbers(bool shouldHighlight)
+    {
+        if (gridArray == null) return;
+        foreach (Tile tile in gridArray)
+        {
+            if (tile != null && tile.type != TileType.Hole)
+            {
+                tile.SetPowerHighlight(shouldHighlight);
+            }
+        }
+    }
+
     private void UpdateBackground()
     {
         // Force clean up of the old background to prevent any alternating states

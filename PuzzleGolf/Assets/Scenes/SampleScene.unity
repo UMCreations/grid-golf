@@ -13251,18 +13251,30 @@ MonoBehaviour:
     message: Welcome to Puzzle Golf! Your goal is to get the ball exactly into the
       Hole (the black tile with the flag).
     characterSprite: {fileID: 21300000, guid: 5d6af7741529144eeb057739e579f24a, type: 3}
+    actionType: 0
+    requiredTargetPosition: {x: 0, y: 0}
+    visualBehavior: 0
   - title: CADDY'S HINT
     message: The number on your current tile tells you exactly how many spaces you
       will fly. A 2 means you move 2 spaces!
     characterSprite: {fileID: 21300000, guid: 637b554a320c84688b0dae9c0e42edb2, type: 3}
+    actionType: 0
+    requiredTargetPosition: {x: 0, y: 0}
+    visualBehavior: 3
   - title: CADDY'S HINT
     message: Swipe anywhere to aim in 8 different directions. The green glowing line
       shows exactly where you will land.
     characterSprite: {fileID: 21300000, guid: 74b0c1dad6fc649c5b0e9f8deed65f68, type: 3}
+    actionType: 0
+    requiredTargetPosition: {x: 0, y: 0}
+    visualBehavior: 0
   - title: CADDY'S HINT
     message: Be careful not to overshoot the hole or run out of strokes! Try moving
       to the tile with the number 2 right now!
     characterSprite: {fileID: 21300000, guid: 410569ea997244c798580d5ae6bb9c6c, type: 3}
+    actionType: 0
+    requiredTargetPosition: {x: 0, y: 0}
+    visualBehavior: 0
 --- !u!114 &779019380
 MonoBehaviour:
   m_ObjectHideFlags: 0

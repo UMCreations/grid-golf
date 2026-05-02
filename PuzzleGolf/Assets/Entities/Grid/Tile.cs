@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using DG.Tweening;
 
 public enum TileType
 {
@@ -74,6 +75,40 @@ public class Tile : MonoBehaviour
         {
             // Fallback if highlightBorder is not assigned yet
             spriteRenderer.color = isHighlighted ? new Color(0.6f, 1f, 0.6f, 1f) : Color.white;
+        }
+    }
+
+    public void SetPulse(bool shouldPulse)
+    {
+        transform.DOKill();
+        if (shouldPulse)
+        {
+            transform.DOScale(1.2f, 0.5f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+        }
+        else
+        {
+            // Immediate reset followed by short smoothing to ensure it stops exactly at 1.0
+            transform.localScale = Vector3.one; 
+        }
+    }
+
+    public void SetPowerHighlight(bool isHighlighted)
+    {
+        if (powerText != null)
+        {
+            powerText.transform.DOKill(); // Kill transform tweens
+            powerText.DOKill();           // Kill text-specific tweens
+            
+            if (isHighlighted)
+            {
+                powerText.color = Color.yellow;
+                powerText.transform.DOScale(1.5f, 0.4f).SetLoops(-1, LoopType.Yoyo);
+            }
+            else
+            {
+                UpdateVisuals(); // Reverts to default color
+                powerText.transform.localScale = Vector3.one;
+            }
         }
     }
 }

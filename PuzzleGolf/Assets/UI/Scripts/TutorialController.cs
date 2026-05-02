@@ -3,6 +3,20 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 
+public enum TutorialActionType
+{
+    None,            // Advances with "Next" button
+    MoveToPosition,  // Advances when ball reaches specific grid pos
+}
+
+public enum TutorialVisualBehavior
+{
+    None,
+    HighlightHole,
+    HighlightTargetTile,
+    HighlightAllTileNumbers
+}
+
 [System.Serializable]
 public class TutorialStep
 {
@@ -10,6 +24,13 @@ public class TutorialStep
     [TextArea(2, 5)]
     public string message;
     public Sprite characterSprite; // Optional character expression
+    
+    [Header("Action Requirements")]
+    public TutorialActionType actionType = TutorialActionType.None;
+    public Vector2Int requiredTargetPosition; // For MoveToPosition
+    
+    [Header("Visual Behavior")]
+    public TutorialVisualBehavior visualBehavior = TutorialVisualBehavior.None;
 }
 
 public class TutorialController : MonoBehaviour
@@ -30,6 +51,9 @@ public class TutorialController : MonoBehaviour
     [Header("Tutorial Data")]
     public TutorialStep[] tutorialSteps;
     private int currentStep = 0;
+
+    public int CurrentStepIndex => currentStep;
+    public TutorialStep CurrentStepData => (tutorialSteps != null && currentStep < tutorialSteps.Length) ? tutorialSteps[currentStep] : null;
 
     private void Start()
     {
@@ -57,6 +81,32 @@ public class TutorialController : MonoBehaviour
     }
 
     private void OnNextClicked()
+    {
+        // Don't allow manual "Next" if the step requires an action
+        if (tutorialSteps[currentStep].actionType != TutorialActionType.None)
+            return;
+
+        AdvanceTutorial();
+    }
+
+    public void OnActionPerformed(TutorialActionType action, Vector2Int position = default)
+    {
+        if (currentStep >= tutorialSteps.Length) return;
+
+        TutorialStep step = tutorialSteps[currentStep];
+        if (step.actionType == action)
+        {
+            if (action == TutorialActionType.MoveToPosition)
+            {
+                if (position == step.requiredTargetPosition)
+                {
+                    AdvanceTutorial();
+                }
+            }
+        }
+    }
+
+    private void AdvanceTutorial()
     {
         currentStep++;
         if (currentStep < tutorialSteps.Length)
@@ -97,16 +147,55 @@ public class TutorialController : MonoBehaviour
                 }
             }
 
+            // Show/Hide Next button based on whether an action is required
+            if (nextButton != null)
+            {
+                nextButton.gameObject.SetActive(step.actionType == TutorialActionType.None);
+            }
+
             // Animate CharBox when step changes
             if (CharBox != null)
             {
                 UIAnimationHelper.PopIn(CharBox, popDuration, 0.8f, 1f);
             }
+
+            // Apply Visual Behaviors
+            ApplyVisualBehaviors(step);
+        }
+    }
+
+    private void ApplyVisualBehaviors(TutorialStep step)
+    {
+        if (GridManager.Instance == null) return;
+
+        // Reset all special highlights first
+        GridManager.Instance.ClearTutorialVisuals();
+
+        switch (step.visualBehavior)
+        {
+            case TutorialVisualBehavior.HighlightHole:
+                GridManager.Instance.HighlightHoleForTutorial(true);
+                break;
+            case TutorialVisualBehavior.HighlightTargetTile:
+                if (step.actionType == TutorialActionType.MoveToPosition)
+                {
+                    GridManager.Instance.HighlightTileForTutorial(step.requiredTargetPosition, true);
+                }
+                break;
+            case TutorialVisualBehavior.HighlightAllTileNumbers:
+                GridManager.Instance.HighlightAllPowerNumbers(true);
+                break;
         }
     }
 
     private void CompleteTutorial()
     {
+        // Clear any leftover tutorial highlights before exiting
+        if (GridManager.Instance != null)
+        {
+            GridManager.Instance.ClearTutorialVisuals();
+        }
+
         gameObject.SetActive(false);
         
         if (LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)

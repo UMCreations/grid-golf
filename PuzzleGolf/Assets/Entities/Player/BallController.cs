@@ -93,7 +93,16 @@ public class BallController : MonoBehaviour
         // Don't accept input if ball is already animating a move, or if the game is already won/lost
         if (isMoving) return;
         if (GameManager.Instance != null && (GameManager.Instance.HasWon || GameManager.Instance.HasLost)) return;
-        if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy) return;
+        
+        // Block standard input ONLY if the tutorial is in "Button Only" mode (ActionType.None)
+        if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy)
+        {
+            var tutorial = UIManager.Instance.tutorialController;
+            if (tutorial.CurrentStepData != null && tutorial.CurrentStepData.actionType == TutorialActionType.None)
+            {
+                return;
+            }
+        }
 
         HandleKeyboardInput();
         HandleTouchInput();
@@ -321,6 +330,22 @@ public class BallController : MonoBehaviour
         }
 
         Vector2Int targetPosition = currentGridPosition + (direction * power);
+
+        // --- TUTORIAL RESTRICTION ---
+        if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy)
+        {
+            var tutorial = UIManager.Instance.tutorialController;
+            var step = tutorial.CurrentStepData;
+            if (step != null && step.actionType == TutorialActionType.MoveToPosition)
+            {
+                if (targetPosition != step.requiredTargetPosition)
+                {
+                    Debug.Log($"Tutorial: You must move to {step.requiredTargetPosition}!");
+                    return; // Block move if it's not the required one
+                }
+            }
+        }
+
         Tile targetTile = GridManager.Instance.GetTileAtPosition(targetPosition);
 
         if (targetTile != null)
@@ -426,6 +451,12 @@ public class BallController : MonoBehaviour
         if (GridManager.Instance != null && GameManager.Instance != null)
         {
             GridManager.Instance.SaveGameState(currentGridPosition, GameManager.Instance.CurrentStrokes);
+        }
+
+        // Notify tutorial system if active
+        if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy)
+        {
+            UIManager.Instance.tutorialController.OnActionPerformed(TutorialActionType.MoveToPosition, targetGridPos);
         }
 
         if (targetTile.type == TileType.Hole)
