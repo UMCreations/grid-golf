@@ -117,8 +117,8 @@ public class GridManager : MonoBehaviour
 
         GenerateGrid();
         
-        // Calculate max delay to know when to spawn the ball
-        float ballSpawnDelay = (width + height) * 0.05f + 0.6f;
+        // Calculate max delay to know when to spawn the ball (based on increased stagger)
+        float ballSpawnDelay = (width + height) * 0.1f + 0.8f;
         Invoke(nameof(SpawnBall), ballSpawnDelay);
         
         CenterAndFitCamera();
@@ -306,12 +306,13 @@ public class GridManager : MonoBehaviour
                 spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite);
                 
                 // Calculate animation delay based on Manhattan distance from origin
-                float staggerDelay = (x + y) * 0.05f;
+                // Increased from 0.05f to 0.1f for a slower, more deliberate reveal
+                float staggerDelay = (x + y) * 0.1f;
                 
                 // Start and Hole tiles appear a bit later for dramatic effect
                 if (currentType == TileType.Start || currentType == TileType.Hole)
                 {
-                    staggerDelay += 0.5f;
+                    staggerDelay += 0.8f;
                 }
                 
                 spawnedTile.AnimateSpawn(staggerDelay);

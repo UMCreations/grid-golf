@@ -22,6 +22,9 @@ public class AudioManager : MonoBehaviour
     [Header("Settings")]
     public float pitchIncrementPerStroke = 0.05f;
     public float basePitch = 1.0f;
+    
+    private float lastTileSoundTime = 0f;
+    private const float tileSoundCooldown = 0.05f;
 
     private void Awake()
     {
@@ -95,6 +98,10 @@ public class AudioManager : MonoBehaviour
     {
         if (LevelManager.Instance != null && !LevelManager.Instance.CurrentProfile.soundEffectsEnabled) return;
         if (tilePlaceClip == null) return;
+
+        // Rate limit to prevent audio clipping/overlapping mess on large boards
+        if (Time.time - lastTileSoundTime < tileSoundCooldown) return;
+        lastTileSoundTime = Time.time;
 
         // Slight random pitch for variety
         sfxSource.pitch = 1.0f + Random.Range(-0.1f, 0.1f);
