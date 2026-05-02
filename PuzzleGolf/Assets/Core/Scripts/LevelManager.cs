@@ -48,6 +48,9 @@ public class LevelManager : MonoBehaviour
     public GameMode SelectedGameMode { get; private set; } = GameMode.Classic;
     public bool IsTutorialMode { get; set; } = false;
 
+    [Header("Handcrafted Content")]
+    public List<HandcraftedLevelSO> handcraftedAdventureLevels;
+
     private void Awake()
     {
         if (Instance == null)
@@ -259,6 +262,14 @@ public class LevelManager : MonoBehaviour
             CurrentProfile.lastAdventureLevelIndex = AdventureLevelIndex;
             SaveProfile();
         }
+    }
+
+    public HandcraftedLevelSO GetHandcraftedLevel(int index)
+    {
+        if (handcraftedAdventureLevels == null || index < 1 || index > handcraftedAdventureLevels.Count)
+            return null;
+            
+        return handcraftedAdventureLevels[index - 1];
     }
 
     public int GetAdventureStars(int levelIndex)

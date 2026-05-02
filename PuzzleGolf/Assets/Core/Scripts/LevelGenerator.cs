@@ -115,6 +115,17 @@ public class LevelGenerator : MonoBehaviour
 
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
+        // Check for Handcrafted Level first (Adventure Mode)
+        if (currentGameMode == GameMode.Adventure && LevelManager.Instance != null)
+        {
+            HandcraftedLevelSO handcrafted = LevelManager.Instance.GetHandcraftedLevel(levelIndex);
+            if (handcrafted != null)
+            {
+                Debug.Log($"[LevelGenerator] Loading handcrafted level: {handcrafted.levelName}");
+                return handcrafted.ToLevelData(levelIndex);
+            }
+        }
+
         if (currentStrategy == null) InitializeStrategy();
         LevelData data = currentStrategy.GenerateLevel(difficulty, levelIndex, isTutorial);
         data.gameMode = currentGameMode;

@@ -28075,6 +28075,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf518909f9d574ba4a882d3be7aa61f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  handcraftedAdventureLevels:
+  - {fileID: 11400000, guid: bb6f1f0158cde46509146a4c3720b949, type: 2}
 --- !u!4 &1961453894
 Transform:
   m_ObjectHideFlags: 0
