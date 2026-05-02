@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 
 [CustomEditor(typeof(HandcraftedLevelSO))]
 public class HandcraftedLevelEditor : Editor
@@ -7,6 +8,13 @@ public class HandcraftedLevelEditor : Editor
     private HandcraftedLevelSO level;
     private TileType selectedType = TileType.Standard;
     private int selectedPower = 1;
+
+    private int minFill = 1;
+    private int maxFill = 5;
+
+    private bool includeIce = true;
+    private bool includeSand = true;
+    private bool includeBoost = true;
 
     private void OnEnable()
     {
@@ -46,6 +54,26 @@ public class HandcraftedLevelEditor : Editor
         selectedType = (TileType)EditorGUILayout.EnumPopup("Painting Type", selectedType);
         selectedPower = EditorGUILayout.IntField("Painting Power", selectedPower);
         EditorGUILayout.EndHorizontal();
+
+        GUILayout.Space(10);
+        GUILayout.Label("RANDOM FILL (Apply to power 0)", EditorStyles.miniBoldLabel);
+        EditorGUILayout.BeginHorizontal();
+        minFill = EditorGUILayout.IntField("Min", minFill);
+        maxFill = EditorGUILayout.IntField("Max", maxFill);
+        EditorGUILayout.EndHorizontal();
+
+        if (GUILayout.Button("RANDOM FILL", GUILayout.Height(30)))
+        {
+            Undo.RecordObject(level, "Random Fill Handcrafted Level");
+            for (int i = 0; i < level.tilePowers.Length; i++)
+            {
+                if (level.tilePowers[i] == 0)
+                {
+                    level.tilePowers[i] = Random.Range(minFill, maxFill + 1);
+                }
+            }
+            EditorUtility.SetDirty(level);
+        }
 
         GUILayout.Space(10);
         
