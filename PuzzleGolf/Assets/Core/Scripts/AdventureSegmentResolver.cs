@@ -19,7 +19,7 @@ public static class AdventureSegmentResolver
             startLevel = 9, endLevel = 15, themeName = "Sandy Shores",
             minGridSize = 5, maxGridSize = 6,
             minPathLength = 4, maxPathLength = 5, maxPower = 3,
-            maxHazardsOnPath = 1, maxHazardsInNoise = 0,
+            maxHazardsOnPath = 1, maxHazardsInNoise = 2,
             allowedHazards = new List<TileType> { TileType.Sand },
             segmentColor = new Color(0.8f, 0.7f, 0.4f) // Sandy Yellow
         },
@@ -28,7 +28,7 @@ public static class AdventureSegmentResolver
             startLevel = 16, endLevel = 25, themeName = "Deep Desert",
             minGridSize = 6, maxGridSize = 6,
             minPathLength = 5, maxPathLength = 7, maxPower = 4,
-            maxHazardsOnPath = 2, maxHazardsInNoise = 2,
+            maxHazardsOnPath = 2, maxHazardsInNoise = 4,
             allowedHazards = new List<TileType> { TileType.Sand },
             segmentColor = new Color(0.9f, 0.5f, 0.2f) // Deep Orange
         },
@@ -37,7 +37,7 @@ public static class AdventureSegmentResolver
             startLevel = 26, endLevel = 30, themeName = "Frozen Peaks",
             minGridSize = 6, maxGridSize = 7,
             minPathLength = 5, maxPathLength = 7, maxPower = 4,
-            maxHazardsOnPath = 2, maxHazardsInNoise = 2,
+            maxHazardsOnPath = 2, maxHazardsInNoise = 4,
             allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice },
             segmentColor = new Color(0.6f, 0.8f, 1.0f) // Light Blue
         },
@@ -45,8 +45,8 @@ public static class AdventureSegmentResolver
         new AdventureSegmentConfig {
             startLevel = 31, endLevel = 40, themeName = "Arctic Hazard",
             minGridSize = 7, maxGridSize = 7,
-            minPathLength = 7, maxPathLength = 9, maxPower = 4,
-            maxHazardsOnPath = 3, maxHazardsInNoise = 3,
+            minPathLength = 7, maxPathLength = 9, maxPower = 5,
+            maxHazardsOnPath = 3, maxHazardsInNoise = 6,
             allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice },
             segmentColor = new Color(0.4f, 0.6f, 0.9f) // Deep Blue
         },
@@ -54,8 +54,8 @@ public static class AdventureSegmentResolver
         new AdventureSegmentConfig {
             startLevel = 41, endLevel = 50, themeName = "Launch Pad Valley",
             minGridSize = 7, maxGridSize = 8,
-            minPathLength = 8, maxPathLength = 10, maxPower = 5,
-            maxHazardsOnPath = 3, maxHazardsInNoise = 4,
+            minPathLength = 8, maxPathLength = 10, maxPower = 6,
+            maxHazardsOnPath = 3, maxHazardsInNoise = 8,
             allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice, TileType.Boost },
             segmentColor = new Color(0.5f, 0.3f, 0.7f) // Purple
         },
@@ -63,27 +63,27 @@ public static class AdventureSegmentResolver
         new AdventureSegmentConfig {
             startLevel = 51, endLevel = 65, themeName = "The Gauntlet",
             minGridSize = 8, maxGridSize = 8,
-            minPathLength = 9, maxPathLength = 11, maxPower = 5,
-            maxHazardsOnPath = 4, maxHazardsInNoise = 5,
-            allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice, TileType.Boost },
+            minPathLength = 9, maxPathLength = 11, maxPower = 6,
+            maxHazardsOnPath = 4, maxHazardsInNoise = 10,
+            allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice, TileType.Boost, TileType.Water },
             segmentColor = new Color(0.7f, 0.2f, 0.2f) // Dark Red
         },
         // Segment 8: Master's Course (Levels 66 - 80)
         new AdventureSegmentConfig {
             startLevel = 66, endLevel = 80, themeName = "Master's Course",
             minGridSize = 8, maxGridSize = 9,
-            minPathLength = 10, maxPathLength = 12, maxPower = 5,
-            maxHazardsOnPath = 5, maxHazardsInNoise = 6,
-            allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice, TileType.Boost },
+            minPathLength = 10, maxPathLength = 12, maxPower = 7,
+            maxHazardsOnPath = 5, maxHazardsInNoise = 12,
+            allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice, TileType.Boost, TileType.Water },
             segmentColor = new Color(0.3f, 0.1f, 0.4f) // Midnight Purple
         },
         // Segment 9: The Final Hole (Levels 81 - 100)
         new AdventureSegmentConfig {
             startLevel = 81, endLevel = 100, themeName = "The Final Hole",
             minGridSize = 9, maxGridSize = 9,
-            minPathLength = 11, maxPathLength = 14, maxPower = 5,
-            maxHazardsOnPath = 6, maxHazardsInNoise = 8,
-            allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice, TileType.Boost },
+            minPathLength = 11, maxPathLength = 14, maxPower = 8,
+            maxHazardsOnPath = 6, maxHazardsInNoise = 15,
+            allowedHazards = new List<TileType> { TileType.Sand, TileType.Ice, TileType.Boost, TileType.Water, TileType.Wall },
             segmentColor = new Color(0.1f, 0.1f, 0.1f) // Black/Void
         }
     };

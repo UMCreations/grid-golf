@@ -209,7 +209,9 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
             {
                 if (level.tilePowers[x, y] == 0 && new Vector2Int(x, y) != level.holePosition)
                 {
-                    level.tilePowers[x, y] = Random.Range(1, maxPower + 1);
+                    // Skew towards higher power for noise tiles to prevent "creep" shortcuts and increase challenge
+                    // In Adventure Mode, we want the world outside the path to be aggressively high-powered
+                    level.tilePowers[x, y] = Random.value < 0.6f ? maxPower : Random.Range(1, maxPower + 1);
                     level.tileTypes[x, y] = TileType.Standard; // Default initialization
                 }
             }

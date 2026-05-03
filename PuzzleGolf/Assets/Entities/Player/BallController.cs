@@ -351,6 +351,14 @@ public class BallController : MonoBehaviour
 
         if (targetTile != null)
         {
+            if (targetTile.type == TileType.Wall)
+            {
+                Debug.Log("Invalid move: Target is a wall!");
+                if (GameManager.Instance != null)
+                    GameManager.Instance.OnInvalidMove();
+                return;
+            }
+
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.OnMoveMade();
@@ -464,6 +472,11 @@ public class BallController : MonoBehaviour
         {
             if (GameManager.Instance != null)
                 GameManager.Instance.OnHoleReached();
+        }
+        else if (targetTile.type == TileType.Water)
+        {
+            if (GameManager.Instance != null)
+                GameManager.Instance.TriggerGameOver("Ball fell into the water!");
         }
         else
         {

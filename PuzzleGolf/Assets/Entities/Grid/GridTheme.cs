@@ -25,6 +25,10 @@ public class GridTheme : ScriptableObject
     public Sprite[] sandSprites;
     public Sprite[] boostSprites;
 
+    [Header("Hazard Tile Sprites (Optional)")]
+    public Sprite waterSprite;
+    public Sprite wallSprite;
+
     [Header("Visual Tuning")]
     public Color standardTileColor = Color.white;
     public Color powerTextColor = Color.white;
@@ -38,6 +42,8 @@ public class GridTheme : ScriptableObject
             case TileType.Ice:      return GetRandomFromList(iceSprites);
             case TileType.Sand:     return GetRandomFromList(sandSprites);
             case TileType.Boost:    return GetRandomFromList(boostSprites);
+            case TileType.Water:    return waterSprite != null ? waterSprite : GetRandomFromList(standardSprites);
+            case TileType.Wall:     return wallSprite != null ? wallSprite : GetRandomFromList(standardSprites);
             case TileType.Standard:
                 if (power > 0 && numberedSprites != null && power - 1 < numberedSprites.Length && numberedSprites[power - 1] != null)
                 {
