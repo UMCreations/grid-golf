@@ -41,7 +41,7 @@ public class BallController : MonoBehaviour
             Tile currentTile = GridManager.Instance.GetTileAtPosition(currentGridPosition);
             if (currentTile != null && currentTile.type != TileType.Hole)
             {
-                GridManager.Instance.HighlightValidDestinations(currentGridPosition, currentTile.powerCount);
+                GridManager.Instance.HighlightValidDestinations(currentGridPosition, adventurePowerModifier);
             }
             else
             {
@@ -214,6 +214,7 @@ public class BallController : MonoBehaviour
     private void UpdateTrajectory()
     {
         if (trajectoryLine == null) return;
+        if (GridManager.Instance == null || GridManager.Instance.CurrentLevelData == null) return;
 
         Tile currentTile = GridManager.Instance.GetTileAtPosition(currentGridPosition);
         if (currentTile == null || currentTile.type == TileType.Hole) 
@@ -222,21 +223,31 @@ public class BallController : MonoBehaviour
             return;
         }
 
-        int power = currentTile.powerCount;
-        if (power <= 0)
+        BoardMoveResult moveResult = BoardRules.ResolveMove(
+            GridManager.Instance.CurrentLevelData,
+            currentGridPosition,
+            currentAimDirection,
+            adventurePowerModifier
+        );
+
+        if (moveResult.InvalidReason == MoveInvalidReason.ZeroDirection)
         {
             HideTrajectory();
             return;
         }
 
-        Vector2Int targetPosition = currentGridPosition + (currentAimDirection * power);
-        Tile targetTile = GridManager.Instance.GetTileAtPosition(targetPosition);
-
         Vector3 startPos = transform.position;
         Vector3 endPos;
 
-        if (targetTile != null)
+        if (moveResult.IsValid)
         {
+            Tile targetTile = GridManager.Instance.GetTileAtPosition(moveResult.TargetPosition);
+            if (targetTile == null)
+            {
+                HideTrajectory();
+                return;
+            }
+
             endPos = targetTile.transform.position;
             trajectoryLine.startColor = new Color(0.2f, 1f, 0.4f, 0.8f); // Vibrant light green
             trajectoryLine.endColor = new Color(0.2f, 1f, 0.4f, 0.1f);  
@@ -251,7 +262,7 @@ public class BallController : MonoBehaviour
             float spacing = GridManager.Instance.spacing;
             Vector3 direction3D = new Vector3(currentAimDirection.x * (tileSize + spacing), currentAimDirection.y * (tileSize + spacing), 0);
             
-            endPos = transform.position + (direction3D * power);
+            endPos = transform.position + (direction3D * Mathf.Max(1, moveResult.EffectivePower));
             trajectoryLine.startColor = new Color(1f, 0.2f, 0.2f, 0.8f); // Red
             trajectoryLine.endColor = new Color(1f, 0.2f, 0.2f, 0.2f);
             
@@ -309,28 +320,15 @@ public class BallController : MonoBehaviour
 
     private void AttemptMove(Vector2Int direction)
     {
-        Tile currentTile = GridManager.Instance.GetTileAtPosition(currentGridPosition);
-        if (currentTile == null) return;
-        if (currentTile.type == TileType.Hole) return;
-
-        int power = currentTile.powerCount;
-        
-        // Adventure Mode: apply any stored power modifier (Sand/Boost effect from last landing)
-        bool isAdventure = GridManager.Instance.CurrentLevelData != null &&
-                           GridManager.Instance.CurrentLevelData.gameMode == GameMode.Adventure;
-        if (isAdventure && adventurePowerModifier != 0)
-        {
-            power = Mathf.Max(1, power + adventurePowerModifier);
-            adventurePowerModifier = 0; // consume it
-        }
-        
-        if (power <= 0)
-        {
-            Debug.Log("Invalid move: Current tile has 0 power.");
+        if (GridManager.Instance == null || GridManager.Instance.CurrentLevelData == null)
             return;
-        }
 
-        Vector2Int targetPosition = currentGridPosition + (direction * power);
+        BoardMoveResult moveResult = BoardRules.ResolveMove(
+            GridManager.Instance.CurrentLevelData,
+            currentGridPosition,
+            direction,
+            adventurePowerModifier
+        );
 
         // --- TUTORIAL RESTRICTION ---
         if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy)
@@ -339,7 +337,7 @@ public class BallController : MonoBehaviour
             var step = tutorial.CurrentStepData;
             if (step != null && step.actionType == TutorialActionType.MoveToPosition)
             {
-                if (targetPosition != step.requiredTargetPosition)
+                if (moveResult.TargetPosition != step.requiredTargetPosition)
                 {
                     Debug.Log($"Tutorial: You must move to {step.requiredTargetPosition}!");
                     return; // Block move if it's not the required one
@@ -347,10 +345,13 @@ public class BallController : MonoBehaviour
             }
         }
 
-        Tile targetTile = GridManager.Instance.GetTileAtPosition(targetPosition);
-
-        if (targetTile != null)
+        if (moveResult.IsValid)
         {
+            Tile targetTile = GridManager.Instance.GetTileAtPosition(moveResult.TargetPosition);
+            if (targetTile == null) return;
+
+            adventurePowerModifier = 0; // consume the stored modifier when a move starts
+
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.OnMoveMade();
@@ -359,8 +360,8 @@ public class BallController : MonoBehaviour
             // Show encouraging feedback immediately on shot release
             if (FeedbackManager.Instance != null && !GameManager.Instance.HasLost)
             {
-                int distance = direction.magnitude == 0 ? 0 : (int)(targetPosition - currentGridPosition).magnitude;
-                FeedbackManager.Instance.ShowFeedback(targetPosition, distance, targetTile.type == TileType.Hole);
+                int distance = direction.magnitude == 0 ? 0 : (int)(moveResult.TargetPosition - currentGridPosition).magnitude;
+                FeedbackManager.Instance.ShowFeedback(moveResult.TargetPosition, distance, targetTile.type == TileType.Hole);
             }
 
             if (GridManager.Instance != null)
@@ -368,18 +369,18 @@ public class BallController : MonoBehaviour
                 GridManager.Instance.ClearAllHighlights();
             }
             
-            StartCoroutine(MoveAndAnimateBall(targetTile.transform.position, targetTile, targetPosition, direction));
-            Debug.Log($"Moving to {targetPosition}");
+            StartCoroutine(MoveAndAnimateBall(targetTile.transform.position, targetTile, moveResult.TargetPosition, direction, moveResult));
+            Debug.Log($"Moving to {moveResult.TargetPosition}");
         }
         else
         {
-            Debug.Log($"Invalid move: Target {targetPosition} is out of bounds!");
+            Debug.Log($"Invalid move: {moveResult.InvalidReason}");
             if (GameManager.Instance != null)
                 GameManager.Instance.OnInvalidMove();
         }
     }
 
-    public IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos, Vector2Int moveDirection)
+    public IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos, Vector2Int moveDirection, BoardMoveResult moveResult = null)
     {
         isMoving = true;
         
@@ -422,36 +423,23 @@ public class BallController : MonoBehaviour
         isMoving = false;
         UpdateHighlights();
 
-        // --- ADVENTURE MODE: resolve tile effects on landing ---
-        bool adventureMode = GridManager.Instance?.CurrentLevelData?.gameMode == GameMode.Adventure;
-        if (adventureMode)
+        if (moveResult != null)
         {
-            ITileEffect effect = TileEffectResolver.GetEffect(targetTile.type);
-            if (effect != null)
-            {
-                int modified = effect.ApplyEffect(targetTile.powerCount, moveDirection);
+            adventurePowerModifier = moveResult.NextPowerModifier;
 
-                if (effect.CausesAutoSlide)
-                {
-                    // ICE: chain a free slide in the same direction
-                    Debug.Log($"[Ice] Auto-slide triggered in {moveDirection}!");
-                    yield return new WaitForSeconds(0.05f);
-                    AttemptMove(moveDirection);
-                    yield break; // let the chained move handle the rest
-                }
-                else
-                {
-                    // Sand or Boost: store the delta for next shot
-                    adventurePowerModifier = modified - targetTile.powerCount;
-                    Debug.Log($"[{effect.EffectName}] Next power modifier: {adventurePowerModifier:+0;-0}");
-                }
+            if (moveResult.TriggersAutoSlide)
+            {
+                Debug.Log($"[Ice] Auto-slide triggered in {moveDirection}!");
+                yield return new WaitForSeconds(0.05f);
+                AttemptMove(moveDirection);
+                yield break;
             }
         }
 
         // Save progress after move
         if (GridManager.Instance != null && GameManager.Instance != null)
         {
-            GridManager.Instance.SaveGameState(currentGridPosition, GameManager.Instance.CurrentStrokes);
+            GridManager.Instance.SaveGameState(currentGridPosition, GameManager.Instance.CurrentStrokes, adventurePowerModifier);
         }
 
         // Notify tutorial system if active
@@ -473,11 +461,16 @@ public class BallController : MonoBehaviour
                 
             if (GridManager.Instance != null && GameManager.Instance != null && !GameManager.Instance.HasWon && !GameManager.Instance.HasLost)
             {
-                if (!GridManager.Instance.HasValidMoves(currentGridPosition, targetTile.powerCount))
+                if (!GridManager.Instance.HasValidMoves(currentGridPosition, adventurePowerModifier))
                 {
                     GameManager.Instance.TriggerGameOver("Stuck on a tile with no valid exits");
                 }
             }
         }
+    }
+
+    public void SetAdventurePowerModifier(int powerModifier)
+    {
+        adventurePowerModifier = powerModifier;
     }
 }

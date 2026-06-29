@@ -17,6 +17,7 @@ public enum GameMode
 [System.Serializable]
 public class LevelData
 {
+    public int dataVersion = 1;
     public Difficulty difficulty;
     public GameMode gameMode;   // Classic or Adventure
     public int width;
@@ -25,6 +26,7 @@ public class LevelData
     public Vector2Int holePosition;
     public int levelPar;
     public int currentStrokes;
+    public int currentPowerModifier;
     public int levelIndex;
     public Vector2Int currentGridPosition;
     public List<Vector2Int> goldenPath = new List<Vector2Int>();

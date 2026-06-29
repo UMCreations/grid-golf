@@ -158,10 +158,16 @@ public class GridManager : MonoBehaviour
 
     public void SaveGameState(Vector2Int newBallPos, int strokes)
     {
+        SaveGameState(newBallPos, strokes, 0);
+    }
+
+    public void SaveGameState(Vector2Int newBallPos, int strokes, int powerModifier)
+    {
         if (CurrentLevelData != null)
         {
             CurrentLevelData.currentGridPosition = newBallPos;
             CurrentLevelData.currentStrokes = strokes;
+            CurrentLevelData.currentPowerModifier = powerModifier;
             SaveManager.SaveLevel(CurrentLevelData);
         }
     }
@@ -219,6 +225,7 @@ public class GridManager : MonoBehaviour
                 
                 currentBall = Instantiate(ballPrefab, spawnPos, Quaternion.identity);
                 currentBall.currentGridPosition = CurrentLevelData.currentGridPosition;
+                currentBall.SetAdventurePowerModifier(CurrentLevelData.currentPowerModifier);
                 
                 // Trigger the characteristic jump animation to reach the start tile
                 currentBall.StartCoroutine(currentBall.MoveAndAnimateBall(targetPos, currentTile, CurrentLevelData.currentGridPosition, Vector2Int.down));
@@ -343,20 +350,14 @@ public class GridManager : MonoBehaviour
         return null;
     }
 
-    public void HighlightValidDestinations(Vector2Int sourcePos, int power)
+    public void HighlightValidDestinations(Vector2Int sourcePos, int powerModifier = 0)
     {
         ClearAllHighlights();
 
-        if (power <= 0) return;
+        if (CurrentLevelData == null) return;
 
-        Vector2Int[] directions = {
-            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
-            new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1)
-        };
-
-        foreach (var dir in directions)
+        foreach (var targetPos in BoardRules.GetValidDestinations(CurrentLevelData, sourcePos, powerModifier))
         {
-            Vector2Int targetPos = sourcePos + (dir * power);
             Tile targetTile = GetTileAtPosition(targetPos);
             if (targetTile != null)
             {
@@ -377,26 +378,9 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    public bool HasValidMoves(Vector2Int sourcePos, int power)
+    public bool HasValidMoves(Vector2Int sourcePos, int powerModifier = 0)
     {
-        if (power <= 0) return false;
-
-        Vector2Int[] directions = {
-            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
-            new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1)
-        };
-
-        foreach (var dir in directions)
-        {
-            Vector2Int targetPos = sourcePos + (dir * power);
-            Tile targetTile = GetTileAtPosition(targetPos);
-            if (targetTile != null)
-            {
-                return true;
-            }
-        }
-        
-        return false;
+        return CurrentLevelData != null && BoardRules.HasValidMoves(CurrentLevelData, sourcePos, powerModifier);
     }
 
     public void ClearTutorialVisuals()
