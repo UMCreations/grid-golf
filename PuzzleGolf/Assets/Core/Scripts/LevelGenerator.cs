@@ -84,6 +84,10 @@ public class LevelGenerator : MonoBehaviour
     [Header("Generation Settings")]
     [Tooltip("Enable to use the new Sawtooth pacing and False Paths.")]
     public bool useAdvancedMechanics = true;
+    [Tooltip("Opt-in classic generation pipeline that evaluates multiple candidates and selects the strongest puzzle.")]
+    public bool useEvaluatedClassicPipeline = false;
+    [Tooltip("Opt-in pattern-driven classic generation pipeline with archetypes and handcrafted puzzle moments.")]
+    public bool usePatternDrivenClassicPipeline = false;
 
     private ILevelGeneratorStrategy currentStrategy;
     private GameMode currentGameMode = GameMode.Classic;
@@ -103,7 +107,7 @@ public class LevelGenerator : MonoBehaviour
 
     private void InitializeStrategy()
     {
-        currentStrategy = LevelGeneratorFactory.GetStrategy(useAdvancedMechanics);
+        currentStrategy = GetClassicStrategy();
     }
 
     public void SetGameMode(GameMode mode)
@@ -112,7 +116,7 @@ public class LevelGenerator : MonoBehaviour
         if (mode == GameMode.Adventure)
             currentStrategy = new AdventureLevelGeneratorStrategy();
         else
-            currentStrategy = LevelGeneratorFactory.GetStrategy(useAdvancedMechanics);
+            currentStrategy = GetClassicStrategy();
     }
 
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
@@ -132,5 +136,16 @@ public class LevelGenerator : MonoBehaviour
         LevelData data = currentStrategy.GenerateLevel(difficulty, levelIndex, isTutorial);
         data.gameMode = currentGameMode;
         return data;
+    }
+
+    private ILevelGeneratorStrategy GetClassicStrategy()
+    {
+        if (usePatternDrivenClassicPipeline)
+            return new PatternDrivenClassicLevelGeneratorStrategy();
+
+        if (useEvaluatedClassicPipeline)
+            return new EvaluatedClassicLevelGeneratorStrategy();
+
+        return LevelGeneratorFactory.GetStrategy(useAdvancedMechanics);
     }
 }

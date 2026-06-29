@@ -254,6 +254,19 @@ The root docs still describe an MVP, while the codebase contains larger systems 
 4. Add save/profile versioning.
 5. Align docs with the actual implemented feature set.
 
+## Generator Pipeline Notes
+
+- A new opt-in classic generator pipeline now exists via:
+  - `LevelGenerator.useEvaluatedClassicPipeline`
+- A newer pattern-driven classic pipeline also exists via:
+  - `LevelGenerator.usePatternDrivenClassicPipeline`
+- It does not replace the old generator.
+- Current behavior:
+  - `false`: existing classic generator path remains active
+  - `true`: classic mode uses the new evaluated multi-candidate pipeline
+  - if `usePatternDrivenClassicPipeline` is enabled, it takes priority over the evaluated pipeline
+  - adventure mode still uses the existing adventure generator
+
 ## Quick File Map For Future Work
 
 - Start here for gameplay:

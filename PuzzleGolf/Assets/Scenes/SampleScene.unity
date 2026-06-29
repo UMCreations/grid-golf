@@ -10388,6 +10388,7 @@ MonoBehaviour:
   tilePrefab: {fileID: 6303450923254926047, guid: 9e1f70e9b30d24f02a67b64f63a3f57a, type: 3}
   gridParent: {fileID: 611456832}
   screenPadding: 1
+  maxAspect: 0.6
   currentTheme: {fileID: 11400000, guid: 3e1c5be98b2fa4278b06d0d6da7abfb2, type: 2}
   currentDifficulty: 0
   ballPrefab: {fileID: 7777476746999806065, guid: cbf9517a982d04db9af92fe8eeebdaf8, type: 3}
@@ -26521,7 +26522,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 869be0552f6f24cfa832273698347c8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useAdvancedMechanics: 1
+  useAdvancedMechanics: 0
+  useEvaluatedClassicPipeline: 0
+  usePatternDrivenClassicPipeline: 1
 --- !u!4 &1865492289
 Transform:
   m_ObjectHideFlags: 0
