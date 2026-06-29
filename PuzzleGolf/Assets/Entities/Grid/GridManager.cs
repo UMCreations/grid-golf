@@ -13,6 +13,7 @@ public class GridManager : MonoBehaviour
 
     [Header("Camera Settings")]
     public float screenPadding = 1.0f; // Extra space around the grid
+    public float maxAspect = 0.6f;     // Clamps aspect ratio on wider devices to maintain portrait safe area
 
     [Header("Theme Setup")]
     public GridTheme currentTheme;
@@ -187,9 +188,12 @@ public class GridManager : MonoBehaviour
         // 5. aspect ratio = width / height
         float screenAspect = (float)Screen.width / (float)Screen.height;
         
+        // Clamp screenAspect to maxAspect to keep a portrait safe area on wider screens
+        float effectiveAspect = Mathf.Min(screenAspect, maxAspect);
+        
         // Required size based on width vs height
         float requiredSizeHeight = paddedHeight / 2f;
-        float requiredSizeWidth = (paddedWidth / screenAspect) / 2f;
+        float requiredSizeWidth = (paddedWidth / effectiveAspect) / 2f;
 
         // The camera should take the larger requirement to ensure everything fits
         Camera.main.orthographicSize = Mathf.Max(requiredSizeHeight, requiredSizeWidth);
