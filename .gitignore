@@ -101,3 +101,9 @@ ehthumbs.db
 # --- Other ---
 *.swp
 *~
+
+# --- GitHub Pages WebGL publish exception ---
+# Keep general build outputs ignored, but allow the committed WebGL publish build.
+!PuzzleGolf/Builds/
+!PuzzleGolf/Builds/WebGL/
+!PuzzleGolf/Builds/WebGL/**

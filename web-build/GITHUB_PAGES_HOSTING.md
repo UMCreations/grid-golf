@@ -74,6 +74,20 @@ PuzzleGolf/Builds/WebGL/TemplateData/...
 
 If `PuzzleGolf/Builds/WebGL/index.html` is missing, the GitHub workflow will fail on purpose.
 
+3. The WebGL build is committed to git.
+
+Important:
+
+- this repo ignores normal Unity `Builds/` output by default
+- but GitHub Pages deployment in this setup needs `PuzzleGolf/Builds/WebGL` present in the repo
+- `.gitignore` has been updated to allow that specific folder
+
+Use this after building WebGL:
+
+```bash
+git add -f PuzzleGolf/Builds/WebGL
+```
+
 ## Publish Process
 
 ### Step 1: Build the level editor
@@ -103,6 +117,7 @@ From repo root:
 ```bash
 cd /Users/meharaj/Desktop/Umer/ProductionGames/PuzzleGolf
 git add .
+git add -f PuzzleGolf/Builds/WebGL
 git commit -m "Set up GitHub Pages hosting for game and editor"
 git push origin main
 ```
@@ -161,9 +176,17 @@ Fix:
 
 Cause:
 - `PuzzleGolf/Builds/WebGL/index.html` is not present
+- or the WebGL build folder was never committed because `Builds/` is usually ignored
 
 Fix:
 - rebuild Unity WebGL and commit the output
+- run:
+
+```bash
+git add -f PuzzleGolf/Builds/WebGL
+git commit -m "Update WebGL build"
+git push origin main
+```
 
 ### 3. WebGL game loads but fails at runtime
 
