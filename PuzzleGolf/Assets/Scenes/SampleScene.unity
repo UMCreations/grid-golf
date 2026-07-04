@@ -10388,6 +10388,7 @@ MonoBehaviour:
   tilePrefab: {fileID: 6303450923254926047, guid: 9e1f70e9b30d24f02a67b64f63a3f57a, type: 3}
   gridParent: {fileID: 611456832}
   screenPadding: 1
+  maxAspect: 0.6
   currentTheme: {fileID: 11400000, guid: 3e1c5be98b2fa4278b06d0d6da7abfb2, type: 2}
   currentDifficulty: 0
   ballPrefab: {fileID: 7777476746999806065, guid: cbf9517a982d04db9af92fe8eeebdaf8, type: 3}
@@ -28135,7 +28136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   handcraftedAdventureLevels:
-  - {fileID: 11400000, guid: bb6f1f0158cde46509146a4c3720b949, type: 2}
+  - {fileID: 11400000, guid: e5c4998895e674bf8898fd98e8c8f6da, type: 2}
 --- !u!4 &1961453894
 Transform:
   m_ObjectHideFlags: 0
