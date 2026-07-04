@@ -5,11 +5,11 @@
 After deployment, the site structure is:
 
 - Home:
-  - `https://<your-username>.github.io/PuzzleGolf/`
+  - `https://<your-username>.github.io/grid-golf/`
 - Game:
-  - `https://<your-username>.github.io/PuzzleGolf/game/`
+  - `https://<your-username>.github.io/grid-golf/game/`
 - Level editor:
-  - `https://<your-username>.github.io/PuzzleGolf/editor/`
+  - `https://<your-username>.github.io/grid-golf/editor/`
 
 ## What This Repo Publishes
 
@@ -20,13 +20,14 @@ After deployment, the site structure is:
 ## Important Repo Assumption
 
 The editor base path is configured for a repo named `PuzzleGolf`:
+The editor base path is configured for your current repo name: `grid-golf`
 
 - `tools/level-editor-web/vite.config.ts`
 
 It uses:
 
 ```ts
-base: "/PuzzleGolf/editor/"
+base: "/grid-golf/editor/"
 ```
 
 If the GitHub repo name changes, update that path.
@@ -120,11 +121,11 @@ On GitHub:
 ### Step 5: Open the site
 
 - Home:
-  - `https://<your-username>.github.io/PuzzleGolf/`
+  - `https://<your-username>.github.io/grid-golf/`
 - Game:
-  - `https://<your-username>.github.io/PuzzleGolf/game/`
+  - `https://<your-username>.github.io/grid-golf/game/`
 - Editor:
-  - `https://<your-username>.github.io/PuzzleGolf/editor/`
+  - `https://<your-username>.github.io/grid-golf/editor/`
 
 ## Updating Later
 
@@ -154,7 +155,7 @@ Cause:
 
 Fix:
 - verify `tools/level-editor-web/vite.config.ts` uses:
-  - `"/PuzzleGolf/editor/"`
+  - `"/grid-golf/editor/"`
 
 ### 2. Workflow fails because game is missing
 
