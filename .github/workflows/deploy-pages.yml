@@ -36,6 +36,19 @@ jobs:
         working-directory: tools/level-editor-web
         run: npm run build
 
+      - name: Debug workspace
+        run: |
+          pwd
+          ls -la
+          echo "---- PuzzleGolf ----"
+          ls -la PuzzleGolf || true
+          echo "---- PuzzleGolf/Builds ----"
+          ls -la PuzzleGolf/Builds || true
+          echo "---- PuzzleGolf/Builds/WebGL ----"
+          ls -la PuzzleGolf/Builds/WebGL || true
+          echo "---- Find WebGL folders ----"
+          find . -type d -name WebGL | sort || true
+
       - name: Prepare Pages artifact
         run: |
           rm -rf site
