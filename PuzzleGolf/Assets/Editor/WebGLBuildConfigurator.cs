@@ -41,7 +41,7 @@ public static class WebGLBuildConfigurator
         PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
         PlayerSettings.WebGL.debugSymbolMode = WebGLDebugSymbolMode.Off;
         PlayerSettings.WebGL.template = "APPLICATION:Default";
-        UserBuildSettings.codeOptimization = WasmCodeOptimization.None;
+        UserBuildSettings.codeOptimization = WasmCodeOptimization.DiskSizeLTO;
 
         AssetDatabase.SaveAssets();
 
