@@ -19,8 +19,8 @@ Based on Unity Web documentation for WebGL:
   - Build target: `WebGL`
 - Scripting backend:
   - `IL2CPP`
-- Compression:
-  - `Brotli`
+- Compression for GitHub Pages:
+  - `Disabled`
 - Data caching:
   - enabled
 - Debug symbols:
@@ -54,19 +54,34 @@ We are using an editor-side configuration tool so the team can apply WebGL setti
 
 Menu items:
 
-- `Tools/Puzzle Golf/WebGL/Apply Recommended Settings`
+- `Tools/Puzzle Golf/WebGL/Apply GitHub Pages Release Settings`
+- `Tools/Puzzle Golf/WebGL/Apply GitHub Pages Development Settings`
 - `Tools/Puzzle Golf/WebGL/Build Release`
+- `Tools/Puzzle Golf/WebGL/Build Development`
 
 ## Team Workflow
 
 1. Open the project in Unity.
 2. Run:
-   - `Tools > Puzzle Golf > WebGL > Apply Recommended Settings`
+   - `Tools > Puzzle Golf > WebGL > Apply GitHub Pages Release Settings`
 3. Switch platform to WebGL if Unity prompts for it.
 4. Test in Editor if needed.
 5. Run:
    - `Tools > Puzzle Golf > WebGL > Build Release`
 6. Serve the output with a proper static host or local web server.
+
+### Development build option
+
+For a debug-friendly web build that is still GitHub Pages-safe:
+
+1. Run:
+   - `Tools > Puzzle Golf > WebGL > Apply GitHub Pages Development Settings`
+2. Then run:
+   - `Tools > Puzzle Golf > WebGL > Build Development`
+
+## Important Hosting Note
+
+This tool now deletes the existing `Builds/WebGL` folder before building so stale `.br` or `.unityweb` artifacts do not survive across rebuilds.
 
 ## Next Steps After Base Export
 

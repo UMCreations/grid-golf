@@ -8,8 +8,8 @@ public static class WebGLBuildConfigurator
 {
     private const string BuildOutputPath = "Builds/WebGL";
 
-    [MenuItem("Tools/Puzzle Golf/WebGL/Apply Recommended Settings")]
-    public static void ApplyRecommendedSettings()
+    [MenuItem("Tools/Puzzle Golf/WebGL/Apply GitHub Pages Release Settings")]
+    public static void ApplyGitHubPagesReleaseSettings()
     {
         PlayerSettings.runInBackground = false;
         PlayerSettings.resizableWindow = true;
@@ -17,7 +17,7 @@ public static class WebGLBuildConfigurator
         PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.Medium);
         PlayerSettings.stripEngineCode = true;
         PlayerSettings.WebGL.dataCaching = true;
-        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
         PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
         PlayerSettings.WebGL.debugSymbolMode = WebGLDebugSymbolMode.Off;
         PlayerSettings.WebGL.template = "APPLICATION:Default";
@@ -25,14 +25,45 @@ public static class WebGLBuildConfigurator
 
         AssetDatabase.SaveAssets();
 
-        Debug.Log("Applied recommended WebGL settings for PuzzleGolf. Set Web resolution manually in Player Settings if needed.");
+        Debug.Log("Applied GitHub Pages-safe WebGL release settings for PuzzleGolf. Compression is disabled to avoid host header issues.");
+    }
+
+    [MenuItem("Tools/Puzzle Golf/WebGL/Apply GitHub Pages Development Settings")]
+    public static void ApplyGitHubPagesDevelopmentSettings()
+    {
+        PlayerSettings.runInBackground = false;
+        PlayerSettings.resizableWindow = true;
+        PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP);
+        PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.Minimal);
+        PlayerSettings.stripEngineCode = false;
+        PlayerSettings.WebGL.dataCaching = false;
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+        PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
+        PlayerSettings.WebGL.debugSymbolMode = WebGLDebugSymbolMode.Off;
+        PlayerSettings.WebGL.template = "APPLICATION:Default";
+        UserBuildSettings.codeOptimization = WasmCodeOptimization.None;
+
+        AssetDatabase.SaveAssets();
+
+        Debug.Log("Applied GitHub Pages-safe WebGL development settings for PuzzleGolf.");
     }
 
     [MenuItem("Tools/Puzzle Golf/WebGL/Build Release")]
     public static void BuildRelease()
     {
-        ApplyRecommendedSettings();
+        ApplyGitHubPagesReleaseSettings();
+        BuildWebGL(BuildOptions.None);
+    }
 
+    [MenuItem("Tools/Puzzle Golf/WebGL/Build Development")]
+    public static void BuildDevelopment()
+    {
+        ApplyGitHubPagesDevelopmentSettings();
+        BuildWebGL(BuildOptions.Development | BuildOptions.AllowDebugging);
+    }
+
+    private static void BuildWebGL(BuildOptions buildOptions)
+    {
         if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.WebGL)
         {
             bool switched = EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.WebGL, BuildTarget.WebGL);
@@ -43,6 +74,10 @@ public static class WebGLBuildConfigurator
             }
         }
 
+        if (Directory.Exists(BuildOutputPath))
+        {
+            Directory.Delete(BuildOutputPath, true);
+        }
         Directory.CreateDirectory(BuildOutputPath);
 
         BuildPlayerOptions options = new BuildPlayerOptions
@@ -50,7 +85,7 @@ public static class WebGLBuildConfigurator
             scenes = GetEnabledScenes(),
             locationPathName = BuildOutputPath,
             target = BuildTarget.WebGL,
-            options = BuildOptions.None
+            options = buildOptions
         };
 
         BuildReport report = BuildPipeline.BuildPlayer(options);
