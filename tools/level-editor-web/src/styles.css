@@ -172,11 +172,33 @@ textarea {
 .paint-settings {
   display: flex;
   gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.scale-control {
+  min-width: 200px;
+}
+
+.scale-control input[type="range"] {
+  padding: 0;
+}
+
+.scale-control strong {
+  display: block;
+  margin-top: 6px;
+  color: #28493a;
+}
+
+.grid-shell {
+  overflow: auto;
+  padding: 8px 4px 4px;
 }
 
 .grid {
   display: grid;
   gap: 8px;
+  margin: 0 auto;
 }
 
 .tile {

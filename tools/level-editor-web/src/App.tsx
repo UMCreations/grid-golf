@@ -16,6 +16,7 @@ function App() {
   const [paintType, setPaintType] = useState<TileType>("Standard");
   const [paintPower, setPaintPower] = useState(1);
   const [paintMode, setPaintMode] = useState<PaintMode>("tile");
+  const [boardScale, setBoardScale] = useState(1);
 
   const validation = useMemo(() => validateLevel(level), [level]);
   const selectedTile = useMemo(() => getTile(level, level.startPosition), [level]);
@@ -247,6 +248,18 @@ function App() {
             </div>
 
             <div className="paint-settings">
+              <label className="scale-control">
+                <span>Board Scale</span>
+                <input
+                  type="range"
+                  min={0.55}
+                  max={1.6}
+                  step={0.05}
+                  value={boardScale}
+                  onChange={(event) => setBoardScale(Number(event.target.value))}
+                />
+                <strong>{Math.round(boardScale * 100)}%</strong>
+              </label>
               <label>
                 <span>Type</span>
                 <select
@@ -274,25 +287,31 @@ function App() {
             </div>
           </div>
 
-          <div
-            className="grid"
-            style={{ gridTemplateColumns: `repeat(${level.width}, minmax(0, 1fr))` }}
-          >
-            {[...level.tiles]
-              .sort((a, b) => (b.y - a.y) || (a.x - b.x))
-              .map((tile) => (
-                <button
-                  key={`${tile.x}-${tile.y}`}
-                  className={`tile tile-${tile.type.toLowerCase()}`}
-                  onClick={() => updateTile(tile.x, tile.y)}
-                >
-                  <span className="tile-type">{tile.type.slice(0, 1)}</span>
-                  <strong>{tile.power}</strong>
-                  <small>
-                    {tile.x},{tile.y}
-                  </small>
-                </button>
-              ))}
+          <div className="grid-shell">
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: `repeat(${level.width}, minmax(0, ${72 * boardScale}px))`,
+                width: "fit-content",
+              }}
+            >
+              {[...level.tiles]
+                .sort((a, b) => (b.y - a.y) || (a.x - b.x))
+                .map((tile) => (
+                  <button
+                    key={`${tile.x}-${tile.y}`}
+                    className={`tile tile-${tile.type.toLowerCase()}`}
+                    onClick={() => updateTile(tile.x, tile.y)}
+                    style={{ width: `${72 * boardScale}px` }}
+                  >
+                    <span className="tile-type">{tile.type.slice(0, 1)}</span>
+                    <strong>{tile.power}</strong>
+                    <small>
+                      {tile.x},{tile.y}
+                    </small>
+                  </button>
+                ))}
+            </div>
           </div>
         </section>
 
