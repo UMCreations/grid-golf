@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <link rel="stylesheet" href="TemplateData/style.css">
+  </head>
+  <body>
+    <div id="unity-shell">
+      <div id="unity-container">
+        <canvas id="unity-canvas" width={{{ WIDTH }}} height={{{ HEIGHT }}} tabindex="-1"></canvas>
+        <div id="unity-loading-bar">
+          <div id="unity-loading-label">{{{ PRODUCT_NAME }}}</div>
+          <div id="unity-progress-track">
+            <div id="unity-progress-bar-full"></div>
+          </div>
+        </div>
+        <div id="unity-warning"></div>
+      </div>
+      <div id="unity-footer">
+        <div id="unity-build-title">{{{ PRODUCT_NAME }}}</div>
+        <button id="unity-fullscreen-button" type="button">Fullscreen</button>
+      </div>
+    </div>
+
+    <script>
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var warningBanner = document.querySelector("#unity-warning");
+      var footer = document.querySelector("#unity-footer");
+
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? "flex" : "none";
+        }
+
+        var div = document.createElement("div");
+        div.className = type === "error" ? "unity-banner unity-banner-error" : "unity-banner unity-banner-warning";
+        div.textContent = msg;
+        warningBanner.appendChild(div);
+
+        if (type !== "error") {
+          setTimeout(function() {
+            if (div.parentNode === warningBanner) {
+              warningBanner.removeChild(div);
+            }
+            updateBannerVisibility();
+          }, 5000);
+        }
+
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var baseCanvasWidth = {{{ WIDTH }}};
+      var baseCanvasHeight = {{{ HEIGHT }}};
+      var config = {
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_WASM
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if MEMORY_FILENAME
+        memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner,
+      };
+
+      function resizeCanvasToViewport() {
+        var shellPadding = 24;
+        var footerHeight = footer ? footer.offsetHeight + 12 : 0;
+        var availableWidth = Math.max(320, window.innerWidth - shellPadding);
+        var availableHeight = Math.max(320, window.innerHeight - shellPadding - footerHeight);
+        var aspectRatio = baseCanvasWidth / baseCanvasHeight;
+        var width = availableWidth;
+        var height = width / aspectRatio;
+
+        if (height > availableHeight) {
+          height = availableHeight;
+          width = height * aspectRatio;
+        }
+
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+      }
+
+      resizeCanvasToViewport();
+      window.addEventListener("resize", resizeCanvasToViewport);
+      window.addEventListener("orientationchange", resizeCanvasToViewport);
+
+      loadingBar.style.display = "flex";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = function() {
+        createUnityInstance(canvas, config, function(progress) {
+          progressBarFull.style.width = (100 * progress) + "%";
+        }).then(function(unityInstance) {
+          loadingBar.style.display = "none";
+          fullscreenButton.onclick = function() {
+            unityInstance.SetFullscreen(1);
+          };
+          resizeCanvasToViewport();
+        }).catch(function(message) {
+          alert(message);
+        });
+      };
+
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

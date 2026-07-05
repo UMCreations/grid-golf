@@ -7,10 +7,15 @@ using UnityEngine;
 public static class WebGLBuildConfigurator
 {
     private const string BuildOutputPath = "Builds/WebGL";
+    private const string ResponsiveTemplateName = "PROJECT:PuzzleGolfResponsive";
+    private const string ResponsiveTemplateFolder = "Assets/WebGLTemplates/PuzzleGolfResponsive";
 
     [MenuItem("Tools/Puzzle Golf/WebGL/Apply GitHub Pages Release Settings")]
     public static void ApplyGitHubPagesReleaseSettings()
     {
+        if (!EnsureResponsiveTemplateExists())
+            return;
+
         PlayerSettings.runInBackground = false;
         PlayerSettings.resizableWindow = true;
         PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP);
@@ -20,17 +25,20 @@ public static class WebGLBuildConfigurator
         PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
         PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
         PlayerSettings.WebGL.debugSymbolMode = WebGLDebugSymbolMode.Off;
-        PlayerSettings.WebGL.template = "APPLICATION:Default";
+        PlayerSettings.WebGL.template = ResponsiveTemplateName;
         UserBuildSettings.codeOptimization = WasmCodeOptimization.DiskSizeLTO;
 
         AssetDatabase.SaveAssets();
 
-        Debug.Log("Applied GitHub Pages-safe WebGL release settings for PuzzleGolf. Compression is disabled to avoid host header issues.");
+        Debug.Log("Applied GitHub Pages-safe WebGL release settings for PuzzleGolf. Responsive WebGL template enabled and compression disabled for static hosting.");
     }
 
     [MenuItem("Tools/Puzzle Golf/WebGL/Apply GitHub Pages Development Settings")]
     public static void ApplyGitHubPagesDevelopmentSettings()
     {
+        if (!EnsureResponsiveTemplateExists())
+            return;
+
         PlayerSettings.runInBackground = false;
         PlayerSettings.resizableWindow = true;
         PlayerSettings.SetScriptingBackend(BuildTargetGroup.WebGL, ScriptingImplementation.IL2CPP);
@@ -40,12 +48,12 @@ public static class WebGLBuildConfigurator
         PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
         PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
         PlayerSettings.WebGL.debugSymbolMode = WebGLDebugSymbolMode.Off;
-        PlayerSettings.WebGL.template = "APPLICATION:Default";
+        PlayerSettings.WebGL.template = ResponsiveTemplateName;
         UserBuildSettings.codeOptimization = WasmCodeOptimization.DiskSizeLTO;
 
         AssetDatabase.SaveAssets();
 
-        Debug.Log("Applied GitHub Pages-safe WebGL development settings for PuzzleGolf.");
+        Debug.Log("Applied GitHub Pages-safe WebGL development settings for PuzzleGolf. Responsive WebGL template enabled.");
     }
 
     [MenuItem("Tools/Puzzle Golf/WebGL/Build Release")]
@@ -64,6 +72,9 @@ public static class WebGLBuildConfigurator
 
     private static void BuildWebGL(BuildOptions buildOptions)
     {
+        if (!EnsureResponsiveTemplateExists())
+            return;
+
         if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.WebGL)
         {
             bool switched = EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.WebGL, BuildTarget.WebGL);
@@ -120,5 +131,14 @@ public static class WebGLBuildConfigurator
         }
 
         return enabled;
+    }
+
+    private static bool EnsureResponsiveTemplateExists()
+    {
+        if (Directory.Exists(ResponsiveTemplateFolder))
+            return true;
+
+        Debug.LogError($"Missing WebGL template folder: {ResponsiveTemplateFolder}");
+        return false;
     }
 }

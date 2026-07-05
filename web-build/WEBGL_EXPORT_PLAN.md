@@ -34,7 +34,7 @@ Based on Unity Web documentation for WebGL:
 - Managed stripping:
   - medium by default for safety
 - Template:
-  - default template first, custom template later if needed
+  - custom responsive template for exported web shell
 - Web resolution:
   - default target around `1280x720`
 
@@ -51,6 +51,8 @@ Based on Unity Web documentation for WebGL:
 We are using an editor-side configuration tool so the team can apply WebGL settings consistently:
 
 - `Assets/Editor/WebGLBuildConfigurator.cs`
+- `Assets/WebGLTemplates/PuzzleGolfResponsive/index.html`
+- `Assets/WebGLTemplates/PuzzleGolfResponsive/TemplateData/style.css`
 
 Menu items:
 
@@ -58,6 +60,17 @@ Menu items:
 - `Tools/Puzzle Golf/WebGL/Apply GitHub Pages Development Settings`
 - `Tools/Puzzle Golf/WebGL/Build Release`
 - `Tools/Puzzle Golf/WebGL/Build Development`
+
+The configurator now forces a custom Unity WebGL template:
+
+- `PROJECT:PuzzleGolfResponsive`
+
+That means every new WebGL export gets:
+
+- responsive canvas scaling for phone, tablet, and desktop
+- aspect-ratio-preserving fit inside the browser viewport
+- no dependency on manually editing generated `Builds/WebGL/index.html`
+- a GitHub Pages-safe shell with compression already disabled by the build settings
 
 ## Team Workflow
 
@@ -82,6 +95,10 @@ For a debug-friendly web build that is still GitHub Pages-safe:
 ## Important Hosting Note
 
 This tool now deletes the existing `Builds/WebGL` folder before building so stale `.br` or `.unityweb` artifacts do not survive across rebuilds.
+
+## Rebuild Requirement
+
+Because the responsive shell now lives in `Assets/WebGLTemplates/PuzzleGolfResponsive`, you must generate a fresh WebGL build after pulling these changes. Existing files already inside `Builds/WebGL` do not automatically inherit template updates until you rebuild.
 
 ## Next Steps After Base Export
 
