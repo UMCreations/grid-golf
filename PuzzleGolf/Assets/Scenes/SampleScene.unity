@@ -979,8 +979,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: < BACK
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: c03ae822e2e8d49cf907a4ef0e801b77, type: 2}
-  m_sharedMaterial: {fileID: -6401307332444455493, guid: c03ae822e2e8d49cf907a4ef0e801b77, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1004,7 +1004,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 51.15
+  m_fontSize: 52.35
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1660,6 +1660,206 @@ MonoBehaviour:
   verticalSpacing: 200
   pathWidth: 300
   frequency: 0.5
+  segmentArt:
+  - themeName: The Fairway
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.48, y: 0}
+    - {x: 0.85, y: 0.12}
+    - {x: 0.22, y: 0.22}
+    - {x: 0.8, y: 0.35}
+    - {x: 0.38, y: 0.46}
+    - {x: 0.74, y: 0.59}
+    - {x: 0.2, y: 0.69}
+    levelPositions:
+    - {x: 0.6355957, y: 0.037089843}
+    - {x: 0.8108301, y: 0.13325195}
+    - {x: 0.24768555, y: 0.20620117}
+    - {x: 0.6025684, y: 0.3013965}
+    - {x: 0.68146485, y: 0.39183593}
+    - {x: 0.39382812, y: 0.47549805}
+    - {x: 0.7327344, y: 0.5750488}
+    - {x: 0.4025, y: 0.6611426}
+  - themeName: Sandy Shores
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.73370266, y: 0.056326557}
+    - {x: 0.67247814, y: 0.2096793}
+    - {x: 0.24688047, y: 0.36696795}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7391254, y: 0.65839654}
+    - {x: 0.31049567, y: 0.7939941}
+    - {x: 0.522099, y: 0.9426238}
+  - themeName: Deep Desert
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.6905, y: 0.035609987}
+    - {x: 0.8315, y: 0.14246997}
+    - {x: 0.49625, y: 0.248125}
+    - {x: 0.23326999, y: 0.3587749}
+    - {x: 0.63881, y: 0.475625}
+    - {x: 0.83132, y: 0.577625}
+    - {x: 0.72764003, y: 0.6647749}
+    - {x: 0.43124998, y: 0.759375}
+    - {x: 0.25465003, y: 0.85672}
+    - {x: 0.61134994, y: 0.96376}
+  - themeName: Frozen Peaks
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.788, y: 0.08687988}
+    - {x: 0.27727997, y: 0.30304003}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.61536, y: 0.71135986}
+    - {x: 0.4023999, y: 0.91168016}
+  - themeName: Arctic Hazard
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.6905, y: 0.035610106}
+    - {x: 0.8315, y: 0.14246997}
+    - {x: 0.49625, y: 0.248125}
+    - {x: 0.23326999, y: 0.3587749}
+    - {x: 0.63881, y: 0.475625}
+    - {x: 0.83132, y: 0.577625}
+    - {x: 0.72764003, y: 0.6647749}
+    - {x: 0.43124998, y: 0.759375}
+    - {x: 0.25465003, y: 0.85671973}
+    - {x: 0.61134994, y: 0.9637598}
+  - themeName: Launch Pad Valley
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.6905, y: 0.035609864}
+    - {x: 0.8315, y: 0.14247021}
+    - {x: 0.49625, y: 0.248125}
+    - {x: 0.23326999, y: 0.3587749}
+    - {x: 0.63881, y: 0.475625}
+    - {x: 0.83132, y: 0.577625}
+    - {x: 0.72764003, y: 0.6647749}
+    - {x: 0.43124998, y: 0.759375}
+    - {x: 0.25465003, y: 0.85671973}
+    - {x: 0.61134994, y: 0.9637598}
+  - themeName: The Gauntlet
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.66, y: 0.021440104}
+    - {x: 0.788, y: 0.08687988}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.58096, y: 0.23008008}
+    - {x: 0.27727997, y: 0.30304003}
+    - {x: 0.27136, y: 0.378}
+    - {x: 0.56032, y: 0.45640007}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.82624, y: 0.5924001}
+    - {x: 0.75392, y: 0.65}
+    - {x: 0.61536, y: 0.71136004}
+    - {x: 0.37072003, y: 0.77551985}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.4023999, y: 0.91168004}
+    - {x: 0.6735999, y: 0.9782399}
+  - themeName: Master's Course
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.66, y: 0.021440104}
+    - {x: 0.788, y: 0.08687988}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.58096, y: 0.23008008}
+    - {x: 0.27727997, y: 0.30304003}
+    - {x: 0.27136, y: 0.378}
+    - {x: 0.56032, y: 0.45640007}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.82624, y: 0.5924001}
+    - {x: 0.75392, y: 0.65}
+    - {x: 0.61536, y: 0.71136004}
+    - {x: 0.37072003, y: 0.77551985}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.4023999, y: 0.9116797}
+    - {x: 0.6735999, y: 0.97824025}
+  - themeName: The Final Hole
+    background: {fileID: 21300000, guid: e0d5d041477b849c88041944591f3f41, type: 3}
+    pathPoints:
+    - {x: 0.62, y: 0}
+    - {x: 0.82, y: 0.16}
+    - {x: 0.22, y: 0.34}
+    - {x: 0.8, y: 0.53}
+    - {x: 0.7, y: 0.68}
+    - {x: 0.24, y: 0.84}
+    - {x: 0.76, y: 1}
+    levelPositions:
+    - {x: 0.6468125, y: 0.015138672}
+    - {x: 0.74093753, y: 0.059996095}
+    - {x: 0.82156247, y: 0.11484375}
+    - {x: 0.80664873, y: 0.16853711}
+    - {x: 0.6221713, y: 0.22112304}
+    - {x: 0.37460372, y: 0.27546436}
+    - {x: 0.22432625, y: 0.3307505}
+    - {x: 0.29796875, y: 0.38773438}
+    - {x: 0.5195713, y: 0.44666553}
+    - {x: 0.7385638, y: 0.50357175}
+    - {x: 0.82529, y: 0.55457175}
+    - {x: 0.82133, y: 0.5996655}
+    - {x: 0.76625, y: 0.64273435}
+    - {x: 0.6839587, y: 0.6877744}
+    - {x: 0.52660114, y: 0.7352607}
+    - {x: 0.34287384, y: 0.78360206}
+    - {x: 0.24131624, y: 0.8319883}
+    - {x: 0.31328124, y: 0.88375}
+    - {x: 0.5068188, y: 0.93889016}
+    - {x: 0.7008063, y: 0.9846699}
 --- !u!1001 &113851234
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13705,8 +13905,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: PLAY
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: c03ae822e2e8d49cf907a4ef0e801b77, type: 2}
-  m_sharedMaterial: {fileID: -6401307332444455493, guid: c03ae822e2e8d49cf907a4ef0e801b77, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -15978,7 +16178,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 33af1be90b34b42fea72fd560618690d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: dece80d04460a4c5e9a8bcc2f0fa2e19, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -30286,7 +30486,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 33af1be90b34b42fea72fd560618690d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: dece80d04460a4c5e9a8bcc2f0fa2e19, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

@@ -9,7 +9,7 @@ public class SagaMapEditorTool : EditorWindow
     private int totalLevels = 100;
     private float verticalSpacing = 200f;
     private float pathWidth = 300f;
-    private float frequency = 0.1f;
+    private float frequency = 0.5f;
 
     [MenuItem("Tools/Saga Map/Saga Map Setup Tool")]
     public static void ShowWindow()
