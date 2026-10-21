@@ -2474,7 +2474,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -6.9965, y: 149}
+  m_AnchoredPosition: {x: -6.996521, y: 149}
   m_SizeDelta: {x: 550, y: 150}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &179173890
@@ -10458,7 +10458,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4239cc58f215f4feb88d972e92ae5908, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileSize: 1
+  tileSize: 2.1
   spacing: 0.25
   tilePrefab: {fileID: 6303450923254926047, guid: 9e1f70e9b30d24f02a67b64f63a3f57a, type: 3}
   gridParent: {fileID: 611456832}
@@ -29637,9 +29637,9 @@ RectTransform:
   - {fileID: 1635240568}
   m_Father: {fileID: 2042101029}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 479.67108, y: -237.9442}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &2013299301
@@ -30123,10 +30123,10 @@ RectTransform:
   - {fileID: 373551464}
   m_Father: {fileID: 2113947918}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.32163945, y: 0.5}
+  m_AnchorMax: {x: 0.68225694, y: 0.5}
+  m_AnchoredPosition: {x: -2.217102, y: 0}
+  m_SizeDelta: {x: 549.47, y: 238}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2042101030
 MonoBehaviour:

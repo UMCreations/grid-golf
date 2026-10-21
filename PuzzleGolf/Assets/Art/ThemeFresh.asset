@@ -20,9 +20,11 @@ MonoBehaviour:
   containerColor: {r: 1, g: 1, b: 1, a: 1}
   containerPadding: 0.9
   standardSprites:
-  - {fileID: 21300000, guid: 7ffbdad9b2e7e4e0f8ee0b42e199cae7, type: 3}
-  startSprite: {fileID: 21300000, guid: 40252668f130e454a891a2b31252d586, type: 3}
-  holeSprite: {fileID: 21300000, guid: 86ee17b6e64c24467a46d6e3e16c527c, type: 3}
+  - {fileID: 21300000, guid: 776172f687ba14f319e944597eadd364, type: 3}
+  - {fileID: 21300000, guid: 1b9e1898548e2457b8ac6118f8428353, type: 3}
+  - {fileID: 21300000, guid: 4e4a5cbad9b7c4cbfa3b8dd8548a5e01, type: 3}
+  startSprite: {fileID: 21300000, guid: b46d12e0578b8485d883035ab6dbdb2d, type: 3}
+  holeSprite: {fileID: 21300000, guid: d1a6e915747344c05a71cc749bbbd412, type: 3}
   numberedSprites: []
   iceSprites: []
   sandSprites:
