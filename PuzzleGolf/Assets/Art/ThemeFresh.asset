@@ -16,8 +16,11 @@ MonoBehaviour:
   backgroundImage: {fileID: 21300000, guid: 33af1be90b34b42fea72fd560618690d, type: 3}
   backgroundColor: {r: 1, g: 1, b: 1, a: 1}
   backgroundPadding: 1.5
+  containerImage: {fileID: 21300000, guid: 4d2cb397708b94aa19f507dcc6a7629c, type: 3}
+  containerColor: {r: 1, g: 1, b: 1, a: 1}
+  containerPadding: 0.9
   standardSprites:
-  - {fileID: 21300000, guid: dff2cf20e93874537ad1f1fe374c6cab, type: 3}
+  - {fileID: 21300000, guid: 1e20e87d6f1ff44bc931a6ab2a252fbf, type: 3}
   startSprite: {fileID: 21300000, guid: 40252668f130e454a891a2b31252d586, type: 3}
   holeSprite: {fileID: 21300000, guid: 86ee17b6e64c24467a46d6e3e16c527c, type: 3}
   numberedSprites: []

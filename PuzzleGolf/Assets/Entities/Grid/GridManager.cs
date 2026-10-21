@@ -18,6 +18,7 @@ public class GridManager : MonoBehaviour
     [Header("Theme Setup")]
     public GridTheme currentTheme;
     private SpriteRenderer bgRenderer;
+    private SpriteRenderer containerRenderer;
 
     [Header("Level Integration")]
     public Difficulty currentDifficulty = Difficulty.Easy;
@@ -248,6 +249,12 @@ public class GridManager : MonoBehaviour
         {
             Destroy(bgRenderer.gameObject);
             bgRenderer = null;
+        }
+
+        if (containerRenderer != null)
+        {
+            Destroy(containerRenderer.gameObject);
+            containerRenderer = null;
         }
     }
 
@@ -500,6 +507,67 @@ public class GridManager : MonoBehaviour
         {
             Vector2 spriteSize = currentTheme.backgroundImage.bounds.size;
             bgRenderer.transform.localScale = new Vector3(targetWidth / spriteSize.x, targetHeight / spriteSize.y, 1f);
+        }
+
+        UpdateGridContainer();
+    }
+
+    private void UpdateGridContainer()
+    {
+        // Clean up previous container
+        if (containerRenderer != null)
+        {
+            Destroy(containerRenderer.gameObject);
+            containerRenderer = null;
+        }
+
+        if (currentTheme == null || currentTheme.containerImage == null)
+            return;
+
+        // Physical grid bounds
+        float physicalWidth  = (width  - 1) * (tileSize + spacing) + tileSize;
+        float physicalHeight = (height - 1) * (tileSize + spacing) + tileSize;
+        float centerX = ((width  - 1) * (tileSize + spacing)) / 2f;
+        float centerY = ((height - 1) * (tileSize + spacing)) / 2f;
+
+        GameObject containerObj = new GameObject("GridContainer");
+        containerObj.transform.parent = transform;
+        containerRenderer = containerObj.AddComponent<SpriteRenderer>();
+
+        containerRenderer.sprite = currentTheme.containerImage;
+        containerRenderer.color  = currentTheme.containerColor;
+        // Behind tiles (Z=0) but in front of the full-screen BG (Z=5)
+        containerRenderer.sortingOrder = -10;
+
+        // Support 9-sliced sprites for clean borders
+        if (currentTheme.containerImage.border != Vector4.zero)
+        {
+            containerRenderer.drawMode = SpriteDrawMode.Sliced;
+        }
+        else
+        {
+            containerRenderer.drawMode = SpriteDrawMode.Simple;
+        }
+
+        float pad = currentTheme.containerPadding;
+        float containerWidth  = physicalWidth  + pad * 2f;
+        float containerHeight = physicalHeight + pad * 2f;
+
+        // Place between BG (Z=5) and tiles (Z=0): use Z=2
+        containerRenderer.transform.position = new Vector3(centerX, centerY, 2f);
+
+        if (containerRenderer.drawMode == SpriteDrawMode.Sliced)
+        {
+            containerRenderer.size = new Vector2(containerWidth, containerHeight);
+            containerRenderer.transform.localScale = Vector3.one;
+        }
+        else
+        {
+            Vector2 spriteSize = currentTheme.containerImage.bounds.size;
+            containerRenderer.transform.localScale = new Vector3(
+                containerWidth  / spriteSize.x,
+                containerHeight / spriteSize.y,
+                1f);
         }
     }
 }

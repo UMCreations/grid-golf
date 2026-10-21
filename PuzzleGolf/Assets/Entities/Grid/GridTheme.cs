@@ -11,6 +11,13 @@ public class GridTheme : ScriptableObject
     public Color backgroundColor = Color.white;
     public float backgroundPadding = 1.5f;
 
+    [Header("Grid Container Settings")]
+    [Tooltip("Sprite for the panel that wraps all tiles (the inner grass/board layer).")]
+    public Sprite containerImage;
+    public Color containerColor = Color.white;
+    [Tooltip("Extra space added around the tile grid for the container panel.")]
+    public float containerPadding = 0.6f;
+
     [Header("Tile Sprites (Required)")]
     public Sprite[] standardSprites;
     public Sprite startSprite;
