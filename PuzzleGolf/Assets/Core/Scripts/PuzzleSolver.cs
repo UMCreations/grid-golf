@@ -5,12 +5,14 @@ public class SolveResult
 {
     public bool IsSolvable;
     public int ShortestPathStrokes;
+    public int ShortestPathCount;
     public List<Vector2Int> Path;
 
     public SolveResult()
     {
         IsSolvable = false;
         ShortestPathStrokes = -1;
+        ShortestPathCount = 0;
         Path = new List<Vector2Int>();
     }
 }
@@ -38,12 +40,14 @@ public static class PuzzleSolver
         if (level == null) return new SolveResult();
 
         Queue<SolverState> queue = new Queue<SolverState>();
-        // State is position + current power modifier (from last tile)
-        HashSet<(Vector2Int, int)> visited = new HashSet<(Vector2Int, int)>();
+        // State is position + current power modifier (from last tile).
+        var distances = new Dictionary<(Vector2Int, int), int>();
+        var shortestPathsToState = new Dictionary<(Vector2Int, int), int>();
 
         // Initial state
         queue.Enqueue(new SolverState(level.startPosition, 0, 0, new List<Vector2Int>()));
-        visited.Add((level.startPosition, 0));
+        distances.Add((level.startPosition, 0), 0);
+        shortestPathsToState.Add((level.startPosition, 0), 1);
 
         Vector2Int[] directions = {
             Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
@@ -57,10 +61,12 @@ public static class PuzzleSolver
             // If we reached the hole, this is the shortest path (due to BFS)
             if (current.Position == level.holePosition)
             {
+                int solutionCount = shortestPathsToState[(current.Position, current.PowerModifier)];
                 return new SolveResult
                 {
                     IsSolvable = true,
                     ShortestPathStrokes = current.Strokes,
+                    ShortestPathCount = solutionCount,
                     Path = current.History
                 };
             }
@@ -126,10 +132,19 @@ public static class PuzzleSolver
                     }
                 }
 
-                if (!visited.Contains((finalPos, nextModifier)))
+                var nextState = (finalPos, nextModifier);
+                int nextDistance = current.Strokes + 1;
+                int currentPathCount = shortestPathsToState[(current.Position, current.PowerModifier)];
+                if (!distances.TryGetValue(nextState, out int knownDistance))
                 {
-                    visited.Add((finalPos, nextModifier));
-                    queue.Enqueue(new SolverState(finalPos, nextModifier, current.Strokes + 1, current.History));
+                    distances.Add(nextState, nextDistance);
+                    shortestPathsToState.Add(nextState, currentPathCount);
+                    queue.Enqueue(new SolverState(finalPos, nextModifier, nextDistance, current.History));
+                }
+                else if (knownDistance == nextDistance)
+                {
+                    shortestPathsToState[nextState] = Mathf.Min(2,
+                        shortestPathsToState[nextState] + currentPathCount);
                 }
             }
         }

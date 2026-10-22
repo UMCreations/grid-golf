@@ -80,7 +80,7 @@ public class LevelGenerator : MonoBehaviour
     public static LevelGenerator Instance { get; private set; }
 
     [Header("Generation Settings")]
-    [Tooltip("Enable to use the new Sawtooth pacing and False Paths.")]
+    [Tooltip("Enable solver-validated Smart generation; disable for Classic generation.")]
     public bool useAdvancedMechanics = true;
 
     private ILevelGeneratorStrategy currentStrategy;

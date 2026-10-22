@@ -60,6 +60,23 @@ textarea {
   color: #51614f;
 }
 
+.draft-status,
+.draft-notice {
+  max-width: 60ch;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #546453;
+  overflow-wrap: anywhere;
+}
+
+.draft-notice {
+  color: #28513c;
+}
+
+.draft-notice.is-error {
+  color: #9a2d24;
+}
+
 .hero-actions {
   display: flex;
   gap: 12px;
@@ -72,6 +89,7 @@ textarea {
   border: 0;
   border-radius: 999px;
   padding: 12px 18px;
+  min-height: 44px;
   background: #274c3d;
   color: white;
   cursor: pointer;
@@ -83,8 +101,28 @@ textarea {
   color: #203326;
 }
 
+.hero-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.file-button {
+  position: relative;
+  overflow: hidden;
+}
+
 .file-button input {
-  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-button:focus-within {
+  outline: 2px solid #274c3d;
+  outline-offset: 3px;
 }
 
 .workspace {
@@ -128,6 +166,7 @@ textarea {
 .paint-settings input,
 .paint-settings select {
   width: 100%;
+  min-height: 44px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid #ccd7c7;
@@ -159,6 +198,7 @@ textarea {
   border: 1px solid #cad8c8;
   border-radius: 999px;
   padding: 10px 14px;
+  min-height: 44px;
   background: white;
   cursor: pointer;
 }
@@ -190,8 +230,37 @@ textarea {
   color: #28493a;
 }
 
+.validation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.validation-header h2 {
+  margin: 0;
+}
+
+.validate-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  min-height: 44px;
+  background: #274c3d;
+  color: white;
+  cursor: pointer;
+}
+
+.validate-button:focus-visible {
+  outline: 2px solid #274c3d;
+  outline-offset: 3px;
+}
+
 .grid-shell {
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
   padding: 8px 4px 4px;
 }
 
@@ -202,7 +271,8 @@ textarea {
 }
 
 .tile {
-  aspect-ratio: 1 / 1;
+  min-width: 44px;
+  min-height: 44px;
   border: 0;
   border-radius: 16px;
   padding: 8px;
@@ -210,10 +280,21 @@ textarea {
   flex-direction: column;
   justify-content: space-between;
   align-items: start;
+  line-height: 1.1;
   color: #143020;
   cursor: pointer;
+  touch-action: manipulation;
   box-shadow: inset 0 0 0 1px rgba(20, 48, 32, 0.08);
 }
+
+.tile-compact {
+  padding: 4px;
+  border-radius: 11px;
+}
+
+.tile-compact .tile-type { font-size: 0.55rem; letter-spacing: 0.02em; }
+.tile-compact strong { font-size: 0.85rem; }
+.tile-compact small { font-size: 0.5rem; line-height: 1; }
 
 .tile strong {
   font-size: 1.2rem;
@@ -243,6 +324,7 @@ textarea {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
@@ -284,4 +366,37 @@ textarea {
   .workspace {
     grid-template-columns: 1fr;
   }
+
+  .editor { order: -1; }
+  .workspace > .panel:first-child { order: 0; }
+  .workspace > .panel:last-child { order: 1; }
+}
+
+@media (max-width: 680px) {
+  .app-shell { padding: 12px; }
+
+  .hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .hero-actions { justify-content: flex-start; }
+  .workspace { gap: 12px; }
+  .panel, .editor { padding: 14px; border-radius: 16px; }
+  .toolbar { align-items: stretch; gap: 12px; }
+  .paint-group button { flex: 1 1 auto; padding-inline: 10px; }
+
+  .paint-settings {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+
+  .paint-settings label { min-width: 0; margin-bottom: 0; }
+  .scale-control { grid-column: 1 / -1; min-width: 0; }
+  .grid-shell { padding: 8px 0 4px; }
 }

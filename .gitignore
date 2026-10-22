@@ -107,3 +107,6 @@ ehthumbs.db
 !PuzzleGolf/Builds/
 !PuzzleGolf/Builds/WebGL/
 !PuzzleGolf/Builds/WebGL/**
+
+# --- Web level editor dependencies ---
+tools/level-editor-web/node_modules/

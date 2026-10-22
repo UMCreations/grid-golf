@@ -25,12 +25,14 @@ public class Tile : MonoBehaviour
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private TMP_Text powerText;
     [SerializeField] private GameObject highlightBorder;
+    private Color powerNumberColor = Color.white;
 
-    public void Init(Vector2Int gridPos, int power, TileType tileType, Sprite tileSprite = null)
+    public void Init(Vector2Int gridPos, int power, TileType tileType, Sprite tileSprite = null, Color? numberColor = null)
     {
         gridPosition = gridPos;
         powerCount = power;
         type = tileType;
+        powerNumberColor = numberColor ?? Color.white;
 
         if (spriteRenderer != null && tileSprite != null)
         {
@@ -51,12 +53,7 @@ public class Tile : MonoBehaviour
             if (shouldShowPower && powerCount > 0)
             {
                 powerText.text = powerCount.ToString();
-
-                // Color-code power number by tile type
-                if      (type == TileType.Ice)   powerText.color = new Color(0.6f, 0.85f, 1f);   // Ice Blue
-                else if (type == TileType.Sand)  powerText.color = new Color(1f,  0.9f,  0.55f); // Sand Yellow
-                else if (type == TileType.Boost) powerText.color = new Color(0.4f, 1f,   0.6f);  // Boost Green
-                else                             powerText.color = Color.white;
+                powerText.color = powerNumberColor;
             }
             else
             {

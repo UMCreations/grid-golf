@@ -1,3 +1,5 @@
+import Ajv2020 from "ajv/dist/2020";
+import levelSchema from "../../../level-authoring/schemas/level.schema.json";
 import type {
   GridPosition,
   LevelAuthoringDto,
@@ -5,6 +7,8 @@ import type {
   TileType,
   ValidationResult,
 } from "./types";
+
+const schemaValidator = new Ajv2020({ allErrors: true }).compile(levelSchema);
 
 export const TILE_TYPES: TileType[] = [
   "Standard",
@@ -97,6 +101,26 @@ export function resizeLevel(level: LevelAuthoringDto, width: number, height: num
   return normalized;
 }
 
+export function normalizeLevelGrid(level: LevelAuthoringDto): LevelAuthoringDto {
+  const tilesByPosition = new Map(level.tiles.map((tile) => [`${tile.x}:${tile.y}`, tile]));
+  const tiles: TileAuthoringDto[] = [];
+
+  for (let y = 0; y < level.height; y += 1) {
+    for (let x = 0; x < level.width; x += 1) {
+      tiles.push(
+        tilesByPosition.get(`${x}:${y}`) ?? {
+          x,
+          y,
+          type: "Standard",
+          power: 1,
+        },
+      );
+    }
+  }
+
+  return normalizeSpecialTiles({ ...level, tiles });
+}
+
 export function normalizeSpecialTiles(level: LevelAuthoringDto): LevelAuthoringDto {
   const tiles: TileAuthoringDto[] = level.tiles.map((tile) => {
     if (tile.x === level.startPosition.x && tile.y === level.startPosition.y) {
@@ -117,24 +141,28 @@ export function normalizeSpecialTiles(level: LevelAuthoringDto): LevelAuthoringD
   return { ...level, tiles };
 }
 
-export function validateLevel(level: LevelAuthoringDto): ValidationResult {
+export function validateLevel(value: unknown): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const seen = new Set<string>();
 
-  if (level.schemaVersion !== 1) {
-    errors.push(`schemaVersion must be 1, got ${level.schemaVersion}.`);
+  if (!schemaValidator(value)) {
+    return {
+      errors: (schemaValidator.errors ?? []).map(
+        ({ instancePath, message }) => `${instancePath || "Level"} ${message ?? "is invalid"}.`,
+      ),
+      warnings,
+    };
   }
 
+  const level = value as unknown as LevelAuthoringDto;
+  const seen = new Set<string>();
   if (!level.id.trim()) errors.push("Level id is required.");
   if (!level.name.trim()) errors.push("Level name is required.");
-  if (level.width < 1 || level.height < 1) errors.push("Width and height must be at least 1.");
-  if (level.levelPar < 1) errors.push("Par must be at least 1.");
   if (!isWithin(level.startPosition, level.width, level.height)) errors.push("Start position is out of bounds.");
   if (!isWithin(level.holePosition, level.width, level.height)) errors.push("Hole position is out of bounds.");
-
-  let startCount = 0;
-  let holeCount = 0;
+  if (level.startPosition.x === level.holePosition.x && level.startPosition.y === level.holePosition.y) {
+    errors.push("Start and hole positions must be different.");
+  }
 
   for (const tile of level.tiles) {
     const key = `${tile.x}:${tile.y}`;
@@ -142,30 +170,97 @@ export function validateLevel(level: LevelAuthoringDto): ValidationResult {
     seen.add(key);
 
     if (!isWithin(tile, level.width, level.height)) errors.push(`Tile (${tile.x}, ${tile.y}) is out of bounds.`);
-    if (tile.power < 0) errors.push(`Tile (${tile.x}, ${tile.y}) has negative power.`);
-
-    if (tile.type === "Start") startCount += 1;
-    if (tile.type === "Hole") holeCount += 1;
-
     if (tile.type === "Hole" && tile.power !== 0) {
       errors.push(`Hole tile at (${tile.x}, ${tile.y}) must have power 0.`);
     }
+
+    if (tile.type === "Start" && (tile.x !== level.startPosition.x || tile.y !== level.startPosition.y)) {
+      errors.push(`Start tile at (${tile.x}, ${tile.y}) does not match startPosition.`);
+    }
+
+    if (tile.type === "Hole" && (tile.x !== level.holePosition.x || tile.y !== level.holePosition.y)) {
+      errors.push(`Hole tile at (${tile.x}, ${tile.y}) does not match holePosition.`);
+    }
   }
 
-  if (level.tiles.length !== level.width * level.height) {
-    warnings.push("Tile count does not exactly match width * height. Missing cells should be normalized.");
+  if (level.tiles.length < level.width * level.height) {
+    warnings.push("Missing cells will be filled as Standard tiles with power 1.");
   }
-
-  if (startCount !== 1) errors.push(`Expected exactly 1 Start tile, found ${startCount}.`);
-  if (holeCount !== 1) errors.push(`Expected exactly 1 Hole tile, found ${holeCount}.`);
-
-  const startTile = getTile(level, level.startPosition);
-  if (startTile.type !== "Start") errors.push("startPosition does not map to a Start tile.");
-
-  const holeTile = getTile(level, level.holePosition);
-  if (holeTile.type !== "Hole") errors.push("holePosition does not map to a Hole tile.");
 
   return { errors, warnings };
+}
+
+export function solveLevel(level: LevelAuthoringDto): { isSolvable: boolean; shortestPathStrokes: number } {
+  // shortcut: mirrors PuzzleSolver.cs; keep transitions in sync when game movement rules change.
+  const directions = [
+    [0, 1], [0, -1], [-1, 0], [1, 0],
+    [1, 1], [1, -1], [-1, 1], [-1, -1],
+  ] as const;
+  const tiles = new Map(level.tiles.map((tile) => [`${tile.x}:${tile.y}`, tile]));
+  const tileAt = (x: number, y: number) => {
+    if (x === level.holePosition.x && y === level.holePosition.y) {
+      return { type: "Hole" as TileType, power: 0 };
+    }
+    if (x === level.startPosition.x && y === level.startPosition.y) {
+      return { type: "Start" as TileType, power: tiles.get(`${x}:${y}`)?.power ?? 1 };
+    }
+    return tiles.get(`${x}:${y}`) ?? { type: "Standard" as TileType, power: 1 };
+  };
+  const inBounds = (x: number, y: number) => x >= 0 && x < level.width && y >= 0 && y < level.height;
+  const queue = [{ x: level.startPosition.x, y: level.startPosition.y, modifier: 0, strokes: 0 }];
+  const seen = new Set([`${level.startPosition.x}:${level.startPosition.y}:0`]);
+
+  for (let index = 0; index < queue.length; index += 1) {
+    const current = queue[index];
+    if (current.x === level.holePosition.x && current.y === level.holePosition.y) {
+      return { isSolvable: true, shortestPathStrokes: current.strokes };
+    }
+
+    const currentTile = tileAt(current.x, current.y);
+    if (currentTile.power <= 0) continue;
+    const power = Math.max(1, currentTile.power + current.modifier);
+
+    for (const [dx, dy] of directions) {
+      const nextX = current.x + dx * power;
+      const nextY = current.y + dy * power;
+      if (!inBounds(nextX, nextY)) continue;
+
+      let finalX = nextX;
+      let finalY = nextY;
+      let nextModifier = 0;
+      let nextTile = tileAt(nextX, nextY);
+
+      if (level.mode === "Adventure" && nextTile.type === "Ice") {
+        let safety = 100;
+        while (inBounds(finalX, finalY) && nextTile.type === "Ice" && safety-- > 0) {
+          finalX += dx * nextTile.power;
+          finalY += dy * nextTile.power;
+          if (!inBounds(finalX, finalY)) break;
+          nextTile = tileAt(finalX, finalY);
+        }
+
+        if (!inBounds(finalX, finalY)) continue;
+        if (nextTile.type === "Hole") {
+          nextModifier = 0;
+        } else if (nextTile.type === "Sand") {
+          nextModifier = -1;
+        } else if (nextTile.type === "Boost") {
+          nextModifier = 1;
+        }
+      } else if (level.mode === "Adventure" && nextTile.type === "Sand") {
+        nextModifier = -1;
+      } else if (level.mode === "Adventure" && nextTile.type === "Boost") {
+        nextModifier = 1;
+      }
+
+      const key = `${finalX}:${finalY}:${nextModifier}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      queue.push({ x: finalX, y: finalY, modifier: nextModifier, strokes: current.strokes + 1 });
+    }
+  }
+
+  return { isSolvable: false, shortestPathStrokes: -1 };
 }
 
 function clampPosition(position: GridPosition, width: number, height: number): GridPosition {

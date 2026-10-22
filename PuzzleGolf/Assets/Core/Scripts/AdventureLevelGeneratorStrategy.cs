@@ -11,6 +11,8 @@ using System.Collections.Generic;
 /// </summary>
 public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
 {
+    private const int MAX_GENERATION_ATTEMPTS = 50;
+
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
         if (isTutorial)
@@ -29,43 +31,55 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
         int pathLength = Random.Range(config.minPathLength, config.maxPathLength + 1);
         int maxPower = config.maxPower;
 
-        LevelData levelData = new LevelData
+        LevelData bestLevel = null;
+        LevelData lastLevel = null;
+        int bestShortestPath = -1;
+        bool bestHasUniqueShortestPath = false;
+        for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++)
         {
-            difficulty = difficulty, // Preserved for compatibility, though largely unused in Adventure now
-            levelIndex = levelIndex,
-            width = width,
-            height = height,
-            tilePowers = new int[width, height],
-            tileTypes = new TileType[width, height]
-        };
+            LevelData levelData = new LevelData
+            {
+                difficulty = difficulty,
+                gameMode = GameMode.Adventure,
+                levelIndex = levelIndex,
+                width = width,
+                height = height,
+                tilePowers = new int[width, height],
+                tileTypes = new TileType[width, height]
+            };
 
-        GenerateAdventureGoldenPath(levelData, pathLength, config);
-
-        // Phase 2: Smart Refinement Loop
-        // Solve the level to ensure noise tiles didn't create an accidental shortcut
-        for (int i = 0; i < 5; i++)
-        {
+            lastLevel = levelData;
+            GenerateAdventureGoldenPath(levelData, pathLength, config);
             FillAdventureNoise(levelData, config);
             SolveResult result = PuzzleSolver.Solve(levelData);
-
-            if (result.IsSolvable)
+            int actualPathLength = levelData.goldenPath.Count - 1;
+            bool hasUniqueShortestPath = result.ShortestPathCount == 1;
+            if (result.IsSolvable && (hasUniqueShortestPath && !bestHasUniqueShortestPath ||
+                hasUniqueShortestPath == bestHasUniqueShortestPath && result.ShortestPathStrokes > bestShortestPath))
             {
-                if (result.ShortestPathStrokes < pathLength)
-                {
-                    // Shortcut detected, let the next iteration of FillAdventureNoise try again
-                    // (Optionally we could specifically break the shortcut path here)
-                    continue;
-                }
-                else
-                {
-                    // Level is valid: intended path is the shortest or equal to it
-                    levelData.levelPar = result.ShortestPathStrokes + 2; 
-                    break;
-                }
+                bestLevel = levelData;
+                bestShortestPath = result.ShortestPathStrokes;
+                bestHasUniqueShortestPath = hasUniqueShortestPath;
+            }
+
+            if (result.IsSolvable && actualPathLength >= config.minPathLength &&
+                result.ShortestPathStrokes == actualPathLength && hasUniqueShortestPath)
+            {
+                levelData.levelPar = result.ShortestPathStrokes;
+                return levelData;
             }
         }
 
-        return levelData;
+        if (bestLevel != null)
+        {
+            bestLevel.levelPar = bestShortestPath;
+            Debug.LogWarning($"[AdventureLevelGenerator] Could not generate the requested unique route length for level {levelIndex}; using the best solvable candidate ({bestShortestPath} strokes).");
+            return bestLevel;
+        }
+
+        Debug.LogError($"[AdventureLevelGenerator] Could not generate a solvable level {levelIndex} after {MAX_GENERATION_ATTEMPTS} attempts.");
+        lastLevel.levelPar = lastLevel.goldenPath.Count - 1;
+        return lastLevel;
     }
 
     private void GenerateAdventureGoldenPath(LevelData level, int pathLength, AdventureSegmentConfig config)
@@ -90,8 +104,6 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
         level.goldenPath.Add(holePos);
 
         Vector2Int currentPos = holePos;
-        int actualPathLength = 0;
-
         Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
         for (int i = 0; i < pathLength; i++)
@@ -169,7 +181,7 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
                             // Place the ice exactly 1 step before the destination
                             Vector2Int icePos = currentPos - forwardDir;
                             level.tileTypes[icePos.x, icePos.y] = TileType.Ice;
-                            level.tilePowers[icePos.x, icePos.y] = Random.Range(1, maxPower + 1); // Fake power to protect from noise fill
+                            level.tilePowers[icePos.x, icePos.y] = 1;
                             
                             // Chosen tile just shoots to the Ice tile
                             assignedType = TileType.Standard;
@@ -183,7 +195,6 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
                 level.tileTypes[chosen.x, chosen.y] = assignedType; 
                 level.goldenPath.Add(chosen);
                 currentPos = chosen;
-                actualPathLength++;
             }
             else break;
         }
@@ -191,8 +202,31 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
         level.startPosition = currentPos;
         level.currentGridPosition = currentPos;
         level.currentStrokes = 0;
-        level.levelPar = Mathf.Max(actualPathLength, 1) + 2; 
         level.tileTypes[currentPos.x, currentPos.y] = TileType.Start;
+
+        // Recalculate powers against the hazard reached before each shot.
+        for (int i = level.goldenPath.Count - 1; i > 0; i--)
+        {
+            Vector2Int source = level.goldenPath[i];
+            Vector2Int destination = level.goldenPath[i - 1];
+            Vector2Int delta = destination - source;
+            Vector2Int direction = new Vector2Int(Mathf.Clamp(delta.x, -1, 1), Mathf.Clamp(delta.y, -1, 1));
+            int distance = Mathf.Max(Mathf.Abs(delta.x), Mathf.Abs(delta.y));
+            Vector2Int landing = destination - direction;
+            int moveDistance = distance;
+            if (distance > 1 && level.tileTypes[landing.x, landing.y] == TileType.Ice)
+                moveDistance--;
+
+            int modifier = level.tileTypes[source.x, source.y] == TileType.Sand ? -1 :
+                level.tileTypes[source.x, source.y] == TileType.Boost ? 1 : 0;
+
+            if (moveDistance - modifier <= 0 && modifier > 0)
+            {
+                level.tileTypes[source.x, source.y] = TileType.Standard;
+                modifier = 0;
+            }
+            level.tilePowers[source.x, source.y] = moveDistance - modifier;
+        }
     }
 
     private void FillAdventureNoise(LevelData level, AdventureSegmentConfig config)
@@ -307,6 +341,7 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
         if (pos.x < 0 || pos.x >= level.width || pos.y < 0 || pos.y >= level.height) return false;
         if (pos == level.holePosition) return false;
         if (level.goldenPath.Contains(pos)) return false;
+        if (level.tileTypes[pos.x, pos.y] != TileType.Standard) return false;
         return true;
     }
 
@@ -317,6 +352,7 @@ public class AdventureLevelGeneratorStrategy : ILevelGeneratorStrategy
         LevelData tutorial = new LevelData
         {
             difficulty = Difficulty.Easy,
+            gameMode = GameMode.Adventure,
             levelIndex = 0,
             width = 4,
             height = 4,

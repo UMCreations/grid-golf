@@ -314,7 +314,8 @@ public class GridManager : MonoBehaviour
                     tileSprite = currentTheme != null ? currentTheme.GetSpriteForType(currentType, power) : null;
                 }
 
-                spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite);
+                Color numberColor = currentTheme != null ? currentTheme.GetPowerNumberColor(power) : Color.white;
+                spawnedTile.Init(new Vector2Int(x, y), power, currentType, tileSprite, numberColor);
                 
                 // Calculate animation delay based on Manhattan distance from origin
                 // Increased from 0.05f to 0.1f for a slower, more deliberate reveal

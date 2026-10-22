@@ -34,3 +34,6 @@ MonoBehaviour:
   boostSprites: []
   standardTileColor: {r: 1, g: 1, b: 1, a: 1}
   powerTextColor: {r: 1, g: 1, b: 1, a: 1}
+  powerNumberColors:
+  - {r: 0.9681529, g: 0.9811321, b: 0.22677112, a: 1}
+  - {r: 0.36320752, g: 0.83337605, b: 1, a: 1}

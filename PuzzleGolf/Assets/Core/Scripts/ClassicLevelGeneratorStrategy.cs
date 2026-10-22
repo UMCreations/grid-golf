@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 public class ClassicLevelGeneratorStrategy : ILevelGeneratorStrategy
 {
+    private const int MAX_GENERATION_ATTEMPTS = 50;
+
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
         if (isTutorial)
@@ -38,18 +40,53 @@ public class ClassicLevelGeneratorStrategy : ILevelGeneratorStrategy
                 break;
         }
 
-        LevelData levelData = new LevelData
+        LevelData bestLevel = null;
+        LevelData lastLevel = null;
+        int bestShortestPath = -1;
+        bool bestHasUniqueShortestPath = false;
+        for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++)
         {
-            difficulty = difficulty,
-            levelIndex = levelIndex,
-            width = width,
-            height = height,
-            tilePowers = new int[width, height]
-        };
+            LevelData levelData = new LevelData
+            {
+                difficulty = difficulty,
+                gameMode = GameMode.Classic,
+                levelIndex = levelIndex,
+                width = width,
+                height = height,
+                tilePowers = new int[width, height]
+            };
+            lastLevel = levelData;
 
-        GenerateGoldenPath(levelData, pathLength, maxPower, difficulty);
+            GenerateGoldenPath(levelData, pathLength, maxPower, difficulty);
+            int actualPathLength = levelData.goldenPath.Count - 1;
+            SolveResult result = PuzzleSolver.Solve(levelData);
+            bool hasUniqueShortestPath = result.ShortestPathCount == 1;
+            if (result.IsSolvable && (hasUniqueShortestPath && !bestHasUniqueShortestPath ||
+                hasUniqueShortestPath == bestHasUniqueShortestPath && result.ShortestPathStrokes > bestShortestPath))
+            {
+                bestLevel = levelData;
+                bestShortestPath = result.ShortestPathStrokes;
+                bestHasUniqueShortestPath = hasUniqueShortestPath;
+            }
 
-        return levelData;
+            if (result.IsSolvable && actualPathLength == pathLength &&
+                result.ShortestPathStrokes == actualPathLength && hasUniqueShortestPath)
+            {
+                levelData.levelPar = result.ShortestPathStrokes + 1;
+                return levelData;
+            }
+        }
+
+        if (bestLevel != null)
+        {
+            bestLevel.levelPar = bestShortestPath + 1;
+            Debug.LogWarning($"[ClassicLevelGenerator] Could not generate the requested unique route length for level {levelIndex}; using the best solvable candidate ({bestShortestPath} strokes).");
+            return bestLevel;
+        }
+
+        Debug.LogError($"[ClassicLevelGenerator] Could not generate a solvable level {levelIndex} after {MAX_GENERATION_ATTEMPTS} attempts.");
+        lastLevel.levelPar = lastLevel.goldenPath.Count;
+        return lastLevel;
     }
 
     private LevelData GenerateTutorialLevel()
@@ -101,7 +138,11 @@ public class ClassicLevelGeneratorStrategy : ILevelGeneratorStrategy
         {
             List<Vector2Int> validMoves = new List<Vector2Int>();
             
-            Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            Vector2Int[] dirs = {
+                Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                new Vector2Int(1, 1), new Vector2Int(1, -1),
+                new Vector2Int(-1, 1), new Vector2Int(-1, -1)
+            };
             
             for (int d = 1; d <= maxPower; d++)
             {
@@ -124,7 +165,7 @@ public class ClassicLevelGeneratorStrategy : ILevelGeneratorStrategy
             {
                 Vector2Int chosenRetreat = validMoves[Random.Range(0, validMoves.Count)];
                 
-                int requiredPower = Mathf.Abs(chosenRetreat.x - currentPos.x) + Mathf.Abs(chosenRetreat.y - currentPos.y);
+                int requiredPower = Mathf.Max(Mathf.Abs(chosenRetreat.x - currentPos.x), Mathf.Abs(chosenRetreat.y - currentPos.y));
                 
                 level.tilePowers[chosenRetreat.x, chosenRetreat.y] = requiredPower;
                 currentPos = chosenRetreat;

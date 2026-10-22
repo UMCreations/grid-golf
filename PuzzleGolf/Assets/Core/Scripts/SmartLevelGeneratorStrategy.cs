@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
 {
-    private const int MAX_REFINEMENT_ATTEMPTS = 10;
+    private const int MAX_GENERATION_ATTEMPTS = 50;
 
     public LevelData GenerateLevel(Difficulty difficulty, int levelIndex, bool isTutorial = false)
     {
@@ -40,28 +40,55 @@ public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
                 break;
         }
 
-        LevelData levelData = new LevelData
+        LevelData bestLevel = null;
+        LevelData lastLevel = null;
+        int bestShortestPath = -1;
+        bool bestHasUniqueShortestPath = false;
+        for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++)
         {
-            difficulty = difficulty,
-            levelIndex = levelIndex,
-            width = width,
-            height = height,
-            tilePowers = new int[width, height],
-            gameMode = GameMode.Classic // Smart strategy optimizes classic puzzles too
-        };
+            LevelData levelData = new LevelData
+            {
+                difficulty = difficulty,
+                levelIndex = levelIndex,
+                width = width,
+                height = height,
+                tilePowers = new int[width, height],
+                gameMode = GameMode.Classic
+            };
+            lastLevel = levelData;
 
-        // Phase 1: Generate a Winding Golden Path (guaranteed solution)
-        GenerateWindingPath(levelData, targetPathLength, maxPower);
+            GenerateWindingPath(levelData, targetPathLength, maxPower);
+            FillNoise(levelData, maxPower);
 
-        // Phase 2: Strategic Deception
-        FillNoise(levelData, maxPower);
+            int actualPathLength = levelData.goldenPath.Count - 1;
+            SolveResult result = PuzzleSolver.Solve(levelData);
+            bool hasUniqueShortestPath = result.ShortestPathCount == 1;
+            if (result.IsSolvable && (hasUniqueShortestPath && !bestHasUniqueShortestPath ||
+                hasUniqueShortestPath == bestHasUniqueShortestPath && result.ShortestPathStrokes > bestShortestPath))
+            {
+                bestLevel = levelData;
+                bestShortestPath = result.ShortestPathStrokes;
+                bestHasUniqueShortestPath = hasUniqueShortestPath;
+            }
 
-        // Phase 3: Extreme Refinement - Ensure EXACTLY ONE solution
-        // We prune any tile that creates a shortcut or an alternative route
-        PruneAlternativeSolutions(levelData, targetPathLength);
+            if (result.IsSolvable && actualPathLength == targetPathLength &&
+                result.ShortestPathStrokes == actualPathLength && hasUniqueShortestPath)
+            {
+                levelData.levelPar = result.ShortestPathStrokes;
+                return levelData;
+            }
+        }
 
-        levelData.levelPar = targetPathLength; // Strict par for 'Exactly One Path' feel
-        return levelData;
+        if (bestLevel != null)
+        {
+            bestLevel.levelPar = bestShortestPath;
+            Debug.LogWarning($"[SmartLevelGenerator] Could not generate the requested unique route length for level {levelIndex}; using the best solvable candidate ({bestShortestPath} strokes).");
+            return bestLevel;
+        }
+
+        Debug.LogError($"[SmartLevelGenerator] Could not generate a solvable level {levelIndex} after {MAX_GENERATION_ATTEMPTS} attempts.");
+        lastLevel.levelPar = lastLevel.goldenPath.Count - 1;
+        return lastLevel;
     }
 
     private LevelData GenerateTutorialLevel()
@@ -140,8 +167,10 @@ public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
                     int distA = Mathf.Abs(a.x - holePos.x) + Mathf.Abs(a.y - holePos.y);
                     int distB = Mathf.Abs(b.x - holePos.x) + Mathf.Abs(b.y - holePos.y);
                     
-                    Vector2Int dirA = (currentPos - a);
-                    Vector2Int dirB = (currentPos - b);
+                    Vector2Int deltaA = currentPos - a;
+                    Vector2Int deltaB = currentPos - b;
+                    Vector2Int dirA = new Vector2Int(Mathf.Clamp(deltaA.x, -1, 1), Mathf.Clamp(deltaA.y, -1, 1));
+                    Vector2Int dirB = new Vector2Int(Mathf.Clamp(deltaB.x, -1, 1), Mathf.Clamp(deltaB.y, -1, 1));
                     
                     bool isAStraight = dirA == lastMoveDir;
                     bool isBStraight = dirB == lastMoveDir;
@@ -152,7 +181,8 @@ public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
 
                 // Pick from top 2 to keep it slightly organic but generally winding
                 Vector2Int chosen = candidates[Random.Range(0, Mathf.Min(2, candidates.Count))];
-                lastMoveDir = currentPos - chosen;
+                Vector2Int moveDelta = currentPos - chosen;
+                lastMoveDir = new Vector2Int(Mathf.Clamp(moveDelta.x, -1, 1), Mathf.Clamp(moveDelta.y, -1, 1));
                 
                 int dist = Mathf.Max(Mathf.Abs(chosen.x - currentPos.x), Mathf.Abs(chosen.y - currentPos.y));
                 level.tilePowers[chosen.x, chosen.y] = dist;
@@ -166,52 +196,17 @@ public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
         level.currentGridPosition = currentPos;
     }
 
-    private void PruneAlternativeSolutions(LevelData level, int targetStrokes)
-    {
-        // Use the solver to find the current shortest path
-        for (int attempt = 0; attempt < 5; attempt++)
-        {
-            SolveResult result = PuzzleSolver.Solve(level);
-            if (!result.IsSolvable) break;
-
-            // If a path shorter than our Golden Path exists, we MUST break it.
-            // If a path OF EQUAL LENGTH exists that isn't our Golden Path, we also break it (optional but keeps it unique).
-            if (result.ShortestPathStrokes <= targetStrokes)
-            {
-                bool brokenAny = false;
-                // Walk the solver's path and find a tile that isn't on our intended Golden Path
-                foreach (var pos in result.Path)
-                {
-                    if (!level.goldenPath.Contains(pos) && pos != level.holePosition)
-                    {
-                        // Change its power to point it into a 'Dead Zone' or just randomize it again
-                        level.tilePowers[pos.x, pos.y] = (level.tilePowers[pos.x, pos.y] % 5) + 1; 
-                        brokenAny = true;
-                        break; // Break one and re-solve
-                    }
-                }
-                
-                if (!brokenAny) break; // Entire path is the golden path
-            }
-            else break; // Shortest path is already long enough
-        }
-    }
-
     private void FillNoise(LevelData level, int maxPower)
     {
         // 1. Create False Branches from the Golden Path
         // This makes the player question where the 'real' path begins.
         CreateFalseBranches(level, maxPower);
 
-        // 2. Create Near-Hole Traps
-        // Tiles adjacent to the hole that look like the 'final step' but aren't reachable.
-        CreateHoleTraps(level);
-
-        // 3. Create Logic Loops (Vortexes)
+        // 2. Create Logic Loops (Vortexes)
         // Pairs of tiles that lead to each other to trap the player.
         CreateLogicLoops(level, maxPower);
 
-        // 4. Final Polish: Fill remaining as standard random noise
+        // 3. Fill remaining as standard random noise
         for (int x = 0; x < level.width; x++)
         {
             for (int y = 0; y < level.height; y++)
@@ -247,20 +242,6 @@ public class SmartLevelGeneratorStrategy : ILevelGeneratorStrategy
                     level.tilePowers[next.x, next.y] = dist; // Points back to the previous node
                     currentPos = next;
                 }
-            }
-        }
-    }
-
-    private void CreateHoleTraps(LevelData level)
-    {
-        Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-        foreach (var dir in dirs)
-        {
-            Vector2Int adj = level.holePosition + dir;
-            if (IsWithinBounds(level, adj) && level.tilePowers[adj.x, adj.y] == 0)
-            {
-                // A tile right next to the hole with power 1 looks like the perfect final move.
-                level.tilePowers[adj.x, adj.y] = 1;
             }
         }
     }

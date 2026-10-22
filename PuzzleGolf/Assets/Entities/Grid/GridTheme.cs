@@ -36,6 +36,18 @@ public class GridTheme : ScriptableObject
     public Color standardTileColor = Color.white;
     public Color powerTextColor = Color.white;
 
+    [Header("Power Number Colors")]
+    [Tooltip("Index 0 colors power 1, index 1 colors power 2, and so on. Unassigned powers use Power Text Color.")]
+    public Color[] powerNumberColors;
+
+    public Color GetPowerNumberColor(int power)
+    {
+        if (power > 0 && powerNumberColors != null && power - 1 < powerNumberColors.Length)
+            return powerNumberColors[power - 1];
+
+        return powerTextColor;
+    }
+
     public Sprite GetSpriteForType(TileType type, int power = 0)
     {
         switch (type)
