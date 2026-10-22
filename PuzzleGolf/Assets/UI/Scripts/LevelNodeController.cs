@@ -22,7 +22,7 @@ public class LevelNodeController : MonoBehaviour
 
     public int LevelIndex { get { return levelIndex; } }
 
-    public void Setup(int level, bool locked, int starsEarned, Color themeColor, bool isCurrentLevel = false)
+    public void Setup(int level, bool locked, int starsEarned, bool isCurrentLevel = false)
     {
         levelIndex = level;
         isLocked = locked;
@@ -35,12 +35,7 @@ public class LevelNodeController : MonoBehaviour
         if (starContainer != null) starContainer.SetActive(!isLocked);
 
         if (backgroundImage != null)
-        {
-            if (isLocked)
-                backgroundImage.color = lockedColor;
-            else
-                backgroundImage.color = isCurrentLevel ? Color.Lerp(themeColor, Color.white, 0.2f) : themeColor;
-        }
+            backgroundImage.color = isLocked ? lockedColor : unlockedColor;
 
         RectTransform nodeRect = GetComponent<RectTransform>();
         if (nodeRect != null)

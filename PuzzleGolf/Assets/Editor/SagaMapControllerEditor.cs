@@ -68,7 +68,7 @@ public class SagaMapControllerEditor : Editor
     private static string GetInstructions(SagaMapController controller, bool isLiveController)
     {
         if (isLiveController)
-            return "Edit Path Points or Path Settings above; the map refreshes immediately. You can also move LevelNode_1, LevelNode_2, etc. under Content in Play Mode; the route follows their positions live. Capture & Copy Live Layout records every node position before you stop. Captured Level Positions override Path Points; clear that list to return to curve editing.";
+            return "Edit Path Points or Path Settings above; the map refreshes immediately. You can also move LevelNode_1, LevelNode_2, etc. under Content in Play Mode. Capture & Copy Live Layout records every node position before you stop. Captured Level Positions override Path Points; clear that list to return to curve editing.";
 
         if (PrefabUtility.IsPartOfPrefabAsset(controller))
             return "Paste applies the copied layout to this prefab asset and saves it. Captured Level Positions override Path Points; clear a segment's list to return to curve editing. Background sprites are not included.";

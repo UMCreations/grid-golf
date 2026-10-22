@@ -55,8 +55,6 @@ public class SagaMapController : MonoBehaviour
     };
 
     private List<LevelNodeController> spawnedNodes = new List<LevelNodeController>();
-    private List<RectTransform> routeStrokes = new List<RectTransform>();
-    private Vector2[] previousNodePositions;
     private float verticalContentPadding;
     private float horizontalPathWidth;
 
@@ -100,47 +98,6 @@ public class SagaMapController : MonoBehaviour
         PopulateMap();
     }
 
-    private void LateUpdate()
-    {
-        if (!Application.isPlaying || spawnedNodes.Count < 2 || routeStrokes.Count != (spawnedNodes.Count - 1) * 2)
-            return;
-
-        if (previousNodePositions == null || previousNodePositions.Length != spawnedNodes.Count)
-        {
-            CacheNodePositions();
-            return;
-        }
-
-        bool nodeMoved = false;
-        for (int i = 0; i < spawnedNodes.Count; i++)
-        {
-            RectTransform nodeRect = spawnedNodes[i] != null ? spawnedNodes[i].GetComponent<RectTransform>() : null;
-            if (nodeRect == null) continue;
-            if ((nodeRect.anchoredPosition - previousNodePositions[i]).sqrMagnitude > 0.01f)
-            {
-                nodeMoved = true;
-                break;
-            }
-        }
-
-        if (!nodeMoved) return;
-
-        for (int i = 0; i < spawnedNodes.Count - 1; i++)
-        {
-            RectTransform fromRect = spawnedNodes[i] != null ? spawnedNodes[i].GetComponent<RectTransform>() : null;
-            RectTransform toRect = spawnedNodes[i + 1] != null ? spawnedNodes[i + 1].GetComponent<RectTransform>() : null;
-            if (fromRect == null || toRect == null) continue;
-
-            Vector2 from = fromRect.anchoredPosition;
-            Vector2 to = toRect.anchoredPosition;
-            UpdateRouteStroke(routeStrokes[i * 2], from, to);
-            UpdateRouteStroke(routeStrokes[i * 2 + 1], from, to);
-            previousNodePositions[i] = from;
-            if (i == spawnedNodes.Count - 2)
-                previousNodePositions[i + 1] = to;
-        }
-    }
-
     public void RefreshMapLayout()
     {
         if (this == null || !Application.isPlaying || !isActiveAndEnabled) return;
@@ -170,8 +127,6 @@ public class SagaMapController : MonoBehaviour
         spawnedNodes.Clear();
 
         // Also clear children of contentContainer that might be left from editor or previous runs
-        routeStrokes.Clear();
-        previousNodePositions = null;
         for (int i = contentContainer.childCount - 1; i >= 0; i--)
         {
             Destroy(contentContainer.GetChild(i).gameObject);
@@ -197,7 +152,6 @@ public class SagaMapController : MonoBehaviour
         Canvas.ForceUpdateCanvases();
 
         CreateSegmentBackdrops();
-        CreateRoute();
         CreateSegmentLabels();
 
         for (int i = 1; i <= LevelManager.MAX_LEVELS; i++)
@@ -216,17 +170,12 @@ public class SagaMapController : MonoBehaviour
             bool isLocked = i > unlockedLevel;
             int starsEarned = LevelManager.Instance.GetAdventureStars(i);
             
-            // Get segment color for background
-            AdventureSegmentConfig config = AdventureSegmentResolver.GetConfigForLevel(i);
-            Color segmentColor = (config != null) ? config.segmentColor : Color.white;
-
-            newNode.Setup(i, isLocked, starsEarned, segmentColor, i == unlockedLevel);
+            newNode.Setup(i, isLocked, starsEarned, i == unlockedLevel);
             spawnedNodes.Add(newNode);
         }
 
         // Optional: Implement auto-scrolling to the highest unlocked level
         ScrollToCurrentLevel(unlockedLevel);
-        CacheNodePositions();
     }
 
     private void ScrollToCurrentLevel(int targetLevel)
@@ -407,55 +356,6 @@ public class SagaMapController : MonoBehaviour
         image.color = image.sprite != null ? Color.white : new Color(tint.r, tint.g, tint.b, 0.10f);
         image.preserveAspect = false;
         image.raycastTarget = false;
-    }
-
-    private void CreateRoute()
-    {
-        for (int level = 1; level < LevelManager.MAX_LEVELS; level++)
-        {
-            Vector2 from = GetNodePosition(level);
-            Vector2 to = GetNodePosition(level + 1);
-            routeStrokes.Add(CreateRouteStroke(from, to, 30f, new Color(0.16f, 0.28f, 0.15f, 0.9f)));
-            routeStrokes.Add(CreateRouteStroke(from, to, 17f, new Color(0.92f, 0.80f, 0.55f, 0.96f)));
-        }
-    }
-
-    private RectTransform CreateRouteStroke(Vector2 from, Vector2 to, float width, Color color)
-    {
-        Vector2 delta = to - from;
-        GameObject stroke = new GameObject("RouteStroke", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        RectTransform rect = stroke.GetComponent<RectTransform>();
-        rect.SetParent(contentContainer, false);
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = (from + to) * 0.5f;
-        rect.sizeDelta = new Vector2(width, delta.magnitude + width);
-        rect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg - 90f);
-
-        Image image = stroke.GetComponent<Image>();
-        image.color = color;
-        image.raycastTarget = false;
-        return rect;
-    }
-
-    private void UpdateRouteStroke(RectTransform rect, Vector2 from, Vector2 to)
-    {
-        Vector2 delta = to - from;
-        float width = rect.sizeDelta.x;
-        rect.anchoredPosition = (from + to) * 0.5f;
-        rect.sizeDelta = new Vector2(width, delta.magnitude + width);
-        rect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg - 90f);
-    }
-
-    private void CacheNodePositions()
-    {
-        previousNodePositions = new Vector2[spawnedNodes.Count];
-        for (int i = 0; i < spawnedNodes.Count; i++)
-        {
-            RectTransform nodeRect = spawnedNodes[i] != null ? spawnedNodes[i].GetComponent<RectTransform>() : null;
-            if (nodeRect != null)
-                previousNodePositions[i] = nodeRect.anchoredPosition;
-        }
     }
 
     private void CreateSegmentLabels()
