@@ -9,6 +9,7 @@ public class LevelNodeController : MonoBehaviour
     public Image backgroundImage;
     public Button nodeButton;
     public GameObject lockedIcon;
+    public GameObject winFlag;
     public GameObject starContainer;
     public Image[] stars; // Array of 3 star images
 
@@ -32,6 +33,7 @@ public class LevelNodeController : MonoBehaviour
 
         // Update visuals based on state
         if (lockedIcon != null) lockedIcon.SetActive(isLocked);
+        if (winFlag != null) winFlag.SetActive(!isLocked && starsEarned > 0);
         if (starContainer != null) starContainer.SetActive(!isLocked);
 
         if (backgroundImage != null)

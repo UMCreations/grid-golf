@@ -715,7 +715,8 @@ MonoBehaviour:
   levelNumberText: {fileID: 6120311726847479568}
   backgroundImage: {fileID: 7984791689780674769}
   nodeButton: {fileID: 1244148970437313309}
-  lockedIcon: {fileID: 7803212419407848453}
+  lockedIcon: {fileID: 1719459900201777292}
+  winFlag: {fileID: 6980786737903607272}
   starContainer: {fileID: 6127453956762420087}
   stars:
   - {fileID: 7223936319417768520}
