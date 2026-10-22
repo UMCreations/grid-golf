@@ -14,6 +14,25 @@ import type { Difficulty, GameMode, LevelAuthoringDto, TileType, ValidationResul
 type PaintMode = "tile" | "start" | "hole";
 type EditorValidation = ValidationResult & { solvable?: boolean; shortestPathStrokes?: number };
 const DRAFT_STORAGE_KEY = "puzzlegolf-level-editor-draft-v1";
+const turnstileAction = "turnstile-spin-v2";
+let turnstileScriptPromise: Promise<void> | null = null;
+
+function loadTurnstileScript(): Promise<void> {
+  if (window.turnstile) return Promise.resolve();
+  if (turnstileScriptPromise) return turnstileScriptPromise;
+
+  turnstileScriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Could not load the bot check."));
+    document.head.appendChild(script);
+  });
+
+  return turnstileScriptPromise;
+}
 
 function loadDraft() {
   try {
@@ -62,15 +81,23 @@ function App() {
   const [paintPower, setPaintPower] = useState(1);
   const [paintMode, setPaintMode] = useState<PaintMode>("tile");
   const [boardScale, setBoardScale] = useState(1);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileError, setTurnstileError] = useState("");
+  const [isSubmittingLevel, setIsSubmittingLevel] = useState(false);
+  const [submissionUrl, setSubmissionUrl] = useState("");
   const gridShellRef = useRef<HTMLDivElement>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetRef = useRef<string | null>(null);
   const [gridShellWidth, setGridShellWidth] = useState(0);
+  const submissionEndpoint = import.meta.env.VITE_LEVEL_SUBMISSION_URL?.trim() ?? "";
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? "";
 
   const selectedTile = useMemo(() => getTile(level, level.startPosition), [level]);
   const tileSize = Math.max(
     44,
     Math.min(72 * boardScale, ((gridShellWidth - (level.width - 1) * 8) / level.width) * boardScale),
   );
-  const noticeIsError = ["Import rejected", "Import failed", "Fix validation"].some((prefix) =>
+  const noticeIsError = ["Import rejected", "Import failed", "Submission failed", "Fix validation"].some((prefix) =>
     notice.startsWith(prefix),
   );
 
@@ -93,6 +120,40 @@ function App() {
     observer.observe(gridShell);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!turnstileSiteKey || !turnstileContainerRef.current) return;
+    let disposed = false;
+
+    loadTurnstileScript()
+      .then(() => {
+        if (disposed || !turnstileContainerRef.current || !window.turnstile) return;
+        turnstileWidgetRef.current = window.turnstile.render(turnstileContainerRef.current, {
+          sitekey: turnstileSiteKey,
+          action: turnstileAction,
+          callback: (token) => {
+            setTurnstileToken(token);
+            setTurnstileError("");
+          },
+          "expired-callback": () => setTurnstileToken(""),
+          "error-callback": () => {
+            setTurnstileToken("");
+            setTurnstileError("Bot check failed to load. Refresh and try again.");
+          },
+        });
+      })
+      .catch((error: unknown) => {
+        setTurnstileError(error instanceof Error ? error.message : "Could not load the bot check.");
+      });
+
+    return () => {
+      disposed = true;
+      if (turnstileWidgetRef.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetRef.current);
+        turnstileWidgetRef.current = null;
+      }
+    };
+  }, [turnstileSiteKey]);
 
   function updateLevel(nextLevel: SetStateAction<LevelAuthoringDto>) {
     setLevel(nextLevel);
@@ -230,6 +291,60 @@ function App() {
     anchor.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     setNotice(`Exported ${anchor.download}.`);
+  }
+
+  async function handleSubmitLevel() {
+    if (!submissionEndpoint || !turnstileSiteKey) {
+      setNotice("Community submissions are not configured yet.");
+      return;
+    }
+    if (!validation) {
+      setNotice("Validate the level before submitting.");
+      return;
+    }
+    if (validation.errors.length > 0 || validation.solvable !== true) {
+      setNotice("Fix validation errors before submitting.");
+      return;
+    }
+    if (!turnstileToken) {
+      setNotice("Complete the bot check before submitting.");
+      return;
+    }
+
+    setIsSubmittingLevel(true);
+    setSubmissionUrl("");
+    try {
+      const response = await fetch(submissionEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          level: {
+            ...level,
+            metadata: { ...level.metadata, updatedAt: new Date().toISOString() },
+          },
+          turnstileToken,
+        }),
+      });
+      const result = await response.json() as {
+        error?: string;
+        levelId?: string;
+        pullRequestUrl?: string;
+      };
+      if (!response.ok) throw new Error(result.error || "The level could not be submitted.");
+      if (!result.pullRequestUrl || !result.levelId) {
+        throw new Error("The submission service returned an incomplete response.");
+      }
+
+      setSubmissionUrl(result.pullRequestUrl);
+      setNotice(`Submitted for review as ${result.levelId}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "The level could not be submitted.";
+      setNotice(`Submission failed: ${message}`);
+    } finally {
+      setIsSubmittingLevel(false);
+      setTurnstileToken("");
+      if (turnstileWidgetRef.current) window.turnstile?.reset(turnstileWidgetRef.current);
+    }
   }
 
   function handleNewLevel() {
@@ -510,6 +625,38 @@ function App() {
               <span>Shortest route: {validation.shortestPathStrokes} strokes</span>
             )}
           </div>
+
+          <section className="community-submit" aria-labelledby="community-submit-title">
+            <h3 id="community-submit-title">Community submission</h3>
+            <p>Send a validated level for review. Approved levels will become playable in the game.</p>
+            {turnstileSiteKey ? (
+              <div
+                ref={turnstileContainerRef}
+                className="turnstile-widget"
+                data-action={turnstileAction}
+                aria-label="Bot verification"
+              />
+            ) : (
+              <p className="quiet">Submission service is not configured yet.</p>
+            )}
+            {turnstileError && <p className="submit-error" role="status">{turnstileError}</p>}
+            <button
+              className="submit-level-button"
+              onClick={handleSubmitLevel}
+              disabled={
+                !submissionEndpoint || !turnstileSiteKey || !validation ||
+                validation.errors.length > 0 || validation.solvable !== true ||
+                !turnstileToken || isSubmittingLevel
+              }
+            >
+              {isSubmittingLevel ? "Sending…" : "Send for Review"}
+            </button>
+            {submissionUrl && (
+              <a className="submission-link" href={submissionUrl} target="_blank" rel="noreferrer">
+                View submission
+              </a>
+            )}
+          </section>
 
           <div className="summary-card">
             <h3>Special Tiles</h3>

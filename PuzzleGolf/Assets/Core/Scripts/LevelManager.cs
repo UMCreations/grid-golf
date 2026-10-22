@@ -47,6 +47,7 @@ public class LevelManager : MonoBehaviour
     public int SelectedLevelIndex { get; private set; } = 1;
     public GameMode SelectedGameMode { get; private set; } = GameMode.Classic;
     public bool IsTutorialMode { get; set; } = false;
+    public LevelData SelectedCommunityLevelData { get; private set; }
 
     [Header("Handcrafted Content")]
     public List<HandcraftedLevelSO> handcraftedAdventureLevels;
@@ -93,6 +94,7 @@ public class LevelManager : MonoBehaviour
     // Called from Main Menu when selecting a specific level to play
     public void SetLevelToPlay(Difficulty diff, int levelIndex, GameMode mode = GameMode.Classic)
     {
+        SelectedCommunityLevelData = null;
         SelectedDifficulty = diff;
         SelectedLevelIndex = levelIndex;
         SelectedGameMode = mode;
@@ -110,6 +112,7 @@ public class LevelManager : MonoBehaviour
     // Called from Main Menu "Play" quick button to resume from highest unlocked
     public void ResumeLastPlayedLevel()
     {
+        SelectedCommunityLevelData = null;
         SelectedDifficulty = CurrentProfile.lastPlayedDifficulty;
         SelectedLevelIndex = CurrentProfile.lastPlayedLevelIndex;
     }
@@ -250,6 +253,7 @@ public class LevelManager : MonoBehaviour
 
     public void SetAdventureLevelToPlay(int levelIndex)
     {
+        SelectedCommunityLevelData = null;
         AdventureLevelIndex = Mathf.Clamp(levelIndex, 1, MAX_LEVELS);
         SelectedLevelIndex = AdventureLevelIndex; // For UI consistency
         SelectedGameMode = GameMode.Adventure;
@@ -262,6 +266,21 @@ public class LevelManager : MonoBehaviour
             CurrentProfile.lastAdventureLevelIndex = AdventureLevelIndex;
             SaveProfile();
         }
+    }
+
+    public void SetCommunityLevelToPlay(LevelData levelData)
+    {
+        if (levelData == null || string.IsNullOrEmpty(levelData.communityLevelId))
+            return;
+
+        SelectedCommunityLevelData = levelData;
+        SelectedDifficulty = levelData.difficulty;
+        SelectedLevelIndex = 0;
+        SelectedGameMode = levelData.gameMode;
+        IsTutorialMode = false;
+
+        if (LevelGenerator.Instance != null)
+            LevelGenerator.Instance.SetGameMode(levelData.gameMode);
     }
 
     public HandcraftedLevelSO GetHandcraftedLevel(int index)

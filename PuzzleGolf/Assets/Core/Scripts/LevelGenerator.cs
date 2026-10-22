@@ -28,6 +28,8 @@ public class LevelData
     public int levelIndex;
     public Vector2Int currentGridPosition;
     public List<Vector2Int> goldenPath = new List<Vector2Int>();
+    public string communityLevelId;
+    public string communityLevelName;
 
     // For JSON serialization
     public int[] tilePowersFlat;

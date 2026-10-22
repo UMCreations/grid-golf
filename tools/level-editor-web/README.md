@@ -1,6 +1,6 @@
 # PuzzleGolf Level Editor Web
 
-This folder will contain the static web level editor hosted on GitHub Pages.
+The static web level editor is built for GitHub Pages at `https://umcreations.github.io/grid-golf/editor/`.
 
 ## Planned stack
 
@@ -8,14 +8,15 @@ This folder will contain the static web level editor hosted on GitHub Pages.
 - React
 - TypeScript
 
-## Planned MVP
+## Editor features
 
 - grid editor
 - tile paint/type/power editing
 - start/hole placement
 - metadata editing
-- browser-side validation
+- browser-side validation and solvability checks
 - JSON import/export
+- optional account-free community submission through a Cloudflare Worker
 
 ## Source of truth
 
@@ -24,4 +25,6 @@ The web tool must use:
 - `../../../level-authoring/schemas/level.schema.json`
 - `../../../level-authoring/docs/LEVEL_FORMAT.md`
 
-The web tool is an authoring client. It does not directly edit Unity assets.
+The web tool is an authoring client. It does not directly edit Unity assets. Community submissions are disabled until Turnstile and Worker settings are configured; see `worker/README.md`.
+
+For the GitHub Pages build, set repository Actions variables `VITE_LEVEL_SUBMISSION_URL` and `VITE_TURNSTILE_SITE_KEY` in `UMCreations/grid-golf`. The site key and Worker URL are public values; never store private keys or Turnstile secrets in these variables.

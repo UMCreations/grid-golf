@@ -98,7 +98,11 @@ public class GameOverController : MonoBehaviour
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         if (GridManager.Instance != null)
         {
-            GridManager.Instance.ResetLevelState();
+            LevelData currentLevel = GridManager.Instance.CurrentLevelData;
+            if (currentLevel != null && !string.IsNullOrEmpty(currentLevel.communityLevelId))
+                SaveManager.ClearCommunitySave(currentLevel.communityLevelId);
+            else
+                GridManager.Instance.ResetLevelState();
         }
 
         // Reloading the active scene will default to showing the Main Menu and reset the level state.

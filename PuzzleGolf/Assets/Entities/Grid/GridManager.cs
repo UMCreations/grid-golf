@@ -57,6 +57,19 @@ public class GridManager : MonoBehaviour
 
     public void InitializeGame()
     {
+        if (LevelManager.Instance != null && LevelManager.Instance.SelectedCommunityLevelData != null)
+        {
+            LevelData selectedCommunityLevel = LevelManager.Instance.SelectedCommunityLevelData;
+            LevelData savedCommunityLevel = SaveManager.LoadLevel(selectedCommunityLevel.communityLevelId);
+            if (savedCommunityLevel != null && savedCommunityLevel.communityLevelId == selectedCommunityLevel.communityLevelId)
+                selectedCommunityLevel = savedCommunityLevel;
+
+            LevelManager.Instance.SetCommunityLevelToPlay(selectedCommunityLevel);
+            SaveManager.SaveLevel(selectedCommunityLevel);
+            LoadExistingLevel(selectedCommunityLevel);
+            return;
+        }
+
         Difficulty targetDiff = currentDifficulty;
         int targetLevel = 1;
 

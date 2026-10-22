@@ -70,10 +70,15 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("Press 'R' to restart the level.");
         
-        // Clear mid-level save so we don't resume into a game-over state
-        SaveManager.ClearSave();
-        
-        if (LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
+        bool isCommunityLevel = GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null &&
+                                !string.IsNullOrEmpty(GridManager.Instance.CurrentLevelData.communityLevelId);
+        // Clear only this level's save so community play cannot erase campaign progress.
+        if (isCommunityLevel)
+            SaveManager.ClearCommunitySave(GridManager.Instance.CurrentLevelData.communityLevelId);
+        else
+            SaveManager.ClearSave();
+
+        if (!isCommunityLevel && LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
         {
             LevelManager.Instance.CurrentProfile.consecutiveFailures++;
             LevelManager.Instance.CurrentProfile.consecutivePerfects = 0;
@@ -103,12 +108,17 @@ public class GameManager : MonoBehaviour
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlayWinSound();
 
-        SaveManager.ClearSave();
+        bool isCommunityLevel = GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null &&
+                                !string.IsNullOrEmpty(GridManager.Instance.CurrentLevelData.communityLevelId);
+        if (isCommunityLevel)
+            SaveManager.ClearCommunitySave(GridManager.Instance.CurrentLevelData.communityLevelId);
+        else
+            SaveManager.ClearSave();
 
-        bool isAdventure = LevelManager.Instance != null &&
+        bool isAdventure = !isCommunityLevel && LevelManager.Instance != null &&
                            LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
 
-        if (LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
+        if (!isCommunityLevel && LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
         {
             LevelManager.Instance.CurrentProfile.consecutiveFailures = 0;
 
@@ -162,6 +172,17 @@ public class GameManager : MonoBehaviour
 
     public void RestartLevel()
     {
+        bool isCommunityLevel = GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null &&
+                                !string.IsNullOrEmpty(GridManager.Instance.CurrentLevelData.communityLevelId);
+        if (isCommunityLevel)
+        {
+            GridManager.Instance.ResetLevelState();
+            GridManager.Instance.InitializeGame();
+            if (UIManager.Instance != null)
+                UIManager.Instance.ShowGameplayHUD();
+            return;
+        }
+
         bool isAdventure = LevelManager.Instance != null &&
                            LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
 

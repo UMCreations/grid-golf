@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class LevelCardController : MonoBehaviour
 {
@@ -22,12 +23,14 @@ public class LevelCardController : MonoBehaviour
     private int myLevelIndex;
     private Difficulty myDifficulty;
     private LevelSelectionController parentController;
+    private CommunityLevelEntry communityLevel;
 
     public void Setup(int levelIndex, Difficulty difficulty, LevelSelectionController parent)
     {
         myLevelIndex = levelIndex;
         myDifficulty = difficulty;
         parentController = parent;
+        communityLevel = null;
         
         if (levelNumberText != null)
         {
@@ -41,6 +44,54 @@ public class LevelCardController : MonoBehaviour
         }
 
         RefreshVisuals();
+    }
+
+    public void SetupCommunity(CommunityLevelEntry level, LevelSelectionController parent)
+    {
+        communityLevel = level;
+        parentController = parent;
+        if (levelNumberText != null)
+        {
+            levelNumberText.text = level.name;
+            levelNumberText.enableAutoSizing = true;
+            levelNumberText.fontSizeMin = 12;
+            levelNumberText.fontSizeMax = levelNumberText.fontSize;
+        }
+        SetCommunityVisuals(true);
+    }
+
+    public void SetupMessage(string message, Action onClick = null)
+    {
+        communityLevel = null;
+        parentController = null;
+        if (levelNumberText != null)
+        {
+            levelNumberText.text = message;
+            levelNumberText.enableAutoSizing = true;
+            levelNumberText.fontSizeMin = 12;
+            levelNumberText.fontSizeMax = levelNumberText.fontSize;
+        }
+        SetCommunityVisuals(false);
+        if (cardButton != null)
+        {
+            cardButton.onClick.RemoveAllListeners();
+            if (onClick != null) cardButton.onClick.AddListener(() => onClick());
+            cardButton.interactable = onClick != null;
+        }
+    }
+
+    private void SetCommunityVisuals(bool canPlay)
+    {
+        if (completedIcon != null) completedIcon.SetActive(false);
+        if (lockedIcon != null) lockedIcon.SetActive(false);
+        if (playIcon != null) playIcon.SetActive(canPlay);
+        if (backgroundImage != null) backgroundImage.color = canPlay ? nextLevelColor : lockedColor;
+        if (cardButton != null)
+        {
+            cardButton.onClick.RemoveAllListeners();
+            cardButton.onClick.AddListener(OnCardClicked);
+            cardButton.interactable = canPlay;
+        }
     }
 
     private void RefreshVisuals()
@@ -72,6 +123,11 @@ public class LevelCardController : MonoBehaviour
     private void OnCardClicked()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+        if (communityLevel != null)
+        {
+            if (parentController != null) parentController.OnCommunityLevelSelected(communityLevel);
+            return;
+        }
         if (parentController != null)
         {
             parentController.OnLevelSelected(myDifficulty, myLevelIndex);

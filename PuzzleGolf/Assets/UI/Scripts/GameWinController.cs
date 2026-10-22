@@ -23,6 +23,9 @@ public class GameWinController : MonoBehaviour
 
     private void PlayWinSequence()
     {
+        bool isCommunityLevel = GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null &&
+                                !string.IsNullOrEmpty(GridManager.Instance.CurrentLevelData.communityLevelId);
+
         // Reset and Hide everything initially
         if (canvasGroup != null) canvasGroup.alpha = 0;
         if (titleText != null) titleText.gameObject.SetActive(false);
@@ -58,7 +61,7 @@ public class GameWinController : MonoBehaviour
         seq.AppendInterval(0.5f);
 
         // 4. Staggered Pop In for buttons
-        if (nextLevelButton != null)
+        if (nextLevelButton != null && !isCommunityLevel)
             seq.AppendCallback(() => UIAnimationHelper.PopIn(nextLevelButton.gameObject, 0.4f, 0.7f));
         
         seq.AppendInterval(0.15f);
@@ -100,6 +103,13 @@ public class GameWinController : MonoBehaviour
     {
         if (victoryText != null && GameManager.Instance != null && LevelManager.Instance != null)
         {
+            LevelData currentLevel = GridManager.Instance != null ? GridManager.Instance.CurrentLevelData : null;
+            if (currentLevel != null && !string.IsNullOrEmpty(currentLevel.communityLevelId))
+            {
+                victoryText.text = $"{currentLevel.communityLevelName} cleared in {GameManager.Instance.CurrentStrokes}!";
+                return;
+            }
+
             bool isAdventure = LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
             int levelNum = isAdventure ? LevelManager.Instance.AdventureLevelIndex : LevelManager.Instance.SelectedLevelIndex;
             string modeName = isAdventure ? "Adventure" : LevelManager.Instance.SelectedDifficulty.ToString();
@@ -131,7 +141,11 @@ public class GameWinController : MonoBehaviour
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         if (GridManager.Instance != null)
         {
-            GridManager.Instance.ResetLevelState();
+            LevelData currentLevel = GridManager.Instance.CurrentLevelData;
+            if (currentLevel != null && !string.IsNullOrEmpty(currentLevel.communityLevelId))
+                SaveManager.ClearCommunitySave(currentLevel.communityLevelId);
+            else
+                GridManager.Instance.ResetLevelState();
         }
 
         // Reloading the active scene will default to showing the Main Menu and reset the level state.

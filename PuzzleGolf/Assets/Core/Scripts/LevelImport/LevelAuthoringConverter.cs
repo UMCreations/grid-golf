@@ -4,6 +4,14 @@ using UnityEngine;
 
 public static class LevelAuthoringConverter
 {
+    public static LevelData ToCommunityLevelData(LevelAuthoringDto dto)
+    {
+        LevelData data = ToLevelData(dto, 0);
+        data.communityLevelId = dto.id;
+        data.communityLevelName = dto.name;
+        return data;
+    }
+
     public static LevelData ToLevelData(LevelAuthoringDto dto, int levelIndex = 1)
     {
         LevelAuthoringValidationResult validation = LevelAuthoringValidator.Validate(dto);

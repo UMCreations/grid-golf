@@ -110,3 +110,7 @@ ehthumbs.db
 
 # --- Web level editor dependencies ---
 tools/level-editor-web/node_modules/
+tools/level-editor-web/dist/
+tools/level-editor-web/*.tsbuildinfo
+tools/level-editor-web/.env.local
+tools/level-editor-web/.dev.vars
