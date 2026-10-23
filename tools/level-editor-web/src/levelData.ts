@@ -190,12 +190,18 @@ export function validateLevel(value: unknown): ValidationResult {
   return { errors, warnings };
 }
 
-export function solveLevel(level: LevelAuthoringDto): { isSolvable: boolean; shortestPathStrokes: number } {
-  // shortcut: mirrors PuzzleSolver.cs; keep transitions in sync when game movement rules change.
-  const directions = [
-    [0, 1], [0, -1], [-1, 0], [1, 0],
-    [1, 1], [1, -1], [-1, 1], [-1, -1],
-  ] as const;
+type SolverState = GridPosition & { modifier: number };
+
+const DIRECTIONS = [
+  [0, 1], [0, -1], [-1, 0], [1, 0],
+  [1, 1], [1, -1], [-1, 1], [-1, -1],
+] as const;
+
+const MAX_DISPLAYED_ROUTES = 100;
+const MAX_ROUTE_SEARCH_STATES = 100_000;
+
+// shortcut: mirrors PuzzleSolver.cs; keep transitions in sync when game movement rules change.
+function createNextStatesResolver(level: LevelAuthoringDto) {
   const tiles = new Map(level.tiles.map((tile) => [`${tile.x}:${tile.y}`, tile]));
   const tileAt = (x: number, y: number) => {
     if (x === level.holePosition.x && y === level.holePosition.y) {
@@ -207,20 +213,14 @@ export function solveLevel(level: LevelAuthoringDto): { isSolvable: boolean; sho
     return tiles.get(`${x}:${y}`) ?? { type: "Standard" as TileType, power: 1 };
   };
   const inBounds = (x: number, y: number) => x >= 0 && x < level.width && y >= 0 && y < level.height;
-  const queue = [{ x: level.startPosition.x, y: level.startPosition.y, modifier: 0, strokes: 0 }];
-  const seen = new Set([`${level.startPosition.x}:${level.startPosition.y}:0`]);
 
-  for (let index = 0; index < queue.length; index += 1) {
-    const current = queue[index];
-    if (current.x === level.holePosition.x && current.y === level.holePosition.y) {
-      return { isSolvable: true, shortestPathStrokes: current.strokes };
-    }
-
+  return (current: SolverState): SolverState[] => {
     const currentTile = tileAt(current.x, current.y);
-    if (currentTile.power <= 0) continue;
+    if (currentTile.power <= 0) return [];
     const power = Math.max(1, currentTile.power + current.modifier);
+    const nextStates: SolverState[] = [];
 
-    for (const [dx, dy] of directions) {
+    for (const [dx, dy] of DIRECTIONS) {
       const nextX = current.x + dx * power;
       const nextY = current.y + dy * power;
       if (!inBounds(nextX, nextY)) continue;
@@ -253,14 +253,72 @@ export function solveLevel(level: LevelAuthoringDto): { isSolvable: boolean; sho
         nextModifier = 1;
       }
 
-      const key = `${finalX}:${finalY}:${nextModifier}`;
+      nextStates.push({ x: finalX, y: finalY, modifier: nextModifier });
+    }
+
+    return nextStates;
+  };
+}
+
+export function solveLevel(level: LevelAuthoringDto): { isSolvable: boolean; shortestPathStrokes: number } {
+  const getNextStates = createNextStatesResolver(level);
+  const queue = [{ ...level.startPosition, modifier: 0, strokes: 0 }];
+  const seen = new Set([`${level.startPosition.x}:${level.startPosition.y}:0`]);
+
+  for (let index = 0; index < queue.length; index += 1) {
+    const current = queue[index];
+    if (current.x === level.holePosition.x && current.y === level.holePosition.y) {
+      return { isSolvable: true, shortestPathStrokes: current.strokes };
+    }
+
+    for (const next of getNextStates(current)) {
+      const key = `${next.x}:${next.y}:${next.modifier}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      queue.push({ x: finalX, y: finalY, modifier: nextModifier, strokes: current.strokes + 1 });
+      queue.push({ ...next, strokes: current.strokes + 1 });
     }
   }
 
   return { isSolvable: false, shortestPathStrokes: -1 };
+}
+
+export function findLevelRoutes(level: LevelAuthoringDto): { routes: GridPosition[][]; truncated: boolean } {
+  const getNextStates = createNextStatesResolver(level);
+  const routes: GridPosition[][] = [];
+  const visited = new Set([`${level.startPosition.x}:${level.startPosition.y}:0`]);
+  const path: GridPosition[] = [{ ...level.startPosition }];
+  let exploredStates = 0;
+  let truncated = false;
+
+  function visit(current: SolverState) {
+    if (truncated) return;
+    if (current.x === level.holePosition.x && current.y === level.holePosition.y) {
+      if (routes.length === MAX_DISPLAYED_ROUTES) {
+        truncated = true;
+      } else {
+        routes.push([...path]);
+      }
+      return;
+    }
+    if (++exploredStates > MAX_ROUTE_SEARCH_STATES) {
+      truncated = true;
+      return;
+    }
+
+    for (const next of getNextStates(current)) {
+      const key = `${next.x}:${next.y}:${next.modifier}`;
+      if (visited.has(key)) continue;
+      visited.add(key);
+      path.push({ x: next.x, y: next.y });
+      visit(next);
+      path.pop();
+      visited.delete(key);
+      if (truncated) return;
+    }
+  }
+
+  visit({ ...level.startPosition, modifier: 0 });
+  return { routes, truncated };
 }
 
 function clampPosition(position: GridPosition, width: number, height: number): GridPosition {
