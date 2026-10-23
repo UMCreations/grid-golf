@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
 
     public int MaxStrokes { get; private set; } = 5;
     public int CurrentStrokes { get; private set; } = 0;
+    public bool HasStrokeLimit { get; private set; } = true;
 
     // UI Events
     public event Action<int, int> OnStrokeMadeEvent; // Current, Max
@@ -30,10 +31,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void InitializeLevel(int maxStrokes, int currentStrokes = 0)
+    public void InitializeLevel(int maxStrokes, int currentStrokes = 0, bool hasStrokeLimit = true)
     {
         MaxStrokes = maxStrokes;
         CurrentStrokes = currentStrokes;
+        HasStrokeLimit = hasStrokeLimit;
         HasWon = false;
         HasLost = false;
         
@@ -90,7 +92,7 @@ public class GameManager : MonoBehaviour
 
     public void CheckStrokeLimit()
     {
-        if (HasWon || HasLost) return;
+        if (HasWon || HasLost || !HasStrokeLimit) return;
 
         if (CurrentStrokes >= MaxStrokes)
         {
@@ -110,6 +112,8 @@ public class GameManager : MonoBehaviour
 
         bool isCommunityLevel = GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null &&
                                 !string.IsNullOrEmpty(GridManager.Instance.CurrentLevelData.communityLevelId);
+        bool isTutorialLevel = GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null &&
+                               GridManager.Instance.CurrentLevelData.levelIndex == 0 && !isCommunityLevel;
         if (isCommunityLevel)
             SaveManager.ClearCommunitySave(GridManager.Instance.CurrentLevelData.communityLevelId);
         else
@@ -118,7 +122,7 @@ public class GameManager : MonoBehaviour
         bool isAdventure = !isCommunityLevel && LevelManager.Instance != null &&
                            LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
 
-        if (!isCommunityLevel && LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
+        if (!isCommunityLevel && !isTutorialLevel && LevelManager.Instance != null && LevelManager.Instance.CurrentProfile != null)
         {
             LevelManager.Instance.CurrentProfile.consecutiveFailures = 0;
 
@@ -212,6 +216,19 @@ public class GameManager : MonoBehaviour
 
     public void LoadNextLevel()
     {
+        bool isTutorialLevel = GridManager.Instance != null && GridManager.Instance.CurrentLevelData != null &&
+                               GridManager.Instance.CurrentLevelData.levelIndex == 0 &&
+                               string.IsNullOrEmpty(GridManager.Instance.CurrentLevelData.communityLevelId);
+        if (isTutorialLevel)
+        {
+            SaveManager.ClearSave();
+            if (GridManager.Instance != null)
+                GridManager.Instance.InitializeGame();
+            if (UIManager.Instance != null)
+                UIManager.Instance.ShowGameplayHUD();
+            return;
+        }
+
         bool isAdventure = LevelManager.Instance != null &&
                            LevelManager.Instance.SelectedGameMode == GameMode.Adventure;
 

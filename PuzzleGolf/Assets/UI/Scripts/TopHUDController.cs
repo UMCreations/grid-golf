@@ -71,11 +71,19 @@ public class TopHUDController : MonoBehaviour
     {
         if (strokesText != null)
         {
-            strokesText.text = $"Strokes: {currentStrokes} / {maxStrokes}";
+            bool hasStrokeLimit = GameManager.Instance == null || GameManager.Instance.HasStrokeLimit;
+            strokesText.text = hasStrokeLimit
+                ? $"Strokes: {currentStrokes} / {maxStrokes}"
+                : $"Strokes: {currentStrokes}";
             
             // 1. Color Feedback
             int strokesLeft = maxStrokes - currentStrokes;
-            if (strokesLeft <= 1)
+            if (!hasStrokeLimit)
+            {
+                strokesText.color = safeColor;
+                StopCriticalPulse();
+            }
+            else if (strokesLeft <= 1)
             {
                 strokesText.color = criticalColor;
                 StartCriticalPulse();

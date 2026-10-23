@@ -7,7 +7,8 @@ public enum TutorialActionType
 {
     None,            // Advances with "Next" button
     MoveToPosition,  // Advances when ball reaches specific grid pos
-    MoveToAnyTile
+    MoveToAnyTile,
+    MoveToHole       // Advances when ball reaches the active level's hole
 }
 
 public enum TutorialVisualBehavior
@@ -15,7 +16,8 @@ public enum TutorialVisualBehavior
     None,
     HighlightHole,
     HighlightTargetTile,
-    HighlightAllTileNumbers
+    HighlightAllTileNumbers,
+    SwipeHint
 }
 
 [System.Serializable]
@@ -54,6 +56,8 @@ public class TutorialController : MonoBehaviour
 
     [Header("Tutorial Data")]
     public TutorialStep[] tutorialSteps;
+    public Sprite swipeDirectionSprite;
+    public Sprite swipeHandSprite;
     private int currentStep = 0;
 
     public int CurrentStepIndex => currentStep;
@@ -122,6 +126,11 @@ public class TutorialController : MonoBehaviour
                 }
             }
             else if (step.actionType == TutorialActionType.MoveToAnyTile)
+            {
+                AdvanceTutorial();
+            }
+            else if (step.actionType == TutorialActionType.MoveToHole &&
+                     GridManager.Instance != null && position == GridManager.Instance.holePosition)
             {
                 AdvanceTutorial();
             }
@@ -212,6 +221,9 @@ public class TutorialController : MonoBehaviour
                 break;
             case TutorialVisualBehavior.HighlightAllTileNumbers:
                 GridManager.Instance.HighlightAllPowerNumbers(true);
+                break;
+            case TutorialVisualBehavior.SwipeHint:
+                GridManager.Instance.ShowSwipeTutorialHint(swipeDirectionSprite, swipeHandSprite);
                 break;
         }
     }
