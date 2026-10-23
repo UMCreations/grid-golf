@@ -2,11 +2,14 @@ name = "grid-golf-level-submissions"
 main = "worker/index.ts"
 compatibility_date = "2026-10-22"
 keep_vars = true # Preserve App ID and installation ID stored in the Cloudflare dashboard.
+preview_urls = false
 
 [vars]
 GITHUB_OWNER = "UMCreations"
 GITHUB_REPOSITORY = "grid-golf-levels"
 GITHUB_BASE_BRANCH = "main"
+GITHUB_APP_ID = "5428306"
+GITHUB_INSTALLATION_ID = "174171570"
 GITHUB_APP_CLIENT_ID = "Iv23lidYwAUCFQyozHZI"
 ADMIN_CALLBACK_URL = "https://grid-golf-level-submissions.puzzlegolf-level-editor-web.workers.dev/admin/auth/callback"
 ADMIN_EDITOR_URL = "https://umcreations.github.io/grid-golf/editor/"
