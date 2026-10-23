@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import {
   createEmptyLevel,
-  findLevelRoutes,
   getTile,
   normalizeLevelGrid,
   normalizeSpecialTiles,
   resizeLevel,
-  solveLevel,
   TILE_TYPES,
   validateLevel,
+  validatePlayableLevel,
 } from "./levelData";
 import type { Difficulty, GameMode, GridPosition, LevelAuthoringDto, TileType, ValidationResult } from "./types";
 
@@ -16,8 +15,7 @@ type PaintMode = "tile" | "start" | "hole";
 type EditorValidation = ValidationResult & {
   solvable?: boolean;
   shortestPathStrokes?: number;
-  routes?: GridPosition[][];
-  routesTruncated?: boolean;
+  shortestPath?: GridPosition[];
 };
 type PendingPreview = {
   id: string;
@@ -101,7 +99,6 @@ function App() {
   const [draftStatus, setDraftStatus] = useState(initialDraft.status);
   const [notice, setNotice] = useState("");
   const [validation, setValidation] = useState<EditorValidation | null>(null);
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [paintType, setPaintType] = useState<TileType>("Standard");
   const [paintPower, setPaintPower] = useState(1);
   const [paintMode, setPaintMode] = useState<PaintMode>("tile");
@@ -128,15 +125,14 @@ function App() {
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? "";
 
   const selectedTile = useMemo(() => getTile(level, level.startPosition), [level]);
-  const activeRoute = validation?.routes?.[selectedRouteIndex];
   const routeSteps = useMemo(() => {
     const steps = new Map<string, number[]>();
-    activeRoute?.forEach(({ x, y }, index) => {
+    validation?.shortestPath?.forEach(({ x, y }, index) => {
       const key = `${x}:${y}`;
       steps.set(key, [...(steps.get(key) ?? []), index + 1]);
     });
     return steps;
-  }, [activeRoute]);
+  }, [validation?.shortestPath]);
   const tileSize = Math.max(
     44,
     Math.min(72 * boardScale, ((gridShellWidth - (level.width - 1) * 8) / level.width) * boardScale),
@@ -258,25 +254,10 @@ function App() {
     setHasDraft(true);
     setShouldPersistDraft(true);
     setValidation(null);
-    setSelectedRouteIndex(0);
   }
 
   function handleValidate() {
-    const result: EditorValidation = validateLevel(level);
-    if (result.errors.length === 0) {
-      const solution = solveLevel(level);
-      result.solvable = solution.isSolvable;
-      if (solution.isSolvable) {
-        result.shortestPathStrokes = solution.shortestPathStrokes;
-        const routeResult = findLevelRoutes(level);
-        result.routes = routeResult.routes;
-        result.routesTruncated = routeResult.truncated;
-      } else {
-        result.errors.push("No playable route from start to hole.");
-      }
-    }
-    setValidation(result);
-    setSelectedRouteIndex(0);
+    setValidation(validatePlayableLevel(level));
   }
 
   function updateTile(x: number, y: number) {
@@ -903,7 +884,7 @@ function App() {
               {validation === null
                 ? "Not checked"
                 : validation.solvable === false
-                  ? "Unsolvable"
+                  ? validation.shortestPathStrokes !== undefined ? "Over par" : "Unsolvable"
                   : validation.errors.length === 0
                     ? "Solvable"
                     : `${validation.errors.length} errors`}
@@ -913,33 +894,10 @@ function App() {
               <span>Shortest route: {validation.shortestPathStrokes} strokes</span>
             )}
           </div>
-          {validation?.routes && validation.routes.length > 0 && (
-            <div className="route-controls" aria-label="Valid route preview">
-              <button
-                type="button"
-                aria-label="Show previous route"
-                onClick={() => setSelectedRouteIndex((index) => Math.max(0, index - 1))}
-                disabled={selectedRouteIndex === 0}
-              >
-                Previous
-              </button>
-              <span>
-                Route {selectedRouteIndex + 1} of {validation.routes.length}
-                {activeRoute && ` · ${activeRoute.length - 1} strokes`}
-              </span>
-              <button
-                type="button"
-                aria-label="Show next route"
-                onClick={() => setSelectedRouteIndex((index) => Math.min(validation.routes!.length - 1, index + 1))}
-                disabled={selectedRouteIndex >= validation.routes.length - 1}
-              >
-                Next
-              </button>
-              <small>Numbered tiles show move order.</small>
-              {validation.routesTruncated && (
-                <small>Route search limit reached; there may be more than {validation.routes.length} routes.</small>
-              )}
-            </div>
+          {validation?.shortestPath && (
+            <p className="route-controls" aria-label="Shortest valid route preview">
+              Shortest route shown on board · {validation.shortestPathStrokes} strokes · numbered tiles show move order.
+            </p>
           )}
 
           <section className="community-submit" aria-labelledby="community-submit-title">

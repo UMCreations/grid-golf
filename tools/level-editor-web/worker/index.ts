@@ -1,4 +1,4 @@
-import { solveLevel, validateLevel } from "../src/levelData";
+import { validateLevel, validatePlayableLevel } from "../src/levelData";
 import type { LevelAuthoringDto } from "../src/types";
 
 interface Env {
@@ -24,7 +24,7 @@ const TURNSTILE_VERIFY = "https://challenges.cloudflare.com/turnstile/v0/sitever
 const TURNSTILE_ACTION = "turnstile-spin-v2";
 const MAX_REQUEST_BYTES = 64 * 1024;
 // shortcut: caps review and solver work at 900 cells; raise after profiling larger authored boards.
-const MAX_REVIEW_BOARD_CELLS = 900;
+const MAX_LEVEL_BOARD_CELLS = 900;
 const ADMIN_SESSION_SECONDS = 10 * 60;
 const OAUTH_STATE_COOKIE = "__Host-grid-golf-oauth";
 
@@ -189,13 +189,20 @@ export default {
       if (validation.errors.length > 0) {
         return json({ error: "The level has validation errors.", details: validation.errors.slice(0, 8) }, 400, headers);
       }
+      const level = body.level as LevelAuthoringDto;
+      if (level.width * level.height > MAX_LEVEL_BOARD_CELLS) {
+        return json({ error: `Board exceeds the ${MAX_LEVEL_BOARD_CELLS}-cell limit.` }, 400, headers);
+      }
+      const playable = validatePlayableLevel(level);
+      if (playable.errors.length > 0) {
+        return json({ error: "The level has validation errors.", details: playable.errors.slice(0, 8) }, 400, headers);
+      }
 
       const turnstile = await verifyTurnstile(body.turnstileToken, request, env);
       if (!turnstile) {
         return json({ error: "Bot check failed. Please try again." }, 403, headers);
       }
 
-      const level = body.level as LevelAuthoringDto;
       const submission = await createSubmission(level, env);
       return json({ status: "pending_review", ...submission }, 202, headers);
     } catch (error) {
@@ -524,18 +531,18 @@ async function loadPendingLevel(
   const value = level as Partial<LevelAuthoringDto> | null;
   if (!value || value.id !== id) validation.errors.push("Level ID does not match its pending filename.");
   if (typeof value?.width === "number" && typeof value.height === "number" &&
-      value.width > 0 && value.height > 0 && value.width * value.height > MAX_REVIEW_BOARD_CELLS) {
-    validation.errors.push(`Board exceeds the ${MAX_REVIEW_BOARD_CELLS}-cell review limit.`);
+      value.width > 0 && value.height > 0 && value.width * value.height > MAX_LEVEL_BOARD_CELLS) {
+    validation.errors.push(`Board exceeds the ${MAX_LEVEL_BOARD_CELLS}-cell review limit.`);
   }
 
   const boardRenderable = validation.errors.length === 0;
   let solvable: boolean | null = null;
   let shortestPathStrokes: number | null = null;
   if (validation.errors.length === 0) {
-    const solution = solveLevel(level as LevelAuthoringDto);
-    solvable = solution.isSolvable;
-    shortestPathStrokes = solution.shortestPathStrokes;
-    if (!solvable) validation.errors.push("No playable route from start to hole.");
+    const playable = validatePlayableLevel(level as LevelAuthoringDto);
+    validation.errors.push(...playable.errors);
+    solvable = playable.solvable;
+    shortestPathStrokes = playable.shortestPathStrokes ?? null;
   }
 
   return { level, validation, solvable, shortestPathStrokes, boardRenderable };
