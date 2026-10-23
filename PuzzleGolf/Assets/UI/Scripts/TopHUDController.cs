@@ -11,11 +11,6 @@ public class TopHUDController : MonoBehaviour
     public Button menuButton;
     public Button restartButton;
 
-    [Header("Strokes Colors")]
-    public Color safeColor = new Color(0.2f, 1f, 0.4f);   // Green
-    public Color warningColor = new Color(1f, 0.8f, 0.2f); // Yellow/Orange
-    public Color criticalColor = new Color(1f, 0.2f, 0.2f); // Red
-
     private int lastCurrentStrokes = -1;
     private Tween criticalPulseTween;
 
@@ -71,23 +66,20 @@ public class TopHUDController : MonoBehaviour
     {
         if (strokesText != null)
         {
-            strokesText.text = $"Strokes: {currentStrokes} / {maxStrokes}";
+            bool hasStrokeLimit = GameManager.Instance == null || GameManager.Instance.HasStrokeLimit;
+            strokesText.text = hasStrokeLimit
+                ? $"{currentStrokes} / {maxStrokes}"
+                : currentStrokes.ToString();
+            strokesText.color = Color.white;
             
-            // 1. Color Feedback
+            // 1. Critical Stroke Feedback
             int strokesLeft = maxStrokes - currentStrokes;
-            if (strokesLeft <= 1)
+            if (hasStrokeLimit && strokesLeft <= 1)
             {
-                strokesText.color = criticalColor;
                 StartCriticalPulse();
-            }
-            else if (strokesLeft <= 3)
-            {
-                strokesText.color = warningColor;
-                StopCriticalPulse();
             }
             else
             {
-                strokesText.color = safeColor;
                 StopCriticalPulse();
             }
 

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using DG.Tweening;
 
 public class GridManager : MonoBehaviour
 {
@@ -36,6 +37,8 @@ public class GridManager : MonoBehaviour
     private BallController currentBall;
 
     private Tile[,] gridArray;
+    private GameObject swipeDirectionHint;
+    private GameObject swipeHandHint;
 
     private void Awake()
     {
@@ -127,7 +130,9 @@ public class GridManager : MonoBehaviour
 
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.InitializeLevel(levelPar, CurrentLevelData.currentStrokes);
+            bool isTutorialLevel = CurrentLevelData.levelIndex == 0 &&
+                                   string.IsNullOrEmpty(CurrentLevelData.communityLevelId);
+            GameManager.Instance.InitializeLevel(levelPar, CurrentLevelData.currentStrokes, !isTutorialLevel);
         }
 
         GenerateGrid();
@@ -422,6 +427,19 @@ public class GridManager : MonoBehaviour
 
     public void ClearTutorialVisuals()
     {
+        if (swipeDirectionHint != null)
+        {
+            swipeDirectionHint.transform.DOKill();
+            Destroy(swipeDirectionHint);
+            swipeDirectionHint = null;
+        }
+        if (swipeHandHint != null)
+        {
+            swipeHandHint.transform.DOKill();
+            Destroy(swipeHandHint);
+            swipeHandHint = null;
+        }
+
         if (gridArray == null) return;
         foreach (Tile tile in gridArray)
         {
@@ -431,6 +449,40 @@ public class GridManager : MonoBehaviour
                 tile.SetPowerHighlight(false);
             }
         }
+    }
+
+    public void ShowSwipeTutorialHint(Sprite directionSprite, Sprite handSprite)
+    {
+        if (currentBall == null) return;
+
+        Tile tile = GetTileAtPosition(currentBall.currentGridPosition);
+        if (tile == null) return;
+
+        if (directionSprite != null)
+        {
+            swipeDirectionHint = CreateTutorialHint("SwipeDirections", directionSprite, tile.transform, Vector3.zero, 2f);
+        }
+
+        if (handSprite != null)
+        {
+            swipeHandHint = CreateTutorialHint("SwipeHand", handSprite, tile.transform, Vector3.zero, 0.55f);
+            swipeHandHint.transform.DOLocalMove(new Vector3(0.7f, 0.7f, 0f), 0.8f)
+                .SetLoops(-1, LoopType.Restart)
+                .SetEase(Ease.Linear);
+        }
+    }
+
+    private GameObject CreateTutorialHint(string objectName, Sprite sprite, Transform parent, Vector3 localPosition, float scale)
+    {
+        GameObject hint = new GameObject(objectName);
+        hint.transform.SetParent(parent, false);
+        hint.transform.localPosition = localPosition;
+        hint.transform.localScale = Vector3.one * scale;
+
+        SpriteRenderer renderer = hint.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.sortingOrder = 100;
+        return hint;
     }
 
     public void HighlightHoleForTutorial(bool shouldHighlight)

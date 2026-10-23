@@ -104,6 +104,14 @@ public class GameWinController : MonoBehaviour
         if (victoryText != null && GameManager.Instance != null && LevelManager.Instance != null)
         {
             LevelData currentLevel = GridManager.Instance != null ? GridManager.Instance.CurrentLevelData : null;
+            if (currentLevel != null && currentLevel.levelIndex == 0 &&
+                string.IsNullOrEmpty(currentLevel.communityLevelId))
+            {
+                if (titleText != null) titleText.text = "TUTORIAL COMPLETE";
+                victoryText.text = $"You reached the hole in {GameManager.Instance.CurrentStrokes} strokes!";
+                return;
+            }
+
             if (currentLevel != null && !string.IsNullOrEmpty(currentLevel.communityLevelId))
             {
                 victoryText.text = $"{currentLevel.communityLevelName} cleared in {GameManager.Instance.CurrentStrokes}!";
