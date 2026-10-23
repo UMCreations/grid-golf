@@ -13,6 +13,14 @@ import type { Difficulty, GameMode, LevelAuthoringDto, TileType, ValidationResul
 
 type PaintMode = "tile" | "start" | "hole";
 type EditorValidation = ValidationResult & { solvable?: boolean; shortestPathStrokes?: number };
+type PendingPreview = {
+  id: string;
+  level: unknown;
+  validation: ValidationResult;
+  solvable: boolean | null;
+  shortestPathStrokes: number | null;
+  boardRenderable: boolean;
+};
 const DRAFT_STORAGE_KEY = "puzzlegolf-level-editor-draft-v1";
 const turnstileAction = "turnstile-spin-v2";
 let turnstileScriptPromise: Promise<void> | null = null;
@@ -32,6 +40,16 @@ function loadTurnstileScript(): Promise<void> {
   });
 
   return turnstileScriptPromise;
+}
+
+async function adminRequest<T>(baseUrl: string, session: string, path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${session}`);
+  if (init.body) headers.set("Content-Type", "application/json");
+  const response = await fetch(`${baseUrl}${path}`, { ...init, headers });
+  const result = await response.json() as T & { error?: string };
+  if (!response.ok) throw new Error(result.error || "The review request failed.");
+  return result;
 }
 
 function loadDraft() {
@@ -85,11 +103,21 @@ function App() {
   const [turnstileError, setTurnstileError] = useState("");
   const [isSubmittingLevel, setIsSubmittingLevel] = useState(false);
   const [submissionUrl, setSubmissionUrl] = useState("");
+  const [adminSession, setAdminSession] = useState("");
+  const [showPendingReview, setShowPendingReview] = useState(false);
+  const [pendingLevelIds, setPendingLevelIds] = useState<string[]>([]);
+  const [pendingPreview, setPendingPreview] = useState<PendingPreview | null>(null);
+  const [pendingReviewError, setPendingReviewError] = useState("");
+  const [publishPullRequest, setPublishPullRequest] = useState("");
+  const [isLoadingPending, setIsLoadingPending] = useState(false);
+  const [isPublishingPending, setIsPublishingPending] = useState(false);
+  const [reviewRefresh, setReviewRefresh] = useState(0);
   const gridShellRef = useRef<HTMLDivElement>(null);
   const turnstileContainerRef = useRef<HTMLDivElement>(null);
   const turnstileWidgetRef = useRef<string | null>(null);
   const [gridShellWidth, setGridShellWidth] = useState(0);
   const submissionEndpoint = import.meta.env.VITE_LEVEL_SUBMISSION_URL?.trim() ?? "";
+  const adminApiBase = submissionEndpoint.replace(/\/submit\/?$/, "");
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? "";
 
   const selectedTile = useMemo(() => getTile(level, level.startPosition), [level]);
@@ -111,6 +139,60 @@ function App() {
       setDraftStatus("Browser storage is unavailable. Export JSON to keep this draft.");
     }
   }, [level, shouldPersistDraft]);
+
+  useEffect(() => {
+    const redirect = new URLSearchParams(window.location.hash.slice(1));
+    const session = redirect.get("admin_session");
+    const error = redirect.get("admin_error");
+    if (!session && !error) return;
+
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    if (session) {
+      setAdminSession(session);
+      setShowPendingReview(true);
+    } else {
+      setPendingReviewError(error === "not_authorized"
+        ? "This GitHub account is not allowed to review levels."
+        : "GitHub sign-in failed. Please try again.");
+      setShowPendingReview(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!showPendingReview || !adminSession || !adminApiBase) return;
+    let cancelled = false;
+
+    async function loadPendingQueue() {
+      setIsLoadingPending(true);
+      setPendingReviewError("");
+      setPendingPreview(null);
+      setPublishPullRequest("");
+      try {
+        const result = await adminRequest<{ levels: Array<{ id: string }> }>(adminApiBase, adminSession, "/admin/pending");
+        if (cancelled) return;
+        const ids = result.levels.map(({ id }) => id);
+        setPendingLevelIds(ids);
+        if (ids.length > 0) {
+          const preview = await adminRequest<Omit<PendingPreview, "id">>(
+            adminApiBase,
+            adminSession,
+            `/admin/pending/${encodeURIComponent(ids[0])}`,
+          );
+          if (!cancelled) setPendingPreview({ ...preview, id: ids[0] });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setPendingReviewError(error instanceof Error ? error.message : "Could not load pending levels.");
+          if (error instanceof Error && error.message.includes("session expired")) setAdminSession("");
+        }
+      } finally {
+        if (!cancelled) setIsLoadingPending(false);
+      }
+    }
+
+    void loadPendingQueue();
+    return () => { cancelled = true; };
+  }, [adminApiBase, adminSession, reviewRefresh, showPendingReview]);
 
   useEffect(() => {
     const gridShell = gridShellRef.current;
@@ -347,6 +429,61 @@ function App() {
     }
   }
 
+  function handleOpenPendingReview() {
+    if (!adminApiBase) {
+      setNotice("Review service is not configured yet.");
+      return;
+    }
+    if (!adminSession) {
+      window.location.assign(`${adminApiBase}/admin/auth/start`);
+      return;
+    }
+    setShowPendingReview(true);
+  }
+
+  async function handleSelectPending(id: string) {
+    if (!adminSession) return;
+    setPendingPreview(null);
+    setPendingReviewError("");
+    setPublishPullRequest("");
+    try {
+      const preview = await adminRequest<Omit<PendingPreview, "id">>(
+        adminApiBase,
+        adminSession,
+        `/admin/pending/${encodeURIComponent(id)}`,
+      );
+      setPendingPreview({ ...preview, id });
+    } catch (error) {
+      setPendingReviewError(error instanceof Error ? error.message : "Could not load this level.");
+      if (error instanceof Error && error.message.includes("session expired")) setAdminSession("");
+    }
+  }
+
+  async function handlePublishPending() {
+    if (!adminSession || !pendingPreview || pendingPreview.validation.errors.length > 0 || pendingPreview.solvable !== true) return;
+    if (!window.confirm(`Create a publish PR for “${(pendingPreview.level as LevelAuthoringDto).name}”?`)) return;
+
+    setIsPublishingPending(true);
+    setPendingReviewError("");
+    try {
+      const result = await adminRequest<{ pullRequestUrl: string; alreadyOpen: boolean }>(
+        adminApiBase,
+        adminSession,
+        "/admin/publish",
+        { method: "POST", body: JSON.stringify({ levelId: pendingPreview.id }) },
+      );
+      setPublishPullRequest(result.pullRequestUrl);
+      setPendingReviewError(result.alreadyOpen
+        ? "A publish PR already exists for this level."
+        : "Publish PR created. Merge it to move the level into the published catalog.");
+    } catch (error) {
+      setPendingReviewError(error instanceof Error ? error.message : "Could not create the publish PR.");
+      if (error instanceof Error && error.message.includes("session expired")) setAdminSession("");
+    } finally {
+      setIsPublishingPending(false);
+    }
+  }
+
   function handleNewLevel() {
     if (hasDraft && !window.confirm("Start a new level? The current draft will be replaced.")) return;
 
@@ -360,6 +497,8 @@ function App() {
     setValidation(null);
     setNotice("New level created.");
   }
+
+  const reviewLevel = pendingPreview?.boardRenderable ? pendingPreview.level as LevelAuthoringDto : null;
 
   return (
     <main className="app-shell">
@@ -378,6 +517,9 @@ function App() {
           )}
         </div>
         <div className="hero-actions">
+          <button onClick={handleOpenPendingReview}>
+            Review Pending
+          </button>
           <button className="primary" onClick={handleNewLevel}>
             New Level
           </button>
@@ -390,6 +532,127 @@ function App() {
           </label>
         </div>
       </section>
+
+      {showPendingReview && (
+        <section className="pending-review" aria-labelledby="pending-review-title">
+          <div className="review-heading">
+            <div>
+              <p className="eyebrow">Maintainer tools</p>
+              <h2 id="pending-review-title">Pending level review</h2>
+              <p>Only submissions merged into <code>levels/pending/</code> on the repository’s main branch appear here.</p>
+            </div>
+            <div className="review-heading-actions">
+              <button onClick={() => setReviewRefresh((value) => value + 1)} disabled={isLoadingPending}>
+                {isLoadingPending ? "Refreshing…" : "Refresh"}
+              </button>
+              <button onClick={() => setShowPendingReview(false)}>Close</button>
+            </div>
+          </div>
+
+          <div className="review-layout">
+            <aside className="pending-queue" aria-label="Pending levels">
+              <h3>Queue <span>{pendingLevelIds.length}</span></h3>
+              {pendingLevelIds.length === 0 && !isLoadingPending ? (
+                <p className="quiet">No pending levels found.</p>
+              ) : (
+                <div className="pending-level-list">
+                  {pendingLevelIds.map((id) => (
+                    <button
+                      key={id}
+                      className={pendingPreview?.id === id ? "selected" : ""}
+                      aria-pressed={pendingPreview?.id === id}
+                      onClick={() => void handleSelectPending(id)}
+                    >
+                      {id}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </aside>
+
+            <div className="review-detail" aria-live="polite">
+              {pendingReviewError && (
+                <p
+                  className={`review-message ${/failed|could not|not allowed|not found|expired|invalid|exists|cannot be published/i.test(pendingReviewError) ? "is-error" : ""}`}
+                  role="status"
+                >
+                  {pendingReviewError}
+                </p>
+              )}
+              {isLoadingPending && <p className="quiet">Loading pending levels…</p>}
+              {!isLoadingPending && pendingPreview && reviewLevel && (
+                <>
+                  <div className="review-level-heading">
+                    <div>
+                      <p className="eyebrow">{reviewLevel.mode} · {reviewLevel.difficulty} · Par {reviewLevel.levelPar}</p>
+                      <h3>{reviewLevel.name}</h3>
+                      <p className="quiet">{pendingPreview.id}</p>
+                    </div>
+                    <span className={pendingPreview.solvable ? "status-good" : "status-bad"}>
+                      {pendingPreview.solvable ? "Solvable" : "Needs fixes"}
+                    </span>
+                  </div>
+                  <div className="review-board-shell">
+                    <div
+                      className="review-grid"
+                      style={{ gridTemplateColumns: `repeat(${reviewLevel.width}, minmax(0, 1fr))` }}
+                      aria-label={`Preview of ${reviewLevel.name}`}
+                    >
+                      {[...reviewLevel.tiles]
+                        .sort((a, b) => (b.y - a.y) || (a.x - b.x))
+                        .map((tile) => (
+                          <div key={`${tile.x}-${tile.y}`} className={`tile review-tile tile-${tile.type.toLowerCase()}`}>
+                            <span className="tile-type">{tile.type.slice(0, 1)}</span>
+                            <strong>{tile.power}</strong>
+                            <small>{tile.x},{tile.y}</small>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  {pendingPreview.validation.errors.length > 0 && (
+                    <ul className="review-errors">
+                      {pendingPreview.validation.errors.map((error) => <li key={error}>{error}</li>)}
+                    </ul>
+                  )}
+                  <div className="review-summary">
+                    <span>{reviewLevel.width} × {reviewLevel.height}</span>
+                    {pendingPreview.shortestPathStrokes !== null && (
+                      <span>Shortest route: {pendingPreview.shortestPathStrokes} strokes</span>
+                    )}
+                    <span>{reviewLevel.metadata?.author ? `By ${reviewLevel.metadata.author}` : "Author not provided"}</span>
+                  </div>
+                  {pendingPreview.validation.warnings.length > 0 && (
+                    <ul className="review-warnings">
+                      {pendingPreview.validation.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                    </ul>
+                  )}
+                  <div className="review-actions">
+                    <button
+                      className="primary"
+                      onClick={() => void handlePublishPending()}
+                      disabled={!pendingPreview.solvable || isPublishingPending}
+                    >
+                      {isPublishingPending ? "Creating PR…" : "Move to Published"}
+                    </button>
+                    {publishPullRequest && (
+                      <a href={publishPullRequest} target="_blank" rel="noreferrer">Open publish PR</a>
+                    )}
+                  </div>
+                </>
+              )}
+              {!isLoadingPending && pendingPreview && !reviewLevel && (
+                <div className="review-invalid">
+                  <h3>This level needs fixes before publishing</h3>
+                  <ul>{pendingPreview.validation.errors.map((error) => <li key={error}>{error}</li>)}</ul>
+                </div>
+              )}
+              {!isLoadingPending && pendingLevelIds.length > 0 && !pendingPreview && !pendingReviewError && (
+                <p className="quiet">Select a level to preview its board.</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="workspace">
         <aside className="panel">

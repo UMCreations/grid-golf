@@ -412,6 +412,96 @@ textarea {
   padding-left: 18px;
 }
 
+.pending-review {
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid rgba(49, 74, 49, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 252, 245, 0.92);
+  box-shadow: 0 14px 40px rgba(49, 74, 49, 0.08);
+}
+
+.review-heading,
+.review-level-heading,
+.review-heading-actions,
+.review-actions,
+.review-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.review-heading { margin-bottom: 18px; }
+.review-heading h2,
+.review-level-heading h3 { margin: 0; }
+.review-heading p:not(.eyebrow) { margin: 8px 0 0; color: #546453; }
+.review-heading-actions button,
+.review-actions button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #cad8c8;
+  border-radius: 999px;
+  background: white;
+  color: #203326;
+  cursor: pointer;
+}
+
+.review-heading-actions button:disabled,
+.review-actions button:disabled { cursor: not-allowed; opacity: 0.55; }
+.review-layout { display: grid; grid-template-columns: minmax(190px, 250px) minmax(0, 1fr); gap: 18px; }
+.pending-queue,
+.review-detail { min-width: 0; padding: 16px; border: 1px solid #d4dfd0; border-radius: 16px; background: #fff; }
+.pending-queue h3 { display: flex; align-items: center; justify-content: space-between; margin: 0 0 12px; }
+.pending-queue h3 span { color: #61725f; font-size: 0.85rem; }
+.pending-level-list { display: grid; gap: 8px; max-height: 460px; overflow: auto; }
+.pending-level-list button {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #d4dfd0;
+  border-radius: 10px;
+  background: #f8fbf4;
+  color: #203326;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.pending-level-list button.selected { border-color: #274c3d; background: #e8f2e7; box-shadow: inset 3px 0 #274c3d; }
+.pending-level-list button:focus-visible,
+.review-heading-actions button:focus-visible,
+.review-actions button:focus-visible { outline: 2px solid #274c3d; outline-offset: 2px; }
+.review-detail { min-height: 220px; }
+.review-level-heading { margin-bottom: 16px; align-items: flex-start; }
+.review-level-heading .eyebrow { margin-top: 0; }
+.review-level-heading .quiet { margin: 6px 0 0; overflow-wrap: anywhere; }
+.review-board-shell { width: min(100%, 680px); margin: 0 auto; padding: 10px; overflow: auto; border: 1px solid #e0e8dc; border-radius: 14px; background: #f7faf3; }
+.review-grid { display: grid; gap: clamp(2px, 0.8vw, 8px); width: 100%; }
+.review-tile {
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: clamp(2px, 0.9vw, 8px);
+  border-radius: clamp(5px, 1.5vw, 16px);
+  cursor: default;
+}
+.review-tile .tile-type { font-size: clamp(0.38rem, 1.35vw, 0.78rem); letter-spacing: 0; }
+.review-tile strong { font-size: clamp(0.62rem, 2.3vw, 1.2rem); }
+.review-tile small { font-size: clamp(0.32rem, 1vw, 0.7rem); line-height: 1; }
+.review-summary { justify-content: flex-start; flex-wrap: wrap; margin-top: 12px; color: #546453; font-size: 13px; }
+.review-actions { justify-content: flex-start; flex-wrap: wrap; margin-top: 16px; }
+.review-actions button.primary { border-color: #274c3d; background: #274c3d; color: white; }
+.review-actions a { color: #274c3d; font-weight: 700; }
+.review-message { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: #edf5e9; color: #28513c; overflow-wrap: anywhere; }
+.review-message.is-error { background: #ffe0db; color: #9a2d24; }
+.review-invalid { color: #9a2d24; }
+.review-invalid h3 { margin-top: 0; }
+.review-invalid ul,
+.review-warnings,
+.review-errors { padding-left: 20px; }
+.review-warnings { color: #785a19; font-size: 13px; }
+.review-errors { color: #9a2d24; }
+
 @media (max-width: 1100px) {
   .workspace {
     grid-template-columns: 1fr;
@@ -449,4 +539,12 @@ textarea {
   .paint-settings label { min-width: 0; margin-bottom: 0; }
   .scale-control { grid-column: 1 / -1; min-width: 0; }
   .grid-shell { padding: 8px 0 4px; }
+  .pending-review { padding: 14px; border-radius: 16px; }
+  .review-heading { align-items: flex-start; flex-direction: column; }
+  .review-heading-actions { width: 100%; }
+  .review-heading-actions button { flex: 1; }
+  .review-layout { grid-template-columns: 1fr; gap: 10px; }
+  .pending-queue { padding: 12px; }
+  .pending-level-list { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); max-height: 190px; }
+  .review-detail { padding: 12px; }
 }
