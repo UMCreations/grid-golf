@@ -40,18 +40,6 @@ interface GitHubContentFile {
   encoding: string;
 }
 
-interface CommunityCatalog {
-  catalogVersion: number;
-  levels: Array<{
-    id: string;
-    name: string;
-    mode: string;
-    difficulty: string;
-    levelPar: number;
-    path: string;
-  }>;
-}
-
 class HttpError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -278,7 +266,7 @@ async function createSubmission(level: LevelAuthoringDto, env: Env): Promise<{ l
         title,
         head: branch,
         base: env.GITHUB_BASE_BRANCH,
-        body: "Account-free level submission from the browser editor. Review this level before moving it to `levels/published/` and adding it to `catalog.json`.",
+        body: "Account-free level submission from the browser editor. Review this level before moving it to `levels/published/`. A catalog-sync pull request will update `catalog.json` after publication.",
       }),
     },
   );
@@ -571,29 +559,6 @@ async function createPublishPullRequest(levelId: string, env: Env): Promise<{ le
   }
   const level = preview.level as LevelAuthoringDto;
   const publishedPath = `levels/published/${level.mode.toLowerCase()}/${levelId}.json`;
-  const catalogFile = await readGithubFile("catalog.json", baseSha, headers, env);
-  let catalog: CommunityCatalog;
-  try {
-    catalog = JSON.parse(catalogFile.text) as CommunityCatalog;
-  } catch {
-    throw new HttpError(409, "catalog.json is not valid JSON. Fix it before publishing.");
-  }
-  if (catalog.catalogVersion !== 1 || !Array.isArray(catalog.levels)) {
-    throw new HttpError(409, "catalog.json has an unsupported format.");
-  }
-  if (!catalog.levels.every((entry) => entry &&
-      typeof entry.id === "string" && typeof entry.name === "string" &&
-      (entry.mode === "Classic" || entry.mode === "Adventure") &&
-      (entry.difficulty === "Easy" || entry.difficulty === "Medium" || entry.difficulty === "Hard") &&
-      Number.isInteger(entry.levelPar) && entry.levelPar > 0 &&
-      typeof entry.path === "string" &&
-      entry.path === `levels/published/${entry.mode.toLowerCase()}/${entry.id}.json`)) {
-    throw new HttpError(409, "catalog.json contains an invalid level entry.");
-  }
-  if (catalog.levels.some((entry) => entry.id === levelId || entry.path === publishedPath)) {
-    throw new HttpError(409, "This level is already listed in catalog.json.");
-  }
-
   const targetUrl = githubContentsUrl(publishedPath, env, baseSha);
   const targetResponse = await fetch(targetUrl, { headers });
   if (targetResponse.ok) throw new HttpError(409, "A published file with this path already exists.");
@@ -627,26 +592,6 @@ async function createPublishPullRequest(levelId: string, env: Env): Promise<{ le
       body: JSON.stringify({ message: `Move level to published: ${levelId}`, sha: pendingFile.sha, branch }),
     });
 
-    catalog.levels.push({
-      id: levelId,
-      name: level.name,
-      mode: level.mode,
-      difficulty: level.difficulty,
-      levelPar: level.levelPar,
-      path: publishedPath,
-    });
-    catalog.levels.sort((a, b) => a.id.localeCompare(b.id));
-    await githubRequest(githubContentsUrl("catalog.json", env), {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({
-        message: `Add ${levelId} to published level catalog`,
-        content: encodeBase64(new TextEncoder().encode(JSON.stringify(catalog, null, 2) + "\n")),
-        sha: catalogFile.sha,
-        branch,
-      }),
-    });
-
     const pull = await githubRequest<{ html_url: string }>(
       `${GITHUB_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPOSITORY}/pulls`,
       {
@@ -656,7 +601,7 @@ async function createPublishPullRequest(levelId: string, env: Env): Promise<{ le
           title: `Publish community level: ${level.name.replace(/[\r\n]+/g, " ").slice(0, 80)}`,
           head: branch,
           base: env.GITHUB_BASE_BRANCH,
-          body: `Promotes \`${levelId}\` from pending review. This PR moves the level JSON and adds its catalog entry.`,
+          body: `Promotes \`${levelId}\` from pending review. This PR only moves the level JSON. After it merges, GitHub Actions updates the catalog in a separate pull request.`,
         }),
       },
     );

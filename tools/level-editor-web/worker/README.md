@@ -23,7 +23,9 @@ This Worker accepts account-free submissions from the editor, verifies the Turns
 
 After deployment, open the editor and choose **Review Pending**. Sign in with the GitHub account configured by `ADMIN_GITHUB_LOGIN` (`UMCreations` in the production config). The Worker lists JSON files already merged into `levels/pending/` on `main` and returns a board preview with structural and solvability checks.
 
-Choose **Move to Published** to create a pull request that moves the level JSON to `levels/published/<mode>/` and adds its entry to `catalog.json`. Merge that PR to publish the level. The browser receives only a short-lived admin session; the GitHub App client secret, private key, and repository write token stay in the Worker.
+Choose **Move to Published** to create a pull request that only moves the level JSON to `levels/published/<mode>/`. Merge that PR to publish the level. A serialized GitHub Actions workflow then creates or updates one catalog-sync PR from all published level files. Merge that PR to make the new level visible to Unity. Because publish PRs no longer edit `catalog.json`, they can merge independently without catalog conflicts.
+
+The `UMCreations/grid-golf-levels` repository needs the catalog-sync workflow from its setup PR merged. In **Settings → Actions → General → Workflow permissions**, allow read and write permissions and allow GitHub Actions to create and approve pull requests. The workflow uses only the built-in `GITHUB_TOKEN`; no additional secrets are needed.
 
 For local development, copy `.dev.vars.example` to `.dev.vars`, fill in the values, then run `npm run worker:dev`. Keep `.dev.vars` private. Admin sign-in is configured for production; to test OAuth locally, use a separate GitHub App with a callback URL matching the local Worker. Deploy with `npm run worker:deploy` after configuring production variables and secrets.
 
