@@ -58,6 +58,14 @@ public class GameManager : MonoBehaviour
         OnStrokeMadeEvent?.Invoke(CurrentStrokes, MaxStrokes);
     }
 
+    public void RestoreAfterUndo(int strokes)
+    {
+        if (HasWon || HasLost) return;
+
+        CurrentStrokes = Mathf.Max(0, strokes);
+        OnStrokeMadeEvent?.Invoke(CurrentStrokes, MaxStrokes);
+    }
+
     public void TriggerGameOver(string reason)
     {
         if (HasWon || HasLost) return;

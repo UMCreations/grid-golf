@@ -35,10 +35,13 @@ public class GridManager : MonoBehaviour
     [Header("Player")]
     public BallController ballPrefab;
     private BallController currentBall;
+    public BallController CurrentBall => currentBall;
 
     private Tile[,] gridArray;
     private GameObject swipeDirectionHint;
     private GameObject swipeHandHint;
+    private Tile powerupHintTile;
+    private Coroutine powerupHintRoutine;
 
     private void Awake()
     {
@@ -251,6 +254,7 @@ public class GridManager : MonoBehaviour
 
     public void ClearGrid()
     {
+        HidePowerupHint();
         if (gridParent != null)
         {
             foreach (Transform child in gridParent)
@@ -278,6 +282,7 @@ public class GridManager : MonoBehaviour
 
     public void GenerateGrid()
     {
+        HidePowerupHint();
         gridArray = new Tile[width, height];
         
         // Ensure we have a parent to organize tiles
@@ -491,6 +496,44 @@ public class GridManager : MonoBehaviour
         if (hole != null)
         {
             hole.SetPulse(shouldHighlight);
+        }
+    }
+
+    public bool ShowPowerupHint(Vector2Int position)
+    {
+        Tile tile = GetTileAtPosition(position);
+        if (tile == null) return false;
+
+        HidePowerupHint();
+        powerupHintTile = tile;
+        powerupHintTile.SetPulse(true);
+        powerupHintRoutine = StartCoroutine(HidePowerupHintAfterDelay());
+        return true;
+    }
+
+    public void HidePowerupHint()
+    {
+        if (powerupHintRoutine != null)
+        {
+            StopCoroutine(powerupHintRoutine);
+            powerupHintRoutine = null;
+        }
+
+        if (powerupHintTile != null)
+        {
+            powerupHintTile.SetPulse(false);
+            powerupHintTile = null;
+        }
+    }
+
+    private System.Collections.IEnumerator HidePowerupHintAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(2.5f);
+        powerupHintRoutine = null;
+        if (powerupHintTile != null)
+        {
+            powerupHintTile.SetPulse(false);
+            powerupHintTile = null;
         }
     }
 

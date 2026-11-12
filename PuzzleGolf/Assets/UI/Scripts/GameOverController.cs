@@ -29,7 +29,6 @@ public class GameOverController : MonoBehaviour
         }
         if (retryButton != null) retryButton.gameObject.SetActive(false);
         if (menuButton != null) menuButton.gameObject.SetActive(false);
-
         Sequence seq = DOTween.Sequence().SetUpdate(true);
 
         // 1. Fade in the background
@@ -64,6 +63,7 @@ public class GameOverController : MonoBehaviour
 
         if (menuButton != null)
             seq.AppendCallback(() => UIAnimationHelper.PopIn(menuButton.gameObject, 0.4f, 0.7f));
+
     }
 
     private void Start()
@@ -92,7 +92,7 @@ public class GameOverController : MonoBehaviour
             GameManager.Instance.RestartLevel();
         }
     }
-    
+
     private void OnMenuClicked()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();

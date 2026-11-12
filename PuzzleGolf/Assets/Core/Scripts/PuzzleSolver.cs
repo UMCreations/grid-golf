@@ -37,7 +37,15 @@ public static class PuzzleSolver
 
     public static SolveResult Solve(LevelData level)
     {
-        if (level == null) return new SolveResult();
+        return level == null
+            ? new SolveResult()
+            : SolveFromState(level, level.startPosition, 0);
+    }
+
+    public static SolveResult SolveFromState(LevelData level, Vector2Int position, int powerModifier)
+    {
+        if (level == null || level.tilePowers == null || !IsWithinBounds(level, position))
+            return new SolveResult();
 
         Queue<SolverState> queue = new Queue<SolverState>();
         // State is position + current power modifier (from last tile).
@@ -45,9 +53,9 @@ public static class PuzzleSolver
         var shortestPathsToState = new Dictionary<(Vector2Int, int), int>();
 
         // Initial state
-        queue.Enqueue(new SolverState(level.startPosition, 0, 0, new List<Vector2Int>()));
-        distances.Add((level.startPosition, 0), 0);
-        shortestPathsToState.Add((level.startPosition, 0), 1);
+        queue.Enqueue(new SolverState(position, powerModifier, 0, new List<Vector2Int>()));
+        distances.Add((position, powerModifier), 0);
+        shortestPathsToState.Add((position, powerModifier), 1);
 
         Vector2Int[] directions = {
             Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
@@ -95,7 +103,7 @@ public static class PuzzleSolver
                 // Handle Adventure Mode hazards
                 if (level.gameMode == GameMode.Adventure && !hitHole)
                 {
-                    TileType type = level.tileTypes[nextPos.x, nextPos.y];
+                    TileType type = GetTileType(level, nextPos);
                     
                     if (type == TileType.Ice)
                     {
@@ -105,7 +113,8 @@ public static class PuzzleSolver
                         
                         // Recursive Ice check
                         int safetyMax = 100;
-                        while (IsWithinBounds(level, finalPos) && level.tileTypes[finalPos.x, finalPos.y] == TileType.Ice && finalPos != level.holePosition && safetyMax-- > 0)
+                        while (IsWithinBounds(level, finalPos) && finalPos != level.holePosition &&
+                               GetTileType(level, finalPos) == TileType.Ice && safetyMax-- > 0)
                         {
                              icePower = level.tilePowers[finalPos.x, finalPos.y];
                              finalPos = finalPos + (dir * icePower);
@@ -117,7 +126,7 @@ public static class PuzzleSolver
                         if (finalPos == level.holePosition) hitHole = true;
                         else
                         {
-                            TileType landingType = level.tileTypes[finalPos.x, finalPos.y];
+                            TileType landingType = GetTileType(level, finalPos);
                             if (landingType == TileType.Sand) nextModifier = -1;
                             else if (landingType == TileType.Boost) nextModifier = 1;
                         }
@@ -155,5 +164,10 @@ public static class PuzzleSolver
     private static bool IsWithinBounds(LevelData level, Vector2Int pos)
     {
         return pos.x >= 0 && pos.x < level.width && pos.y >= 0 && pos.y < level.height;
+    }
+
+    private static TileType GetTileType(LevelData level, Vector2Int position)
+    {
+        return level.tileTypes != null ? level.tileTypes[position.x, position.y] : TileType.Standard;
     }
 }

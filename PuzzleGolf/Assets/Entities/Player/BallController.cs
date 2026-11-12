@@ -1,8 +1,18 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BallController : MonoBehaviour
 {
+    private struct MoveSnapshot
+    {
+        public Vector2Int GridPosition;
+        public int Strokes;
+        public int PowerModifier;
+        public Quaternion Rotation;
+        public Vector3 Scale;
+    }
+
     [Header("State")]
     public Vector2Int currentGridPosition;
     public bool isMoving;
@@ -24,9 +34,62 @@ public class BallController : MonoBehaviour
     private Vector2 touchCurrentPos;
     private bool isAiming;
     private Vector2Int currentAimDirection;
+    private readonly Stack<MoveSnapshot> undoHistory = new Stack<MoveSnapshot>();
+    private bool isResolvingAction;
 
     // Adventure Mode: power modifier from special tiles (+1 Boost, -1 Sand)
     private int adventurePowerModifier = 0;
+
+    public bool CanUndoLastMove => CanActNow && undoHistory.Count > 0 && GameManager.Instance != null &&
+                                  !GameManager.Instance.HasWon && !GameManager.Instance.HasLost;
+    public bool CanUsePowerUps => CanActNow &&
+                                  (GameManager.Instance == null ||
+                                   (!GameManager.Instance.HasWon && !GameManager.Instance.HasLost));
+
+    private bool CanActNow => !isMoving && !isResolvingAction && !isAiming && !IsTutorialActive();
+
+    private bool IsTutorialActive()
+    {
+        return UIManager.Instance != null && UIManager.Instance.tutorialController != null &&
+               UIManager.Instance.tutorialController.gameObject.activeInHierarchy;
+    }
+
+    public bool TryUndoLastMove()
+    {
+        if (!CanUndoLastMove || GridManager.Instance == null || GameManager.Instance == null)
+            return false;
+
+        MoveSnapshot snapshot = undoHistory.Peek();
+        Tile tile = GridManager.Instance.GetTileAtPosition(snapshot.GridPosition);
+        if (tile == null) return false;
+
+        undoHistory.Pop();
+        isAiming = false;
+        HideTrajectory();
+        GridManager.Instance.HidePowerupHint();
+        currentGridPosition = snapshot.GridPosition;
+        adventurePowerModifier = snapshot.PowerModifier;
+        transform.SetPositionAndRotation(tile.transform.position, snapshot.Rotation);
+        transform.localScale = snapshot.Scale;
+
+        GameManager.Instance.RestoreAfterUndo(snapshot.Strokes);
+        GridManager.Instance.ClearAllHighlights();
+        UpdateHighlights();
+        GridManager.Instance.SaveGameState(currentGridPosition, GameManager.Instance.CurrentStrokes);
+
+        return true;
+    }
+
+    public bool TryShowHint()
+    {
+        if (!CanUsePowerUps || GridManager.Instance == null || GridManager.Instance.CurrentLevelData == null)
+            return false;
+
+        SolveResult result = PuzzleSolver.SolveFromState(
+            GridManager.Instance.CurrentLevelData, currentGridPosition, adventurePowerModifier);
+        return result.IsSolvable && result.Path.Count > 1 &&
+               GridManager.Instance.ShowPowerupHint(result.Path[1]);
+    }
 
     private void Start()
     {
@@ -91,7 +154,7 @@ public class BallController : MonoBehaviour
     private void Update()
     {
         // Don't accept input if ball is already animating a move, or if the game is already won/lost
-        if (isMoving) return;
+        if (isMoving || isResolvingAction) return;
         if (GameManager.Instance != null && (GameManager.Instance.HasWon || GameManager.Instance.HasLost)) return;
         
         // Block standard input ONLY if the tutorial is in "Button Only" mode (ActionType.None)
@@ -307,26 +370,28 @@ public class BallController : MonoBehaviour
         return Vector2Int.zero;
     }
 
-    private void AttemptMove(Vector2Int direction)
+    private void AttemptMove(Vector2Int direction, bool isForcedSlide = false)
     {
         Tile currentTile = GridManager.Instance.GetTileAtPosition(currentGridPosition);
-        if (currentTile == null) return;
-        if (currentTile.type == TileType.Hole) return;
+        if (currentTile == null || currentTile.type == TileType.Hole)
+        {
+            if (isForcedSlide) isResolvingAction = false;
+            return;
+        }
 
         int power = currentTile.powerCount;
         
         // Adventure Mode: apply any stored power modifier (Sand/Boost effect from last landing)
         bool isAdventure = GridManager.Instance.CurrentLevelData != null &&
                            GridManager.Instance.CurrentLevelData.gameMode == GameMode.Adventure;
-        if (isAdventure && adventurePowerModifier != 0)
-        {
+        bool consumesPowerModifier = isAdventure && adventurePowerModifier != 0 && !isForcedSlide;
+        if (consumesPowerModifier)
             power = Mathf.Max(1, power + adventurePowerModifier);
-            adventurePowerModifier = 0; // consume it
-        }
         
         if (power <= 0)
         {
             Debug.Log("Invalid move: Current tile has 0 power.");
+            if (isForcedSlide) isResolvingAction = false;
             return;
         }
 
@@ -342,6 +407,7 @@ public class BallController : MonoBehaviour
                 if (targetPosition != step.requiredTargetPosition)
                 {
                     Debug.Log($"Tutorial: You must move to {step.requiredTargetPosition}!");
+                    if (isForcedSlide) isResolvingAction = false;
                     return; // Block move if it's not the required one
                 }
             }
@@ -351,9 +417,20 @@ public class BallController : MonoBehaviour
 
         if (targetTile != null)
         {
-            if (GameManager.Instance != null)
+            if (!isForcedSlide)
             {
-                GameManager.Instance.OnMoveMade();
+                undoHistory.Push(new MoveSnapshot
+                {
+                    GridPosition = currentGridPosition,
+                    Strokes = GameManager.Instance != null ? GameManager.Instance.CurrentStrokes : 0,
+                    PowerModifier = adventurePowerModifier,
+                    Rotation = transform.rotation,
+                    Scale = transform.localScale
+                });
+                isResolvingAction = true;
+                if (consumesPowerModifier) adventurePowerModifier = 0;
+                GridManager.Instance.HidePowerupHint();
+                if (GameManager.Instance != null) GameManager.Instance.OnMoveMade();
             }
             
             // Show encouraging feedback immediately on shot release
@@ -373,13 +450,15 @@ public class BallController : MonoBehaviour
         }
         else
         {
+            if (isForcedSlide) isResolvingAction = false;
             Debug.Log($"Invalid move: Target {targetPosition} is out of bounds!");
             if (GameManager.Instance != null)
                 GameManager.Instance.OnInvalidMove();
         }
     }
 
-    public IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos, Vector2Int moveDirection)
+    public IEnumerator MoveAndAnimateBall(Vector3 targetWorldPos, Tile targetTile, Vector2Int targetGridPos,
+        Vector2Int moveDirection)
     {
         isMoving = true;
         
@@ -436,7 +515,7 @@ public class BallController : MonoBehaviour
                     // ICE: chain a free slide in the same direction
                     Debug.Log($"[Ice] Auto-slide triggered in {moveDirection}!");
                     yield return new WaitForSeconds(0.05f);
-                    AttemptMove(moveDirection);
+                    AttemptMove(moveDirection, true);
                     yield break; // let the chained move handle the rest
                 }
                 else
@@ -447,6 +526,8 @@ public class BallController : MonoBehaviour
                 }
             }
         }
+
+        isResolvingAction = false;
 
         // Save progress after move
         if (GridManager.Instance != null && GameManager.Instance != null)

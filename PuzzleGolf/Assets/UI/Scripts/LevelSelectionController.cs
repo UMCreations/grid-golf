@@ -42,12 +42,12 @@ public class LevelSelectionController : MonoBehaviour
     public Button easyTabBtn;
     public Button mediumTabBtn;
     public Button hardTabBtn;
+    public Button communityTabBtn;
 
     [Header("Navigation")]
     public Button backButton;
 
     private Difficulty currentDifficultyTab = Difficulty.Easy;
-    private Button communityTabBtn;
     private bool showingCommunityLevels;
     private bool communityCatalogLoaded;
     private CommunityLevelEntry[] communityLevels = Array.Empty<CommunityLevelEntry>();
@@ -62,7 +62,7 @@ public class LevelSelectionController : MonoBehaviour
         if (easyTabBtn != null) easyTabBtn.onClick.AddListener(() => { if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick(); ChangeTab(Difficulty.Easy); });
         if (mediumTabBtn != null) mediumTabBtn.onClick.AddListener(() => { if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick(); ChangeTab(Difficulty.Medium); });
         if (hardTabBtn != null) hardTabBtn.onClick.AddListener(() => { if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick(); ChangeTab(Difficulty.Hard); });
-        CreateCommunityTab();
+        if (communityTabBtn != null) communityTabBtn.onClick.AddListener(() => { if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick(); ShowCommunityTab(); });
         
         if (backButton != null) backButton.onClick.AddListener(OnBackClicked);
 
@@ -76,49 +76,6 @@ public class LevelSelectionController : MonoBehaviour
         {
             if (showingCommunityLevels) ShowCommunityTab();
             else ChangeTab(currentDifficultyTab);
-        }
-    }
-
-    private void CreateCommunityTab()
-    {
-        if (hardTabBtn == null) return;
-        Canvas.ForceUpdateCanvases();
-        communityTabBtn = Instantiate(hardTabBtn, hardTabBtn.transform.parent);
-        communityTabBtn.name = "CommunityTab";
-        communityTabBtn.onClick.RemoveAllListeners();
-        communityTabBtn.onClick.AddListener(() =>
-        {
-            if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
-            ShowCommunityTab();
-        });
-
-        TMP_Text label = communityTabBtn.GetComponentInChildren<TMP_Text>(true);
-        if (label != null)
-        {
-            label.text = "COMMUNITY";
-            label.enableAutoSizing = true;
-            label.fontSizeMin = 16;
-            label.fontSizeMax = label.fontSize;
-        }
-
-        RectTransform parent = communityTabBtn.transform.parent as RectTransform;
-        HorizontalLayoutGroup layout = communityTabBtn.transform.parent.GetComponent<HorizontalLayoutGroup>();
-        if (parent != null && layout != null)
-        {
-            float tabWidth = Mathf.Max(72f, (parent.rect.width - layout.spacing * 3) / 4f);
-            foreach (Button tab in new[] { easyTabBtn, mediumTabBtn, hardTabBtn, communityTabBtn })
-            {
-                if (tab == null) continue;
-                RectTransform rect = tab.transform as RectTransform;
-                if (rect != null) rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, tabWidth);
-                TMP_Text tabLabel = tab.GetComponentInChildren<TMP_Text>(true);
-                if (tabLabel != null)
-                {
-                    tabLabel.enableAutoSizing = true;
-                    tabLabel.fontSizeMin = 16;
-                    tabLabel.fontSizeMax = tabLabel.fontSize;
-                }
-            }
         }
     }
 
@@ -167,13 +124,8 @@ public class LevelSelectionController : MonoBehaviour
     private void HighlightTab(Button btn, bool isActive)
     {
         if (btn == null) return;
-        
         Image img = btn.GetComponent<Image>();
-        if (img != null)
-        {
-            // Simple MVP visual feedback => Orange for active, Grey for inactive
-            img.color = isActive ? new Color(1f, 0.8f, 0.4f) : new Color(0.4f, 0.5f, 0.6f); 
-        }
+        if (img != null) img.color = isActive ? Color.white : new Color(0.4f, 0.5f, 0.6f);
     }
 
     private void PopulateGrid()

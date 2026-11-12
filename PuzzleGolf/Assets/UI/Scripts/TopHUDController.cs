@@ -10,6 +10,9 @@ public class TopHUDController : MonoBehaviour
     public TMP_Text strokesText;
     public Button menuButton;
     public Button restartButton;
+    [SerializeField] private Button undoPowerUpButton;
+    [SerializeField] private Button hintPowerUpButton;
+    [SerializeField] private TMP_Text hintPowerUpLabel;
 
     private int lastCurrentStrokes = -1;
     private Tween criticalPulseTween;
@@ -40,11 +43,19 @@ public class TopHUDController : MonoBehaviour
         }
 
         UpdateLevelText();
+        RefreshPowerUpButtons();
+    }
+
+    private void Update()
+    {
+        RefreshPowerUpButtons();
     }
 
     private void OnDisable()
     {
         StopCriticalPulse();
+        CancelInvoke(nameof(ResetHintLabel));
+        ResetHintLabel();
         
         // Very important: Unsubscribe from events to prevent memory leaks!
         if (GameManager.Instance != null)
@@ -97,6 +108,43 @@ public class TopHUDController : MonoBehaviour
             
             lastCurrentStrokes = currentStrokes;
         }
+        RefreshPowerUpButtons();
+    }
+
+    private void RefreshPowerUpButtons()
+    {
+        BallController ball = GridManager.Instance != null ? GridManager.Instance.CurrentBall : null;
+        if (undoPowerUpButton != null)
+            undoPowerUpButton.interactable = ball != null && ball.CanUndoLastMove;
+        if (hintPowerUpButton != null)
+            hintPowerUpButton.interactable = ball != null && ball.CanUsePowerUps;
+    }
+
+    public void OnUndoPowerUpClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+        BallController ball = GridManager.Instance != null ? GridManager.Instance.CurrentBall : null;
+        if (ball != null) ball.TryUndoLastMove();
+        RefreshPowerUpButtons();
+    }
+
+    public void OnHintPowerUpClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+        BallController ball = GridManager.Instance != null ? GridManager.Instance.CurrentBall : null;
+        if (ball != null && ball.TryShowHint()) return;
+
+        if (hintPowerUpLabel != null)
+        {
+            hintPowerUpLabel.text = "NO HINT";
+            CancelInvoke(nameof(ResetHintLabel));
+            Invoke(nameof(ResetHintLabel), 1.2f);
+        }
+    }
+
+    private void ResetHintLabel()
+    {
+        if (hintPowerUpLabel != null) hintPowerUpLabel.text = "HINT";
     }
 
     private void StartCriticalPulse()
