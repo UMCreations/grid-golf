@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class BallController : MonoBehaviour
 {
@@ -213,6 +214,12 @@ public class BallController : MonoBehaviour
         // Input.GetMouseButton(0) works universally for both Mouse Clicks and Mobile Finger Touches
         if (Input.GetMouseButtonDown(0))
         {
+            if (EventSystem.current != null &&
+                (Input.touchCount > 0
+                    ? EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)
+                    : EventSystem.current.IsPointerOverGameObject()))
+                return;
+
             touchStartPos = Input.mousePosition;
             isAiming = true;
             currentAimDirection = Vector2Int.zero;

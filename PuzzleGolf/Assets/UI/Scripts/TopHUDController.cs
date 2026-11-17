@@ -124,7 +124,9 @@ public class TopHUDController : MonoBehaviour
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         BallController ball = GridManager.Instance != null ? GridManager.Instance.CurrentBall : null;
-        if (ball != null) ball.TryUndoLastMove();
+        bool wasEligible = ball != null && ball.CanUndoLastMove;
+        bool restored = ball != null && ball.TryUndoLastMove();
+        Debug.Log($"Undo button clicked: eligible={wasEligible}, restored={restored}");
         RefreshPowerUpButtons();
     }
 
