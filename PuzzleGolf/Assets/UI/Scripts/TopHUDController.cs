@@ -15,9 +15,13 @@ public class TopHUDController : MonoBehaviour
     [SerializeField] private Button undoPowerUpButton;
     [SerializeField] private Button hintPowerUpButton;
     [SerializeField] private TMP_Text hintPowerUpLabel;
+    [SerializeField] private TMP_Text golfCoinsText;
+    [SerializeField] private TMP_Text undoPowerUpCostText;
+    [SerializeField] private TMP_Text hintPowerUpCostText;
 
     private int lastCurrentStrokes = -1;
     private Tween criticalPulseTween;
+    private WalletService subscribedWallet;
 
     private void OnEnable()
     {
@@ -45,11 +49,15 @@ public class TopHUDController : MonoBehaviour
         }
 
         UpdateLevelText();
+        SubscribeToWallet();
+        RefreshWalletUI();
         RefreshPowerUpButtons();
     }
 
     private void Update()
     {
+        // Wallet may be initialized after this HUD enables during scene startup.
+        SubscribeToWallet();
         RefreshPowerUpButtons();
     }
 
@@ -63,6 +71,11 @@ public class TopHUDController : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnStrokeMadeEvent -= UpdateStrokesUI;
+        }
+        if (subscribedWallet != null)
+        {
+            subscribedWallet.GolfCoinsChanged -= OnGolfCoinsChanged;
+            subscribedWallet = null;
         }
 
         if (menuButton != null)
@@ -122,6 +135,33 @@ public class TopHUDController : MonoBehaviour
             undoPowerUpButton.interactable = canAffordPowerUp && ball != null && ball.CanUndoLastMove;
         if (hintPowerUpButton != null)
             hintPowerUpButton.interactable = canAffordPowerUp && ball != null && ball.CanUsePowerUps;
+    }
+
+    private void SubscribeToWallet()
+    {
+        WalletService wallet = LevelManager.Instance != null ? LevelManager.Instance.Wallet : null;
+        if (wallet == subscribedWallet) return;
+
+        if (subscribedWallet != null)
+            subscribedWallet.GolfCoinsChanged -= OnGolfCoinsChanged;
+        subscribedWallet = wallet;
+        if (subscribedWallet != null)
+            subscribedWallet.GolfCoinsChanged += OnGolfCoinsChanged;
+        RefreshWalletUI();
+    }
+
+    private void OnGolfCoinsChanged(int _) => RefreshWalletUI();
+
+    private void RefreshWalletUI()
+    {
+        WalletService wallet = LevelManager.Instance != null ? LevelManager.Instance.Wallet : null;
+        if (golfCoinsText != null)
+            golfCoinsText.text = wallet != null ? wallet.GolfCoins.ToString() : "0";
+
+        if (undoPowerUpCostText != null)
+            undoPowerUpCostText.text = PowerUpTestCost.ToString();
+        if (hintPowerUpCostText != null)
+            hintPowerUpCostText.text = PowerUpTestCost.ToString();
     }
 
     public void OnUndoPowerUpClicked()

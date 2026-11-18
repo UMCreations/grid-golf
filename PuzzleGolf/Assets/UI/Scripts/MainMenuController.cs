@@ -12,6 +12,10 @@ public class MainMenuController : MonoBehaviour
     [Header("Adventure Mode Button")]
     public Button adventureButton;
 
+    [Header("Store")]
+    [SerializeField] private Button storeButton;
+    [SerializeField] private StoreController storeController;
+
     private void Start()
     {
         if (playButton != null)
@@ -28,6 +32,9 @@ public class MainMenuController : MonoBehaviour
 
         if (adventureButton != null)
             adventureButton.onClick.AddListener(OnAdventureClicked);
+
+        if (storeButton != null)
+            storeButton.onClick.AddListener(OnStoreClicked);
     }
 
     private void OnDestroy()
@@ -46,6 +53,9 @@ public class MainMenuController : MonoBehaviour
 
         if (adventureButton != null)
             adventureButton.onClick.RemoveListener(OnAdventureClicked);
+
+        if (storeButton != null)
+            storeButton.onClick.RemoveListener(OnStoreClicked);
     }
 
     private void OnPlayClicked()
@@ -111,6 +121,15 @@ public class MainMenuController : MonoBehaviour
 
         if (UIManager.Instance != null)
             UIManager.Instance.ShowLevelSelection();
+    }
+
+    private void OnStoreClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+        if (storeController != null)
+            storeController.OpenStore();
+        else
+            Debug.LogWarning("MainMenuController has no StoreController assigned.");
     }
 }
 
