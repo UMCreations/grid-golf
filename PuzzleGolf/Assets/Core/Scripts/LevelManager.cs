@@ -4,6 +4,9 @@ using System.Collections.Generic;
 [System.Serializable]
 public class PlayerProfile
 {
+    public int golfCoins;
+    public bool walletInitialized;
+
     // High score/progress for each difficulty
     public int unlockedEasy = 1;
     public int unlockedMedium = 1;
@@ -36,9 +39,12 @@ public class PlayerProfile
 
 public class LevelManager : MonoBehaviour
 {
+    private const int InitialGolfCoins = 20;
+
     public static LevelManager Instance { get; private set; }
 
     public PlayerProfile CurrentProfile { get; private set; }
+    public WalletService Wallet { get; private set; }
     
     public const int MAX_LEVELS = 100;
 
@@ -60,6 +66,11 @@ public class LevelManager : MonoBehaviour
             transform.SetParent(null); // Ensure it's a root object for DontDestroyOnLoad
             DontDestroyOnLoad(gameObject);
             LoadProfile();
+            Wallet = new WalletService(() => CurrentProfile, SaveProfile);
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (GetComponent<GooglePlayInAppUpdate>() == null)
+                gameObject.AddComponent<GooglePlayInAppUpdate>();
+#endif
             ResumeLastPlayedLevel(); // Automatically load saved level progress on start!
         }
         else
@@ -74,11 +85,29 @@ public class LevelManager : MonoBehaviour
         if (!string.IsNullOrEmpty(json))
         {
             CurrentProfile = JsonUtility.FromJson<PlayerProfile>(json);
+            if (CurrentProfile == null)
+                CurrentProfile = CreateNewProfile();
+            else if (!CurrentProfile.walletInitialized)
+            {
+                CurrentProfile.golfCoins = InitialGolfCoins;
+                CurrentProfile.walletInitialized = true;
+                SaveProfile();
+            }
         }
         else
         {
-            CurrentProfile = new PlayerProfile();
+            CurrentProfile = CreateNewProfile();
+            SaveProfile();
         }
+    }
+
+    private static PlayerProfile CreateNewProfile()
+    {
+        return new PlayerProfile
+        {
+            golfCoins = InitialGolfCoins,
+            walletInitialized = true
+        };
     }
 
     public void SaveProfile()
@@ -119,7 +148,7 @@ public class LevelManager : MonoBehaviour
 
     public void ResetProgress()
     {
-        CurrentProfile = new PlayerProfile();
+        CurrentProfile = CreateNewProfile();
         SaveProfile();
         SaveManager.ClearSave(); // Clear mid-level save to make sure board is wiped
     }

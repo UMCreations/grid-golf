@@ -5,6 +5,8 @@ using DG.Tweening;
 
 public class TopHUDController : MonoBehaviour
 {
+    private const int PowerUpTestCost = 10;
+
     [Header("UI References")]
     public TMP_Text levelText;
     public TMP_Text strokesText;
@@ -114,19 +116,22 @@ public class TopHUDController : MonoBehaviour
     private void RefreshPowerUpButtons()
     {
         BallController ball = GridManager.Instance != null ? GridManager.Instance.CurrentBall : null;
+        WalletService wallet = LevelManager.Instance != null ? LevelManager.Instance.Wallet : null;
+        bool canAffordPowerUp = wallet != null && wallet.GolfCoins >= PowerUpTestCost;
         if (undoPowerUpButton != null)
-            undoPowerUpButton.interactable = ball != null && ball.CanUndoLastMove;
+            undoPowerUpButton.interactable = canAffordPowerUp && ball != null && ball.CanUndoLastMove;
         if (hintPowerUpButton != null)
-            hintPowerUpButton.interactable = ball != null && ball.CanUsePowerUps;
+            hintPowerUpButton.interactable = canAffordPowerUp && ball != null && ball.CanUsePowerUps;
     }
 
     public void OnUndoPowerUpClicked()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         BallController ball = GridManager.Instance != null ? GridManager.Instance.CurrentBall : null;
-        bool wasEligible = ball != null && ball.CanUndoLastMove;
-        bool restored = ball != null && ball.TryUndoLastMove();
-        Debug.Log($"Undo button clicked: eligible={wasEligible}, restored={restored}");
+        WalletService wallet = LevelManager.Instance != null ? LevelManager.Instance.Wallet : null;
+        if (ball != null && ball.CanUndoLastMove && wallet != null &&
+            wallet.TrySpendGolfCoins(PowerUpTestCost) && !ball.TryUndoLastMove())
+            wallet.TryGrantGolfCoins(PowerUpTestCost);
         RefreshPowerUpButtons();
     }
 
@@ -134,11 +139,31 @@ public class TopHUDController : MonoBehaviour
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         BallController ball = GridManager.Instance != null ? GridManager.Instance.CurrentBall : null;
-        if (ball != null && ball.TryShowHint()) return;
+        WalletService wallet = LevelManager.Instance != null ? LevelManager.Instance.Wallet : null;
+        if (ball == null || wallet == null || !ball.CanUsePowerUps) return;
+        if (wallet.GolfCoins < PowerUpTestCost)
+        {
+            SetHintLabel("NEED 10 COINS");
+            return;
+        }
 
+        if (!wallet.TrySpendGolfCoins(PowerUpTestCost)) return;
+        if (ball.TryShowHint())
+        {
+            RefreshPowerUpButtons();
+            return;
+        }
+
+        wallet.TryGrantGolfCoins(PowerUpTestCost);
+        SetHintLabel("NO HINT");
+        RefreshPowerUpButtons();
+    }
+
+    private void SetHintLabel(string message)
+    {
         if (hintPowerUpLabel != null)
         {
-            hintPowerUpLabel.text = "NO HINT";
+            hintPowerUpLabel.text = message;
             CancelInvoke(nameof(ResetHintLabel));
             Invoke(nameof(ResetHintLabel), 1.2f);
         }
