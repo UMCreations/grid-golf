@@ -28,6 +28,24 @@ public sealed class WalletService
         return true;
     }
 
+    public bool TryGrantPurchasedGolfCoins(int amount, string purchaseToken)
+    {
+        PlayerProfile profile = getProfile();
+        if (profile == null || amount <= 0 || string.IsNullOrWhiteSpace(purchaseToken) ||
+            profile.golfCoins < 0 || profile.golfCoins > int.MaxValue - amount)
+            return false;
+
+        profile.processedPurchaseTokens ??= new System.Collections.Generic.List<string>();
+        if (profile.processedPurchaseTokens.Contains(purchaseToken))
+            return true;
+
+        profile.golfCoins += amount;
+        profile.processedPurchaseTokens.Add(purchaseToken);
+        saveProfile();
+        GolfCoinsChanged?.Invoke(profile.golfCoins);
+        return true;
+    }
+
     public bool TrySpendGolfCoins(int amount)
     {
         PlayerProfile profile = getProfile();

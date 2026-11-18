@@ -6,6 +6,7 @@ public class PlayerProfile
 {
     public int golfCoins;
     public bool walletInitialized;
+    public List<string> processedPurchaseTokens = new List<string>();
 
     // High score/progress for each difficulty
     public int unlockedEasy = 1;

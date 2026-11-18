@@ -12,6 +12,8 @@ public class TopHUDController : MonoBehaviour
     public TMP_Text strokesText;
     public Button menuButton;
     public Button restartButton;
+    [SerializeField] private Button openStoreButton;
+    [SerializeField] private StoreController storeController;
     [SerializeField] private Button undoPowerUpButton;
     [SerializeField] private Button hintPowerUpButton;
     [SerializeField] private TMP_Text hintPowerUpLabel;
@@ -34,6 +36,8 @@ public class TopHUDController : MonoBehaviour
         {
             restartButton.onClick.AddListener(OnRestartClicked);
         }
+        if (openStoreButton != null)
+            openStoreButton.onClick.AddListener(OnOpenStoreClicked);
 
         // Subscribe to GameManager events
         if (GameManager.Instance != null)
@@ -86,6 +90,8 @@ public class TopHUDController : MonoBehaviour
         {
             restartButton.onClick.RemoveListener(OnRestartClicked);
         }
+        if (openStoreButton != null)
+            openStoreButton.onClick.RemoveListener(OnOpenStoreClicked);
     }
 
     private void UpdateStrokesUI(int currentStrokes, int maxStrokes)
@@ -135,6 +141,16 @@ public class TopHUDController : MonoBehaviour
             undoPowerUpButton.interactable = canAffordPowerUp && ball != null && ball.CanUndoLastMove;
         if (hintPowerUpButton != null)
             hintPowerUpButton.interactable = canAffordPowerUp && ball != null && ball.CanUsePowerUps;
+    }
+
+    private void OnOpenStoreClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+
+        if (storeController != null)
+            storeController.OpenStore();
+        else
+            Debug.LogWarning("TopHUDController has no StoreController assigned.");
     }
 
     private void SubscribeToWallet()

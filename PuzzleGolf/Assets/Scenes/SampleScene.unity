@@ -15507,15 +15507,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: fbf5169d472cb4e2d8464f4980e2fada, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -35778,6 +35778,8 @@ MonoBehaviour:
   strokesText: {fileID: 1635240569}
   menuButton: {fileID: 1656730235}
   restartButton: {fileID: 373551465}
+  openStoreButton: {fileID: 1541399723}
+  storeController: {fileID: 4087012345}
   undoPowerUpButton: {fileID: 359491757}
   hintPowerUpButton: {fileID: 1597490134}
   hintPowerUpLabel: {fileID: 0}
@@ -36353,7 +36355,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   closeButton: {fileID: 1912665890}
-  temporaryCoinButton: {fileID: 857155309}
+  smallPackButton: {fileID: 857155309}
+  smallPackLabel: {fileID: 291010886}
+  mediumPackButton: {fileID: 0}
+  mediumPackLabel: {fileID: 0}
+  largePackButton: {fileID: 0}
+  largePackLabel: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
