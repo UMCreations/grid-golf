@@ -28,6 +28,7 @@ public sealed class StorePackDefinition
     [SerializeField, Min(1)] private int coinAmount = 100;
     [SerializeField, Tooltip("Displayed only in the Unity Editor; runtime prices come from the store.")] private string editorPreviewPrice;
     [SerializeField] private Sprite image;
+    [SerializeField] private Sprite packIcon;
     [SerializeField] private bool offerEnabled;
     [SerializeField, Min(0)] private int offerPercent;
 
@@ -35,6 +36,7 @@ public sealed class StorePackDefinition
     public int CoinAmount => coinAmount;
     public string EditorPreviewPrice => editorPreviewPrice;
     public Sprite Image => image;
+    public Sprite PackIcon => packIcon;
     public bool OfferEnabled => offerEnabled && offerPercent > 0;
     public int OfferPercent => offerPercent;
 

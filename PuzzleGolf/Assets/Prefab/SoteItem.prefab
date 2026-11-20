@@ -359,6 +359,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemImage: {fileID: 542603498070927745}
+  packIconImage: {fileID: 7650312707414154579}
   packImage: {fileID: 0}
   valueLabel: {fileID: 2964203766088485087}
   priceLabel: {fileID: 8762850425729840217}
@@ -377,7 +378,7 @@ GameObject:
   - component: {fileID: 7608966499665926481}
   - component: {fileID: 7650312707414154579}
   m_Layer: 0
-  m_Name: coins
+  m_Name: packIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public sealed class StoreItemView : MonoBehaviour
 {
     [SerializeField] private Image itemImage;
+    [SerializeField] private Image packIconImage;
     [SerializeField] private Sprite packImage;
     [SerializeField] private TMP_Text valueLabel;
     [SerializeField] private TMP_Text priceLabel;
@@ -13,11 +14,16 @@ public sealed class StoreItemView : MonoBehaviour
     [SerializeField] private TMP_Text offerLabel;
     [SerializeField] private Button buyButton;
     private Action purchaseAction;
+    private Sprite defaultPackIcon;
 
     private void Awake()
     {
         if (itemImage == null)
             itemImage = transform.Find("coins/Image/Image")?.GetComponent<Image>();
+        if (packIconImage == null)
+            packIconImage = transform.Find("packIcon")?.GetComponent<Image>();
+        if (packIconImage != null)
+            defaultPackIcon = packIconImage.sprite;
         if (valueLabel == null)
             valueLabel = transform.Find("coins/Image/coinvalue")?.GetComponent<TMP_Text>();
         if (priceLabel == null)
@@ -54,6 +60,8 @@ public sealed class StoreItemView : MonoBehaviour
             itemImage.sprite = pack.Image;
         else if (itemImage != null && packImage != null)
             itemImage.sprite = packImage;
+        if (packIconImage != null)
+            packIconImage.sprite = pack.PackIcon != null ? pack.PackIcon : defaultPackIcon;
         if (valueLabel != null)
             valueLabel.text = pack.CoinAmount.ToString("N0");
         if (priceLabel != null)

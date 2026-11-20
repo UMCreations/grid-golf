@@ -15,19 +15,22 @@ MonoBehaviour:
   packs:
   - productId: gridgolf_coins_100
     coinAmount: 100
-    editorPreviewPrice: ₹29
-    image: {fileID: 21300000, guid: 28ab4e88ae5384ad585d49d9d7943cff, type: 3}
+    editorPreviewPrice: "\u20B929"
+    image: {fileID: 21300000, guid: 89c8c9e981396404b91d4cca6bf65d65, type: 3}
+    packIcon: {fileID: 21300000, guid: 687010498902d453fbf4a8f10a50378e, type: 3}
     offerEnabled: 0
     offerPercent: 0
   - productId: gridgolf_coins_500
     coinAmount: 500
-    editorPreviewPrice: ₹99
-    image: {fileID: 21300000, guid: 28ab4e88ae5384ad585d49d9d7943cff, type: 3}
+    editorPreviewPrice: "\u20B999"
+    image: {fileID: 21300000, guid: 89c8c9e981396404b91d4cca6bf65d65, type: 3}
+    packIcon: {fileID: 21300000, guid: 34a9533cf19f9451280b0b3956c20fc6, type: 3}
     offerEnabled: 0
     offerPercent: 0
   - productId: gridgolf_coins_1200
     coinAmount: 1200
-    editorPreviewPrice: ₹199
-    image: {fileID: 21300000, guid: 28ab4e88ae5384ad585d49d9d7943cff, type: 3}
+    editorPreviewPrice: "\u20B9199"
+    image: {fileID: 21300000, guid: 89c8c9e981396404b91d4cca6bf65d65, type: 3}
+    packIcon: {fileID: 21300000, guid: 32deeb3d7a4604be2810daef2805ca80, type: 3}
     offerEnabled: 1
     offerPercent: 40
