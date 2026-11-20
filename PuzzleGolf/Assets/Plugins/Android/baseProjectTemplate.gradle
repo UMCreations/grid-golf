@@ -1,0 +1,15 @@
+plugins {
+    // Keep aligned with the Android Gradle Plugin bundled with Unity 2022.3.
+    id 'com.android.application' version '7.4.2' apply false
+    id 'com.android.library' version '7.4.2' apply false
+}
+
+allprojects {
+    configurations.configureEach {
+        resolutionStrategy.force 'androidx.core:core:1.13.1'
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
