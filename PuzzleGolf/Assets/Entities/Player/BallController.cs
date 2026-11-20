@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class BallController : MonoBehaviour
 {
@@ -36,6 +37,7 @@ public class BallController : MonoBehaviour
     private bool isAiming;
     private Vector2Int currentAimDirection;
     private readonly Stack<MoveSnapshot> undoHistory = new Stack<MoveSnapshot>();
+    private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
     private bool isResolvingAction;
 
     // Adventure Mode: power modifier from special tiles (+1 Boost, -1 Sand)
@@ -158,12 +160,11 @@ public class BallController : MonoBehaviour
         if (isMoving || isResolvingAction) return;
         if (GameManager.Instance != null && (GameManager.Instance.HasWon || GameManager.Instance.HasLost)) return;
         
-        // Block standard input ONLY if the tutorial is in "Button Only" mode (ActionType.None)
-        // OR if the tutorial text is currently animating/typing
+        // Button-only tutorial steps wait for Next; action steps stay playable while their text animates.
         if (UIManager.Instance != null && UIManager.Instance.tutorialController.gameObject.activeInHierarchy)
         {
             var tutorial = UIManager.Instance.tutorialController;
-            if (tutorial.IsTyping || tutorial.CurrentStepData?.actionType == TutorialActionType.None)
+            if (tutorial.CurrentStepData?.actionType == TutorialActionType.None)
             {
                 return;
             }
@@ -214,10 +215,7 @@ public class BallController : MonoBehaviour
         // Input.GetMouseButton(0) works universally for both Mouse Clicks and Mobile Finger Touches
         if (Input.GetMouseButtonDown(0))
         {
-            if (EventSystem.current != null &&
-                (Input.touchCount > 0
-                    ? EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)
-                    : EventSystem.current.IsPointerOverGameObject()))
+            if (IsPointerOverBlockingUI())
                 return;
 
             touchStartPos = Input.mousePosition;
@@ -254,6 +252,39 @@ public class BallController : MonoBehaviour
                 AttemptMove(currentAimDirection);
             }
         }
+    }
+
+    private bool IsPointerOverBlockingUI()
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null) return false;
+
+        TutorialController tutorial = UIManager.Instance != null ? UIManager.Instance.tutorialController : null;
+        bool isTutorialMoveStep = tutorial != null && tutorial.gameObject.activeInHierarchy &&
+                                  tutorial.CurrentStepData != null &&
+                                  tutorial.CurrentStepData.actionType != TutorialActionType.None;
+
+        if (!isTutorialMoveStep)
+        {
+            return Input.touchCount > 0
+                ? eventSystem.IsPointerOverGameObject(Input.GetTouch(0).fingerId)
+                : eventSystem.IsPointerOverGameObject();
+        }
+
+        var pointer = new PointerEventData(eventSystem)
+        {
+            position = Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition
+        };
+        uiRaycastResults.Clear();
+        eventSystem.RaycastAll(pointer, uiRaycastResults);
+
+        foreach (RaycastResult result in uiRaycastResults)
+        {
+            if (result.gameObject.GetComponentInParent<Selectable>() != null)
+                return true;
+        }
+
+        return false;
     }
 
     private Vector2Int GetSnapDirection(Vector2 rawDirection)
